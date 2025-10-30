@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red-Headed Hallelujah</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter (sans-serif) and Staatliches (blocky, for title) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles to match the album art aesthetic */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Using 'Staatliches' for the main album title to mimic the cover font */
+        .font-album-title {
+            font-family: 'Staatliches', cursive;
+        }
+
+        /* Custom scrollbar for the playlist */
+        #playlist::-webkit-scrollbar {
+            width: 8px;
+        }
+        #playlist::-webkit-scrollbar-track {
+            background: #374151; /* gray-700 */
+            border-radius: 10px;
+        }
+        #playlist::-webkit-scrollbar-thumb {
+            background: #EF4444; /* red-500 */
+            border-radius: 10px;
+        }
+        #playlist::-webkit-scrollbar-thumb:hover {
+            background: #DC2626; /* red-600 */
+        }
+
+        /* Style for the currently active playlist item */
+        .playlist-item.active {
+            background-color: #EF4444; /* red-500 */
+            color: #FFFFFF; /* white */
+        }
+
+        /* Custom style for the progress bar slider thumb */
+        #progress-bar-container input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #EF4444; /* red-500 */
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: -6px; /* Center the thumb on the track */
+        }
+        
+        #progress-bar-container input[type=range]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #EF4444; /* red-500 */
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Custom style for the progress bar track */
+        #progress-bar-container input[type=range] {
+             -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #4B5563; /* gray-600 */
+            border-radius: 5px;
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-4xl">
+        <!-- Main Title -->
+        <h1 class="font-album-title text-4xl md:text-5xl text-yellow-400 text-center mb-6 tracking-wider">
+            Red-Headed Hallelujah
+        </h1>
+        
+        <!-- Player Container -->
+        <div class="bg-gray-800 shadow-2xl rounded-lg overflow-hidden flex flex-col md:flex-row">
+            
+            <!-- Left Side: Album Artwork -->
+            <div class="w-full md:w-1/2 lg:w-5/12 flex-shrink-0">
+                <!-- 
+                  IMPORTANT: Replace 'cover.jpg.png' with the actual path to your image. 
+                  If it's in the same folder, this will work perfectly.
+                -->
+                <img src="cover.jpg.png" alt="Album Art for Red-Headed Hallelujah" class="w-full h-full object-cover">
+            </div>
+
+            <!-- Right Side: Info, Controls, Playlist -->
+            <div class="w-full md:w-1/2 lg:w-7/12 p-6 flex flex-col justify-between">
+                
+                <!-- Top-Right: Current Song Info -->
+                <div class="mb-4">
+                    <p class="text-sm uppercase tracking-widest text-gray-400">Now Playing</p>
+                    <h2 id="song-title" class="text-3xl font-bold text-yellow-400 truncate">Song Title</h2>
+                    <h3 id="song-artist" class="text-lg text-gray-300">A mstonge01 Project</h3>
+                </div>
+
+                <!-- Middle-Right: Controls & Progress Bar -->
+                <div class="mb-4">
+                    <!-- Progress Bar -->
+                    <div id="progress-bar-container" class="mb-3">
+                         <input type="range" id="progress-bar" class="w-full h-1 bg-gray-700 rounded-lg cursor-pointer" value="0" min="0" max="100">
+                    </div>
+                    <!-- Time Display -->
+                    <div class="flex justify-between text-sm text-gray-400">
+                        <span id="current-time">0:00</span>
+                        <span id="duration-time">0:00</span>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="flex justify-center items-center space-x-6 mt-4">
+                        <!-- Previous Button -->
+                        <button id="prev-btn" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.03V5.969a1 1 0 00-1.555-.832L4.12 9.168a1 1 0 000 1.664l4.325 4zM10.879 9.168a1 1 0 000 1.664l4.325 4A1 1 0 0017 14.03V5.969a1 1 0 00-1.555-.832l-4.325 4z"/></svg>
+                        </button>
+                        <!-- Play/Pause Button -->
+                        <button id="play-pause-btn" class="w-16 h-16 bg-red-500 text-white rounded-full flex items-center justify-center text-2xl hover:bg-red-600 transition-colors duration-200 shadow-lg">
+                            <!-- Play Icon -->
+                            <svg id="play-icon" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.002v3.996a1 1 0 001.555.832l3.197-1.998a1 1 0 000-1.664l-3.197-1.998z" clip-rule="evenodd"/></svg>
+                            <!-- Pause Icon (hidden by default) -->
+                            <svg id="pause-icon" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1H8zm5 0a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1h-1z" clip-rule="evenodd"/></svg>
+                        </button>
+                        <!-- Next Button -->
+                        <button id="next-btn" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 5.969v8.062a1 1 0 001.555.832l4.325-4a1 1 0 000-1.664l-4.325-4zM10.879 5.168A1 1 0 009.324 5.97v8.062a1 1 0 001.555.832l4.325-4a1 1 0 000-1.664l-4.325-4z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bottom-Right: Playlist -->
+                <div class="flex-grow min-h-0">
+                    <div id="playlist" class="h-48 md:h-full max-h-48 lg:max-h-56 overflow-y-auto pr-2">
+                        <!-- Playlist items will be injected here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The actual audio element, hidden from view -->
+    <audio id="audio-player"></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 1. SONG DATABASE ---
+            // IMPORTANT: Add your other songs here!
+            // Just follow the pattern:
+            // { title: "Your Song Title", src: "your-song-file.mp3" }
+            //
+            // The first 5 songs are from your upload.
+            // The paths '01-the-crimson-tide.mp3' assume the mp3 files are in the 
+            // same folder as this index.html file.
+            const songs = [
+                { title: "The Crimson Tide", src: "http://googleusercontent.com/file_content/0" },
+                { title: "Real Women", src: "http://googleusercontent.com/file_content/1" },
+                { title: "Red-Headed Hallelujah", src: "http://googleusercontent.com/file_content/2" },
+                { title: "The Good Stuff", src: "http://googleusercontent.com/file_content/3" },
+                { title: "Zero Degree Beach", src: "http://googleusercontent.com/file_content/4" },
+                // --- PLACEHOLDERS FOR YOUR OTHER 7 SONGS ---
+                // Replace these with your actual files
+                { title: "Song 06 (Placeholder)", src: "" },
+                { title: "Song 07 (Placeholder)", src: "" },
+                { title: "Song 08 (Placeholder)", src: "" },
+                { title: "Song 09 (Placeholder)", src: "" },
+                { title: "Song 10 (Placeholder)", src: "" },
+                { title: "Song 11 (Placeholder)", src: "" },
+                { title: "Song 12 (Placeholder)", src: "" },
+            ];
+            const artistName = "A mstonge01 Project";
+
+            // --- 2. DOM ELEMENT REFERENCES ---
+            const audioPlayer = document.getElementById('audio-player');
+            const songTitleEl = document.getElementById('song-title');
+            const songArtistEl = document.getElementById('song-artist');
+            const playlistEl = document.getElementById('playlist');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const currentTimeEl = document.getElementById('current-time');
+            const durationTimeEl = document.getElementById('duration-time');
+
+            // --- 3. PLAYER STATE ---
+            let currentSongIndex = 0;
+            let isPlaying = false;
+
+            // --- 4. PLAYER FUNCTIONS ---
+
+            // Load a song into the player
+            function loadSong(song) {
+                songTitleEl.textContent = song.title;
+                songArtistEl.textContent = artistName;
+                audioPlayer.src = song.src;
+                updateActivePlaylistItem();
+            }
+
+            // Play the loaded song
+            function playSong() {
+                if (!audioPlayer.src || audioPlayer.src.endsWith('index.html')) {
+                    // Don't try to play if no valid src (like a placeholder)
+                    return;
+                }
+                isPlaying = true;
+                audioPlayer.play();
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+            }
+
+            // Pause the playing song
+            function pauseSong() {
+                isPlaying = false;
+                audioPlayer.pause();
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+            }
+
+            // Go to the previous song
+            function prevSong() {
+                currentSongIndex--;
+                if (currentSongIndex < 0) {
+                    currentSongIndex = songs.length - 1;
+                }
+                // Skip empty placeholders
+                while (!songs[currentSongIndex].src) {
+                    currentSongIndex--;
+                    if (currentSongIndex < 0) currentSongIndex = songs.length - 1;
+                }
+                loadSong(songs[currentSongIndex]);
+                if (isPlaying) playSong();
+            }
+
+            // Go to the next song
+            function nextSong() {
+                currentSongIndex++;
+                if (currentSongIndex > songs.length - 1) {
+                    currentSongIndex = 0;
+                }
+                // Skip empty placeholders
+                while (!songs[currentSongIndex].src) {
+                    currentSongIndex++;
+                    if (currentSongIndex > songs.length - 1) currentSongIndex = 0;
+                }
+                loadSong(songs[currentSongIndex]);
+                if (isPlaying) playSong();
+            }
+
+            // Update progress bar as song plays
+            function updateProgress(e) {
+                const { duration, currentTime } = e.srcElement;
+                if (duration) {
+                    const progressPercent = (currentTime / duration) * 100;
+                    progressBar.value = progressPercent;
+                    
+                    // Update time display
+                    durationTimeEl.textContent = formatTime(duration);
+                    currentTimeEl.textContent = formatTime(currentTime);
+                }
+            }
+
+            // Format time from seconds to m:ss
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+
+            // Set progress bar on click/drag
+            function setProgress() {
+                const duration = audioPlayer.duration;
+                if (duration) {
+                     audioPlayer.currentTime = (progressBar.value / 100) * duration;
+                }
+            }
+            
+            // Highlight the currently playing song in the playlist
+            function updateActivePlaylistItem() {
+                const items = document.querySelectorAll('.playlist-item');
+                items.forEach((item, index) => {
+                    if (index === currentSongIndex) {
+                        item.classList.add('active');
+                        // Scroll the active item into view
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            // Build the playlist in the UI
+            function createPlaylist() {
+                songs.forEach((song, index) => {
+                    // Only add songs that have a valid src
+                    if (song.src) {
+                        const item = document.createElement('div');
+                        item.classList.add('playlist-item', 'p-3', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors', 'duration-200');
+                        item.innerHTML = `
+                            <p class="font-semibold truncate">${song.title}</p>
+                            <p class="text-sm text-gray-400">${artistName}</p>
+                        `;
+                        
+                        item.addEventListener('click', () => {
+                            currentSongIndex = index;
+                            loadSong(song);
+                            playSong();
+                        });
+                        playlistEl.appendChild(item);
+                    }
+                    // You could add a visual indicator for placeholder songs if you want
+                    else {
+                         const item = document.createElement('div');
+                        item.classList.add('playlist-item', 'p-3', 'rounded-lg', 'opacity-50');
+                         item.innerHTML = `
+                            <p class="font-semibold truncate">${song.title}</p>
+                            <p class="text-sm text-gray-400">Not available</p>
+                        `;
+                        playlistEl.appendChild(item);
+                    }
+                });
+            }
+
+            // --- 5. EVENT LISTENERS ---
+            playPauseBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    pauseSong();
+                } else {
+                    playSong();
+                }
+            });
+            
+            prevBtn.addEventListener('click', prevSong);
+            nextBtn.addEventListener('click', nextSong);
+            
+            audioPlayer.addEventListener('timeupdate', updateProgress);
+            audioPlayer.addEventListener('ended', nextSong);
+            
+            // Allow seeking
+            progressBar.addEventListener('input', setProgress);
+
+            // --- 6. INITIALIZE PLAYER ---
+            createPlaylist();
+            // Load the first song that has a valid source
+            const firstValidSongIndex = songs.findIndex(song => song.src);
+            if (firstValidSongIndex !== -1) {
+                currentSongIndex = firstValidSongIndex;
+                loadSong(songs[currentSongIndex]);
+            }
+        });
+    </script>
+</body>
+</html>
