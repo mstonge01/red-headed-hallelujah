@@ -524,7 +524,7 @@
                 audioPlayer.pause();
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
-                
+
                 songArtEl.classList.remove('is-visible'); // Fade out song art
                 mainPlayerDiv.classList.remove('is-playing-glow'); // Remove glow
                 
@@ -631,7 +631,6 @@
             
             prevBtn.addEventListener('click', prevSong);
             nextBtn.addEventListener('click', nextSong);
-Red-Headed Hallelujah Music Player
             
             audioPlayer.addEventListener('timeupdate', updateProgress);
             audioPlayer.addEventListener('ended', nextSong);
@@ -662,6 +661,7 @@ Red-Headed Hallelujah Music Player
                         console.log('ServiceWorker registration successful with scope: ', registration.scope);
                     }, err => {
                         console.log('ServiceWorker registration failed: ', err);
+Example
                     });
                 });
             }
