@@ -176,16 +176,19 @@
             height: 100%;
             object-fit: cover;
             
-            /* Apply the spray-paint mask */
+            /* Apply the spray-paint mask (with prefixes) */
+            -webkit-mask-image: url(#spray-mask);
             mask-image: url(#spray-mask);
+            -webkit-mask-size: 300% 300%;
             mask-size: 300% 300%; /* Start the mask zoomed in (fully revealed) */
+            -webkit-mask-position: center;
             mask-position: center;
             
             /* By default, it's fully masked (invisible) */
             opacity: 0;
             
             /* We will transition the mask-size and opacity */
-            transition: mask-size 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            transition: mask-size 0.5s ease-in-out, opacity 0.5s ease-in-out, -webkit-mask-size 0.5s ease-in-out;
         }
 
         /* When .is-playing is added to the container... */
@@ -193,6 +196,7 @@
             /* Become visible */
             opacity: 1;
             /* Animate the mask to its "on" state (fully revealed) */
+            -webkit-mask-size: 100% 100%;
             mask-size: 100% 100%;
         }
 
@@ -536,7 +540,7 @@
                 // --- New Art Logic ---
                 // Trigger the "spray off" effect
                 flipperImageContainer.classList.remove('is-playing');
-            }
+Z            }
 
             function prevSong() {
                 currentSongIndex--;
@@ -655,5 +659,4 @@
     </script>
 </body>
 </html>
-
 
