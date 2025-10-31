@@ -613,10 +613,31 @@
                 navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('ServiceWorker registration successful:', registration);
+                        
+                        // --- NEW UPDATE LOGIC ---
+                        // Listen for a new service worker
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            console.log('New service worker found, installing...');
+
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New SW is installed & waiting.
+                                    // This means new content is downloaded.
+                                    // Force a reload to use the new content.
+                                    console.log('New content installed, reloading app...');
+                                    window.location.reload();
+                                }
+                            });
+                        });
+                        // --- END NEW UPDATE LOGIC ---
+                        
+                        // If no update is found, this just proceeds as normal
                         showBeginButton();
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
+                        // Even if SW fails, show the button
                         showBeginButton();
                     });
             } else {
@@ -628,4 +649,5 @@
     </script>
 </body>
 </html>
+
 
