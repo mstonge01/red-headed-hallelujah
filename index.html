@@ -1,40 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Red-Headed Hallelujah</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter (sans-serif) and Staatliches (blocky, for title) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap" rel="stylesheet">
+    <!-- ... head content, styles, etc. ... -->
     <style>
-        /* Custom styles to match the album art aesthetic */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
+        /* ... all existing styles ... */
 
-        /* Using 'Staatliches' for the main album title to mimic the cover font */
-        .font-album-title {
+        /* New style for the "Enter" button */
+        #enter-btn {
+            position: absolute;
+            z-index: 60;
+            background: rgba(239, 68, 68, 0.8); /* red-500 with 80% opacity */
+            color: white;
+            padding: 1rem 2rem;
             font-family: 'Staatliches', cursive;
+            font-size: 1.5rem;
+            letter-spacing: 0.1em;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
+        #enter-btn:hover {
+            background: rgba(220, 38, 38, 1); /* red-600 */
+            border-color: white;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4">
 
-        /* Custom scrollbar for the playlist */
-        #playlist::-webkit-scrollbar,
-        #flipper-back::-webkit-scrollbar {
-            width: 8px;
-        }
-        #playlist::-webkit-scrollbar-track,
-        #flipper-back::-webkit-scrollbar-track {
-            background: #374151; /* gray-700 */
-            border-radius: 10px;
-        }
-        #playlist::-webkit-scrollbar-thumb,
-        #flipper-back::-webkit-scrollbar-thumb {
-            background: #EF4444; /* red-500 */
-            border-radius: 10px;
+    <!-- Video Splash Screen -->
+    <div id="splash-screen" class="fixed top-0 left-0 w-full h-full bg-gray-900 z-50 flex items-center justify-center opacity-100 transition-opacity duration-1000">
+        <!-- The "Click to Begin" Button -->
+        <button id="enter-btn">Click to Begin</button>
+        
+        <!-- Video: Removed 'autoplay' and 'muted' -->
+        <video id="splash-video" class="max-w-full max-h-full object-contain" playsinline>
+            <source src="paint-video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <!-- Main Player Container (starts invisible) -->
+    <div id="player-container" class="w-full max-w-4xl opacity-0 transition-opacity duration-1000">
+        <!-- ... all player HTML ... -->
+    </div>
+
+    <!-- ... audio player element ... -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... all existing song data and variables ...
+            
+            // --- 2. DOM ELEMENT REFERENCES ---
+            // Splash screen elements
+            const splashScreen = document.getElementById('splash-screen');
+            const splashVideo = document.getElementById('splash-video');
+            const enterBtn = document.getElementById('enter-btn'); // New button reference
+            const playerContainer = document.getElementById('player-container');
+            
+            // ... all other player element references ...
+
+            // ... all player state and functions ...
+
+            // --- 5. EVENT LISTENERS ---
+            
+            // New Splash Screen Logic
+            enterBtn.addEventListener('click', () => {
+                // Hide the button
+                enterBtn.style.display = 'none';
+                // Play the video (now with sound!)
+                splashVideo.play();
+            });
+
+            // This 'ended' event will now fire correctly
+            splashVideo.addEventListener('ended', () => {
+                // Video has finished, wait 4 seconds
+                setTimeout(() => {
+                    // Start the fade out
+                    splashScreen.style.opacity = '0';
+                    playerContainer.style.opacity = '1';
+                    
+                    // After the fade, remove the splash screen
+                    setTimeout(() => {
+                        splashScreen.style.display = 'none';
+                    }, 1000); // Must match the transition duration
+                    
+                }, 4000); // 4-second pause
+            });
+            
+            // ... all other player event listeners (play, pause, next, etc.) ...
+
+            // --- 6. INITIALIZE PLAYER ---
+            createPlaylist();
+            loadSong(songs[currentSongIndex]);
+            // Show "for Rebecca" notes on initial load
+            updateLinerNotes(null);
+        });
+    </script>
+</body>
+</html>            border-radius: 10px;
         }
         #playlist::-webkit-scrollbar-thumb:hover,
         #flipper-back::-webkit-scrollbar-thumb:hover {
@@ -749,6 +813,7 @@ playSong();
     </script>
 </body>
 </html>
+
 
 
 
