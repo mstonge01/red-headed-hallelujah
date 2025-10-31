@@ -482,7 +482,7 @@
                 songArtEl.src = song.art; // Load the new song art
                 flipper.classList.remove('is-flipped');
                 updateActivePlaylistItem();
-                updateMediaSession(song); // Update Bluetooth/lock screen info
+                // We no longer call updateMediaSession here to prevent mobile crashes
             }
 
             function playSong() {
@@ -629,7 +629,7 @@
             createPlaylist();
             loadSong(songs[currentSongIndex]);
             updateLinerNotes(null);
-            updateMediaSession(null); // Set initial paused state
+            // We no longer call updateMediaSession(null) here to prevent the crash on mobile.
         });
     </script>
 </body>
