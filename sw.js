@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhh-cache-v7'; // Version 7
+const CACHE_NAME = 'rhh-cache-v8'; // <-- IMPORTANT: This is v8
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
@@ -6,7 +6,7 @@ const APP_SHELL_FILES = [
     './', // This caches the index.html
     'index.html',
     'manifest.json',
-    'https://cdn.tailwindcss.com/', // Note: Caching root CDN may be broad, but OK for this.
+    'https://cdn.tailwindcss.com/',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
     'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
     'https://fonts.gstatic.com/s/staatliches/v12/HI_OiY8KO6hCsQSoAPmtMYebvpU.woff2', // Common font file
@@ -38,7 +38,7 @@ const CONTENT_FILES = [
     '05-zero-degree-beach-art.png',
     '06-caps-art.png',
     '07-interrupted-art.png',
-    '08-cinnamon-serenade-art.png', // Corrected filename
+    '08-cinnamon-serenade-art.png',
     '09-golden-devotion-art.png',
     '10-natural-magic-art.png',
     '11-red-headed-hallelujah-guitar-art.png',
@@ -62,7 +62,7 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
             console.log('[SW] Caching App Shell...');
-            // This is the download that happens while "Checking for Updates..." is shown
+            // This is the download that happens when the service worker is first installed
             return Promise.all(
                 APP_SHELL_FILES.map(url => cache.add(cacheRequest(url)))
             ).catch(err => {
@@ -70,7 +70,6 @@ self.addEventListener('install', event => {
             });
         }).then(() => {
             // Force this new service worker to activate immediately
-            // This will trigger the 'activate' event
             console.log('[SW] Install complete, skipping waiting.');
             return self.skipWaiting();
         })
