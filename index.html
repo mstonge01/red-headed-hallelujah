@@ -100,7 +100,7 @@
             white-space: pre-wrap;
         }
 
-        /* --- NEW: Splash Screen Button/Status Styles --- */
+        /* --- Splash Screen Button/Status Styles --- */
         .splash-button {
             position: absolute;
             z-index: 60;
@@ -175,13 +175,13 @@
     <!-- Video Splash Screen -->
     <div id="splash-screen" class="fixed top-0 left-0 w-full h-full bg-gray-900 z-50 flex items-center justify-center opacity-100 transition-opacity duration-1000">
         
-        <!-- NEW: Update Status (This is your "progress bar") -->
+        <!-- Update Status (This is your "progress bar") -->
         <div id="update-status" class="splash-button" style="display: none;">Checking for Updates...</div>
 
-        <!-- NEW: "Click to Begin" Button (starts hidden) -->
+        <!-- "Click to Begin" Button (starts hidden) -->
         <button id="enter-btn" class="splash-button" style="display: none;">Click to Begin</button>
         
-        <!-- UPDATED: REMOVED 'autoplay' -->
+        <!-- REMOVED 'autoplay' -->
         <video id="splash-video" class="max-w-full max-h-full object-contain" playsinline preload="auto">
             <source src="paint-video.mp4" type="video/mp4">
             Your browser does not support the video tag.
@@ -252,79 +252,80 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- 1. SONG DATABASE ---
+            // UPDATED: Pasted in all 12 correct liner notes
             const songs = [
-                // ... (All 12 songs are here, truncated for brevity)
                 { 
                     title: "The Crimson Tide", 
                     src: "01-the-crimson-tide.mp3",
                     image_src: "01-the-crimson-tide-art.png",
-                    note: `The Crimson Tide is a driving, high-energy rock anthem...`
+                    note: `The Crimson Tide is a driving, high-energy rock anthem that dives headfirst into themes of danger and irresistible allure. This track establishes the album's mood, telling the tale of a powerful, siren-like figure—a redhead mermaid—who represents a captivating force no sailor can resist. The "Crimson Tide" itself symbolizes that moment when you are willingly lost to a consuming passion or adventure, abandoning all maps and compasses for the thrill of being pulled under. It's a powerful, thunderous opener about giving yourself over to the pull of the deep unknown.`
                 },
                 { 
                     title: "Real Women", 
                     src: "02-real-women.mp3",
                     image_src: "02-real-women-art.png",
-                    note: `This is a fist-pumping, no-nonsense track...`
+                    note: `This is a fist-pumping, no-nonsense track built around a heavy riff and a fierce, anti-establishment attitude. Real Women is an anthem for authenticity, a celebration of those who refuse to conform to societal expectations or manufactured trends. The song champions the powerful, genuine spirit of a woman who makes her own rules, embraces her rugged freedom, and drives her own path, prioritizing grit and independence over superficial glamour.`
                 },
                 { 
                     title: "Red-Headed Hallelujah", 
                     src: "03-red-headed-hallelujah.mp3",
                     image_src: "03-red-headed-hallelujah-art.png",
-                    note: `Red-Headed Hallelujah serves as the album’s emotional centerpiece...`
+                    note: `Red-Headed Hallelujah serves as the album’s emotional centerpiece, capturing the moment of finding grace and peace amid daily chaos. The lyrics paint a picture of mundane stress and anxiety, only for a brilliant light—the Red Headed Hallelujah—to cut through the darkness. It’s a powerful, soaring track about having that one person or singular moment of clarity that acts as a spiritual lifeline, instantly dissolving stress and restoring faith in the good things.`
                 },
                 { 
                     title: "The Good Stuff", 
                     src: "04-the_good_stuff.mp3",
                     image_src: "04-the_good_stuff-art.png",
-                    note: `This is a mid-tempo, reflective song...`
+                    note: `This is a mid-tempo, reflective song about the serendipitous nature of life and the lasting value of genuine connection. The Good Stuff tells the story of an unexpected journey—a disastrous start that leads to a profound discovery—that becomes the ultimate reward. It’s a track about recognizing destiny in its simplest form, realizing that all the minor chaos was worth it because it led directly to finding the solid, reliable, sacred trust that forms the foundation of a lasting life.`
                 },
                 { 
                     title: "Zero Degree Beach", 
                     src: "05-zero-degree-beach.mp3",
                     image_src: "05-zero-degree-beach-art.png",
-                    note: `Zero-Degree Beach is a moody, atmospheric track...`
+                    note: `Zero-Degree Beach is a moody, atmospheric track exploring the idea of mental escapism and resilience. Set against the bleak backdrop of a seemingly endless winter, the song is a tribute to the power of a mindset that can conjure summer out of nowhere. It champions the unshakeable spirit of someone who chooses their own climate, finding personal peace, joy, and freedom in a place others see as inhospitable, effectively creating their own private oasis, even in the middle of a blizzard.`
                 },
                 { 
                     title: "Caps", 
                     src: "06-caps.mp3",
                     image_src: "06-caps-art.png",
-                    note: `This is the album’s most direct and playfully sensual love song...`
+    
+                    note: `This is the album’s most direct and playfully sensual love song. Built on a catchy groove, Caps uses a surprisingly detailed and affectionate focus—specifically on the knees and legs—to convey deep, sincere infatuation. It’s a lighthearted but utterly celebratory tribute to physical beauty, declaring that in a world full of wonders, the most compelling destination remains the masterpiece of human form that inspires obsession and joy.`
                 },
                 { 
                     title: "Interrupted", 
                     src: "07-interrupted.mp3",
                     image_src: "07-interrupted-art.png",
-                    note: `Interrupted captures the chaotic but relatable comedy...`
+                    note: `Interrupted captures the chaotic but relatable comedy of trying to steal a moment of quiet romance in a household with children. The song builds tension as a couple attempts to create a peaceful evening, only to be hilariously derailed by escalating household distractions, from barking dogs to midnight requests from a "little voice." It is a rocking, tongue-in-cheek ode to the realities of modern family life, concluding with the resilient declaration that even when romantic plans fail, the love remains strong enough to survive the interruptions.`
                 },
                 { 
                     title: "Cinnamon Serenade", 
                     src: "08-cinnamon-serenade.mp3",
                     image_src: "08-cinnamon-serenade-art.png",
-                    note: `This track is a rugged, deeply romantic look...`
+                    note: `This track is a rugged, deeply romantic look at the less-than-glamorous moments of a relationship that truly define commitment. Cinnamon Serenade contrasts the sugary sweetness of a cinnamon-flavored whisky with the messy reality of being there for someone at their absolute worst—in this case, holding back hair at 3 AM. It’s a rock ballad celebrating unconditional love, where the act of humble service (clutching a plastic bowl) is shown to be far more meaningful than any perfect date, proving that true devotion shines brightest in the face of imperfection.`
                 },
                 { 
                     title: "Golden Devotion", 
                     src: "09-golden-devotion.mp3",
                     image_src: "09-golden-devotion-art.png",
-                    note: `Golden Devotion is a sun-drenched, devotional track...`
+                    note: `Golden Devotion is a sun-drenched, devotional track that feels like a warm escape. It celebrates an individual who possesses a rare, life-affirming energy, described as someone who "worships the sun" and radiates light. The song contrasts the fleeting cold with the subject's unbreakable warmth and spirit, portraying them as a powerful, glowing crown—a central force whose presence is a constant source of heat, love, and bold, quiet strength that inspires those around them.`
                 },
                 { 
                     title: "Natural Magic", 
                     src: "10-natural-magic.mp3",
                     image_src: "10-natural-magic-art.png",
-                    note: `The album closes with Natural Magic, a tender, observational song...`
+                    note: `The album closes with Natural Magic, a tender, observational song that marvels at the quiet, everyday competence of a person who keeps the world running. It paints a picture of domestic chaos—scattered belongings, noise, and disorder—that is effortlessly managed by a central figure who handles everything with natural grace and care. The track is a heartfelt tribute to the instinctual, healing power of a partner, whose presence is a gentle, calming force that brings peace and order to a hectic life.`
                 },
                 { 
                     title: "Red-Headed Hallelujah (Guitar)", 
                     src: "11-red-headed-hallelujah-guitar.mp3",
                     image_src: "11-red-headed-hallelujah-guitar-art.png",
-                    note: `This cover is a soaring power ballad...`
+                    note: `This cover is a soaring power ballad about finding a literal and emotional lifeline when life becomes overwhelming. The song chronicles a rough journey of stress and anxiety, only for the world-weary narrator to find instant peace and salvation in a central figure—the Red-Headed Hallelujah. It’s a powerful declaration that love can be a force of redemption, a moment of grace that burns bright enough to banish the darkest nights and make you believe that everything is going to be alright.`
                 },
                 { 
                     title: "Red-Headed Hallelujah (Piano)", 
                     src: "12-red-headed-hallelujah-piano.mp3",
                     image_src: "12-red-headed-hallelujah-piano-art.png",
-                    note: `Serving as a beautiful, reflective denouement...`
+                    note: `Serving as a beautiful, reflective denouement, this piano arrangement strips the core melody of the Red-Headed Hallelujah down to its purest, most emotional form. It closes the album with a sense of peace and resolution. After the high-energy and emotional turbulence of the preceding tracks, this instrumental piece offers a final, quiet moment of realization that the "Hallelujah"—the source of grace and love—is a constant, gentle presence.`
                 },
             ];
             const artistName = "A mstonge01 Project";
@@ -336,12 +337,11 @@
             const splashScreen = document.getElementById('splash-screen');
             const splashVideo = document.getElementById('splash-video');
             const enterBtn = document.getElementById('enter-btn');
-            const updateStatusEl = document.getElementById('update-status'); // NEW
+            const updateStatusEl = document.getElementById('update-status');
             
             const playerContainer = document.getElementById('player-container');
             const audioPlayer = document.getElementById('audio-player');
             const introAudio = document.getElementById('intro-audio');
-            // ... (all other player element refs)
             const songTitleEl = document.getElementById('song-title');
             const songArtistEl = document.getElementById('song-artist');
             const playlistEl = document.getElementById('playlist');
@@ -368,7 +368,6 @@
 
             // --- 4. FUNCTIONS ---
 
-            // NEW: Function to show the "Click to Begin" button
             function showBeginButton() {
                 updateStatusEl.style.display = 'none';
                 enterBtn.textContent = 'Click to Begin';
@@ -380,7 +379,6 @@
                 if(hasUserInteracted) return;
                 hasUserInteracted = true;
                 
-                // Only send cache message if we're in PWA mode
                 if (window.matchMedia('(display-mode: standalone)').matches && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
                     console.log('Sending cache-content message to SW');
                     navigator.serviceWorker.controller.postMessage({ action: 'cache-content' });
@@ -389,7 +387,6 @@
                 introAudio.load();
                 enterBtn.style.display = 'none';
 
-                // Play the video. This is now safe.
                 splashVideo.play().then(() => {
                     // Video started!
                 }).catch(error => {
@@ -408,7 +405,6 @@
                 }, 1000); // 1-second pause
             }
             
-            // ... (All other player functions remain the same)
             function updatePositionState() {
                 if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
                     const { duration, currentTime } = audioPlayer;
@@ -608,32 +604,23 @@
             updateLinerNotes(null);
             
             // --- 7. PWA Service Worker Registration ---
-            // UPDATED: This is the new logic to differentiate PC vs. App
-            
-            // Check if it's running as an installed PWA (app mode)
             const isPwa = window.matchMedia('(display-mode: standalone)').matches;
 
             if (isPwa && 'serviceWorker' in navigator) {
                 // --- IT'S THE APP ---
-                // Show "Checking for Updates..."
                 updateStatusEl.style.display = 'block';
 
                 navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('ServiceWorker registration successful:', registration);
-                        // The SW is installed and running.
-                        // The update check is complete.
-                        // Show the "Click to Begin" button.
                         showBeginButton();
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
-                        // SW failed, but let the user in anyway.
                         showBeginButton();
                     });
             } else {
                 // --- IT'S THE PC (or a normal browser tab) ---
-                // Just show the "Click to Begin" button immediately.
                 console.log('Not in PWA mode, skipping update check.');
                 showBeginButton();
             }
@@ -641,5 +628,4 @@
     </script>
 </body>
 </html>
-
 
