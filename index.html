@@ -315,6 +315,287 @@
             const splashScreen = document.getElementById('splash-screen');
             const splashVideo = document.getElementById('splash-video');
             const enterBtn = document.getElementById('enter-btn'); // New button reference
+            const playerContainer = document.getElementById('player            border-radius: 10px;
+        }
+        #playlist::-webkit-scrollbar-thumb:hover,
+        #flipper-back::-webkit-scrollbar-thumb:hover {
+            background: #DC2626; /* red-600 */
+        }
+
+        /* Style for the currently active playlist item */
+        .playlist-item.active {
+            background-color: #EF4444; /* red-500 */
+            color: #FFFFFF; /* white */
+        }
+
+        /* Custom style for the progress bar slider thumb */
+        #progress-bar-container input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #EF4444; /* red-500 */
+            border-radius: 3px; /* Changed from 50% for a "block" feel */
+            cursor: pointer;
+            margin-top: -6px; /* Center the thumb on the track */
+        }
+        
+        #progress-bar-container input[type=range]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #EF4444; /* red-500 */
+            border-radius: 3px; /* Changed from 50% for a "block" feel */
+            cursor: pointer;
+        }
+
+        /* Custom style for the progress bar track */
+        #progress-bar-container input[type=range] {
+             -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px; /* Made track chunkier (was 4px) */
+            background: #4B5563; /* gray-600 */
+            /* removed border-radius */
+            outline: none;
+        }
+
+        /* Class for the player texture */
+        .player-texture {
+            background-color: #1F2937; /* This is Tailwind's bg-gray-800 */
+            background-image: url('https://www.transparenttextures.com/patterns/stucco.png');
+        }
+
+        /* --- Liner Notes Flip Animation --- */
+        
+        /* Container for the flipper, adds 3D perspective */
+        .flipper-container {
+            perspective: 1000px;
+            padding-top: 100%; /* Creates a 1:1 aspect ratio */
+        }
+
+        /* The flipper element */
+        #flipper {
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+        }
+        #flipper.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Front and back faces */
+        .flipper-front,
+        .flipper-back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        /* Back face (notes) styling */
+        .flipper-back {
+            transform: rotateY(180deg);
+            background-color: #4B5563; /* gray-600 */
+            background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png');
+        }
+
+        /* Allow note text to wrap nicely */
+        #note-body {
+            white-space: pre-wrap;
+        }
+
+        /* New style for the "Enter" button */
+        #enter-btn {
+            position: absolute;
+            z-index: 60;
+            background: rgba(239, 68, 68, 0.8); /* red-500 with 80% opacity */
+            color: white;
+            padding: 1rem 2rem;
+            font-family: 'Staatliches', cursive;
+            font-size: 1.5rem;
+            letter-spacing: 0.1em;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        #enter-btn:hover {
+            background: rgba(220, 38, 38, 1); /* red-600 */
+            border-color: white;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Video Splash Screen -->
+    <div id="splash-screen" class="fixed top-0 left-0 w-full h-full bg-gray-900 z-50 flex items-center justify-center opacity-100 transition-opacity duration-1000">
+        <!-- The "Click to Begin" Button -->
+        <button id="enter-btn">Click to Begin</button>
+        
+        <!-- Video: Removed 'autoplay' and 'muted' -->
+        <video id="splash-video" class="max-w-full max-h-full object-contain" playsinline>
+            <source src="paint-video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <!-- Main Player Container (starts invisible) -->
+    <div id="player-container" class="w-full max-w-4xl opacity-0 transition-opacity duration-1000">
+        
+        <!-- Player Container -->
+        <div class="player-texture shadow-2xl overflow-hidden flex flex-col md:flex-row">
+            
+            <!-- Left Side: Album Artwork & Liner Notes -->
+            <div class="w-full md:w-1/2 lg:w-5/12 flex-shrink-0 flex flex-col">
+                <!-- Flipper container (1:1 aspect ratio) -->
+                <div class="relative w-full flipper-container"> 
+                    <div id="flipper" class="absolute top-0 left-0 w-full h-full">
+                        <!-- FRONT (Album Art) -->
+                        <div class="flipper-front absolute w-full h-full">
+                            <img src="cover.jpg.png" alt="Album Art for Red-Headed Hallelujah" class="w-full h-full object-cover">
+                        </div>
+                        <!-- BACK (Liner Notes) -->
+                        <div id="flipper-back" class="flipper-back absolute w-full h-full p-6 overflow-y-auto">
+                            <h3 id="note-title" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
+                            <p id="note-body" class="text-gray-200"></p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Liner Notes Button -->
+                <button id="liner-notes-btn" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200">
+                    Liner Notes
+                </button>
+            </div>
+
+            <!-- Right Side: Info, Controls, Playlist -->
+            <div class="w-full md:w-1/2 lg:w-7/12 p-6 flex flex-col justify-between">
+                
+                <!-- Top-Right: Current Song Info -->
+                <div class="mb-4">
+                    <p class="text-lg uppercase tracking-widest text-red-500 font-album-title">Now Playing</p>
+                    <h2 id="song-title" class="text-3xl text-yellow-400 truncate font-album-title tracking-wider">Song Title</h2>
+                    <h3 id="song-artist" class="text-lg text-gray-300">A mstonge01 Project</h3>
+                </div>
+
+                <!-- Middle-Right: Controls & Progress Bar -->
+                <div class="mb-4">
+                    <!-- Progress Bar -->
+                    <div id="progress-bar-container" class="mb-3">
+                         <input type="range" id="progress-bar" class="w-full h-1 bg-gray-700 rounded-lg cursor-pointer" value="0" min="0" max="100">
+                    </div>
+                    <!-- Time Display -->
+                    <div class="flex justify-between text-sm text-gray-400">
+                        <span id="current-time">0:00</span>
+                        <span id="duration-time">0:00</span>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="flex justify-center items-center space-x-6 mt-4">
+                        <!-- Previous Button -->
+                        <button id="prev-btn" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.03V5.969a1 1 0 00-1.555-.832L4.12 9.168a1 1 0 000 1.664l4.325 4zM10.879 9.168a1 1 0 000 1.664l4.325 4A1 1 0 0017 14.03V5.969a1 1 0 00-1.555-.832l-4.325 4z"/></svg>
+                        </button>
+                        <!-- Play/Pause Button -->
+                        <button id="play-pause-btn" class="w-16 h-16 bg-red-500 text-white rounded-full flex items-center justify-center text-2xl hover:bg-red-600 transition-colors duration-200 shadow-lg">
+                            <!-- Play Icon -->
+                            <svg id="play-icon" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.002v3.996a1 1 0 001.555.832l3.197-1.998a1 1 0 000-1.664l-3.197-1.998z" clip-rule="evenodd"/></svg>
+                            <!-- Pause Icon (hidden by default) -->
+                            <svg id="pause-icon" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1H8zm5 0a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1h-1z" clip-rule="evenodd"/></svg>
+                        </button>
+                        <!-- Next Button -->
+                        <button id="next-btn" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 5.969v8.062a1 1 0 001.555.832l4.325-4a1 1 0 000-1.664l-4.325-4zM10.879 5.168A1 1 0 009.324 5.97v8.062a1 1 0 001.555.832l4.325-4a1 1 0 000-1.664l-4.325-4z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bottom-Right: Playlist -->
+                <div class="flex-grow min-h-0">
+                    <div id="playlist" class="h-48 md:h-full max-h-48 lg:max-h-56 overflow-y-auto pr-2">
+                        <!-- Playlist items will be injected here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The actual audio element, hidden from view -->
+    <audio id="audio-player"></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 1. SONG DATABASE ---
+            // All 12 songs with their liner notes
+            const songs = [
+                { 
+                    title: "The Crimson Tide", 
+                    src: "01-the-crimson-tide.mp3",
+                    note: `The Crimson Tide is a driving, high-energy rock anthem that dives headfirst into themes of danger and irresistible allure. This track establishes the album's mood, telling the tale of a powerful, siren-like figure—a redhead mermaid—who represents a captivating force no sailor can resist. The "Crimson Tide" itself symbolizes that moment when you are willingly lost to a consuming passion or adventure, abandoning all maps and compasses for the thrill of being pulled under. It's a powerful, thunderous opener about giving yourself over to the pull of the deep unknown.`
+                },
+                { 
+                    title: "Real Women", 
+                    src: "02-real-women.mp3",
+                    note: `This is a fist-pumping, no-nonsense track built around a heavy riff and a fierce, anti-establishment attitude. Real Women is an anthem for authenticity, a celebration of those who refuse to conform to societal expectations or manufactured trends. The song champions the powerful, genuine spirit of a woman who makes her own rules, embraces her rugged freedom, and drives her own path, prioritizing grit and independence over superficial glamour.`
+                },
+                { 
+                    title: "Red-Headed Hallelujah", 
+                    src: "03-red-headed-hallelujah.mp3",
+                    note: `Red-Headed Hallelujah serves as the album’s emotional centerpiece, capturing the moment of finding grace and peace amid daily chaos. The lyrics paint a picture of mundane stress and anxiety, only for a brilliant light—the Red Headed Hallelujah—to cut through the darkness. It’s a powerful, soaring track about having that one person or singular moment of clarity that acts as a spiritual lifeline, instantly dissolving stress and restoring faith in the good things.`
+                },
+                { 
+                    title: "The Good Stuff", 
+                    src: "04-the_good_stuff.mp3",
+                    note: `This is a mid-tempo, reflective song about the serendipitous nature of life and the lasting value of genuine connection. The Good Stuff tells the story of an unexpected journey—a disastrous start that leads to a profound discovery—that becomes the ultimate reward. It’s a track about recognizing destiny in its simplest form, realizing that all the minor chaos was worth it because it led directly to finding the solid, reliable, sacred trust that forms the foundation of a lasting life.`
+                },
+                { 
+                    title: "Zero Degree Beach", 
+                    src: "05-zero-degree-beach.mp3",
+                    note: `Zero-Degree Beach is a moody, atmospheric track exploring the idea of mental escapism and resilience. Set against the bleak backdrop of a seemingly endless winter, the song is a tribute to the power of a mindset that can conjure summer out of nowhere. It champions the unshakeable spirit of someone who chooses their own climate, finding personal peace, joy, and freedom in a place others see as inhospitable, effectively creating their own private oasis, even in the middle of a blizzard.`
+                },
+                { 
+                    title: "Caps", 
+                    src: "06-caps.mp3",
+                    note: `This is the album’s most direct and playfully sensual love song. Built on a catchy groove, Caps uses a surprisingly detailed and affectionate focus—specifically on the knees and legs—to convey deep, sincere infatuation. It’s a lighthearted but utterly celebratory tribute to physical beauty, declaring that in a world full of wonders, the most compelling destination remains the masterpiece of human form that inspires obsession and joy.`
+                },
+                { 
+                    title: "Interrupted", 
+                    src: "07-interrupted.mp3",
+                    note: `Interrupted captures the chaotic but relatable comedy of trying to steal a moment of quiet romance in a household with children. The song builds tension as a couple attempts to create a peaceful evening, only to be hilariously derailed by escalating household distractions, from barking dogs to midnight requests from a "little voice." It is a rocking, tongue-in-cheek ode to the realities of modern family life, concluding with the resilient declaration that even when romantic plans fail, the love remains strong enough to survive the interruptions.`
+                },
+                { 
+                    title: "Cinnamon Serenade", 
+                    src: "08-cinnamon-serenade.mp3",
+                    note: `This track is a rugged, deeply romantic look at the less-than-glamorous moments of a relationship that truly define commitment. Cinnamon Serenade contrasts the sugary sweetness of a cinnamon-flavored whisky with the messy reality of being there for someone at their absolute worst—in this case, holding back hair at 3 AM. It’s a rock ballad celebrating unconditional love, where the act of humble service (clutching a plastic bowl) is shown to be far more meaningful than any perfect date, proving that true devotion shines brightest in the face of imperfection.`
+                },
+                { 
+                    title: "Golden Devotion", 
+                    src: "09-golden-devotion.mp3",
+                    note: `Golden Devotion is a sun-drenched, devotional track that feels like a warm escape. It celebrates an individual who possesses a rare, life-affirming energy, described as someone who "worships the sun" and radiates light. The song contrasts the fleeting cold with the subject's unbreakable warmth and spirit, portraying them as a powerful, glowing crown—a central force whose presence is a constant source of heat, love, and bold, quiet strength that inspires those around them.`
+                },
+                { 
+                    title: "Natural Magic", 
+                    src: "10-natural-magic.mp3",
+                    note: `The album closes with Natural Magic, a tender, observational song that marvels at the quiet, everyday competence of a person who keeps the world running. It paints a picture of domestic chaos—scattered belongings, noise, and disorder—that is effortlessly managed by a central figure who handles everything with natural grace and care. The track is a heartfelt tribute to the instinctual, healing power of a partner, whose presence is a gentle, calming force that brings peace and order to a hectic life.`
+                },
+                { 
+                    title: "Red-Headed Hallelujah (Guitar)", 
+                    src: "11-red-headed-hallelujah-guitar.mp3",
+                    note: `This cover is a soaring power ballad about finding a literal and emotional lifeline when life becomes overwhelming. The song chronicles a rough journey of stress and anxiety, only for the world-weary narrator to find instant peace and salvation in a central figure—the Red-Headed Hallelujah. It’s a powerful declaration that love can be a force of redemption, a moment of grace that burns bright enough to banish the darkest nights and make you believe that everything is going to be alright.`
+                },
+                { 
+                    title: "Red-Headed Hallelujah (Piano)", 
+                    src: "12-red-headed-hallelujah-piano.mp3",
+                    note: `Serving as a beautiful, reflective denouement, this piano arrangement strips the core melody of the Red-Headed Hallelujah down to its purest, most emotional form. It closes the album with a sense of peace and resolution. After the high-energy and emotional turbulence of the preceding tracks, this instrumental piece offers a final, quiet moment of realization that the "Hallelujah"—the source of grace and love—is a constant, gentle presence.`
+                },
+            ];
+            const artistName = "A mstonge01 Project";
+            
+            // Constants for the "paused" album notes
+            const albumTitle = "for Rebecca";
+            const albumNote = ``;
+
+            // --- 2. DOM ELEMENT REFERENCES ---
+            // Splash screen elements
+            const splashScreen = document.getElementById('splash-screen');
+            const splashVideo = document.getElementById('splash-video');
+            const enterBtn = document.getElementById('enter-btn'); // New button reference
             const playerContainer = document.getElementById('player        <video id="splash-video" class="max-w-full max-h-full object-contain" playsinline>
             <source src="paint-video.mp4" type="video/mp4">
             Your browser does not support the video tag.
