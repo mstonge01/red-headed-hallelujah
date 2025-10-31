@@ -465,6 +465,20 @@
 
             // --- Player Functions ---
             
+            // --- NEW: Function to update the position state for BT devices ---
+            function updatePositionState() {
+                if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
+                    const { duration, currentTime } = audioPlayer;
+                    if (duration && isFinite(duration)) {
+                        navigator.mediaSession.setPositionState({
+                            duration: duration,
+                            playbackRate: audioPlayer.playbackRate,
+                            position: currentTime
+                        });
+                    }
+                }
+            }
+            
             function updateMediaSession(song) {
                 if ('mediaSession' in navigator) {
                     if (song) {
@@ -478,11 +492,13 @@
                         });
                         navigator.mediaSession.playbackState = "playing";
                     } else {
-                        // On pause, clear metadata or set to 'paused'
+                        // On pause, set to 'paused'
                         if (navigator.mediaSession.metadata) {
                              navigator.mediaSession.playbackState = "paused";
                         }
                     }
+                    // Update position state immediately when song changes or pauses
+                    updatePositionState();
                 }
             }
             
@@ -538,7 +554,7 @@
                 mainPlayerDiv.classList.remove('is-playing-glow'); // Remove glow
                 
                 updateLinerNotes(null);
-                updateMediaSession(null); // Update BT display
+                updateMediaSession(null); // Update BT display (will set state to paused)
             }
 
             function prevSong() {
@@ -562,6 +578,9 @@
                     progressBar.value = progressPercent;
                     durationTimeEl.textContent = formatTime(duration);
                     currentTimeEl.textContent = formatTime(currentTime);
+                    
+                    // --- NEW: Update BT progress bar ---
+                    updatePositionState();
                 }
             }
 
@@ -576,6 +595,9 @@
                 const duration = audioPlayer.duration;
                 if (duration) {
                      audioPlayer.currentTime = (progressBar.value / 100) * duration;
+                     
+                     // --- NEW: Update BT progress bar when scrubbing ---
+                     updatePositionState();
                 }
             }
             
@@ -655,6 +677,12 @@
                 navigator.mediaSession.setActionHandler('pause', pauseSong);
                 navigator.mediaSession.setActionHandler('previoustrack', prevSong);
                 navigator.mediaSession.setActionHandler('nexttrack', nextSong);
+                
+                // --- NEW: Handle scrubbing from BT device ---
+                navigator.mediaSession.setActionHandler('seekto', (details) => {
+                    audioPlayer.currentTime = details.seekTime;
+                    updatePositionState();
+                });
             }
 
             // --- 6. INITIALIZE PLAYER ---
