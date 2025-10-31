@@ -13,6 +13,8 @@
     
     <!-- PWA Manifest Link -->
     <link rel="manifest" href="manifest.json">
+    <!-- Theme color for PWA -->
+    <meta name="theme-color" content="#EF4444">
     
     <style>
         /* Custom styles to match the album art aesthetic */
@@ -369,7 +371,7 @@
                     title: "Red-Headed Hallelujah (Guitar)", 
                     src: "11-red-headed-hallelujah-guitar.mp3",
                     image_src: "11-red-headed-hallelujah-guitar-art.png",
-                    note: `This cover is a soaring power ballad about finding a literal and emotional lifeline when life becomes overwhelming. The song chronicles a rough journey of stress and anxiety, only for the world-weary narrator to find instant peace and salvation in a central figure—the Red-Headed Hallelujah. It’s a powerful declaration that love can be a force of redemption, a moment of grace that burns bright enough to banish the darkest nights and make you believe that everything is going to be alright.`
+                    note: `This cover is a soaring power ballad about finding a literal and emotional lifeline when life becomes overwhelming. The song chronicles a rough journey of stress and anxiety, only to for the world-weary narrator to find instant peace and salvation in a central figure—the Red-Headed Hallelujah. It’s a powerful declaration that love can be a force of redemption, a moment of grace that burns bright enough to banish the darkest nights and make you believe that everything is going to be alright.`
                 },
                 { 
                     title: "Red-Headed Hallelujah (Piano)", 
@@ -422,6 +424,13 @@
             function startVideoTransition() {
                 if(hasUserInteracted) return; // Only run once
                 hasUserInteracted = true;
+                
+                // --- NEW: Trigger background caching ---
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    console.log('Sending cache-content message to SW');
+                    navigator.serviceWorker.controller.postMessage({ action: 'cache-content' });
+                }
+                // --- End New ---
                 
                 // Hide the button
                 enterBtn.style.display = 'none';
@@ -606,7 +615,7 @@
             splashVideo.play().then(() => {
                 // Autoplay started! Hide the button.
                 enterBtn.style.display = 'none';
-                hasUserInteracted = true; // Mark as "interacted"
+                startVideoTransition(); // Call this to trigger caching
             }).catch(error => {
                 // Autoplay was blocked. The button is already visible,
                 // so the user will just click it.
@@ -661,7 +670,6 @@
                         console.log('ServiceWorker registration successful with scope: ', registration.scope);
                     }, err => {
                         console.log('ServiceWorker registration failed: ', err);
-Example
                     });
                 });
             }
