@@ -99,10 +99,12 @@
         #note-body {
             white-space: pre-wrap;
         }
-        #enter-btn {
+
+        /* --- NEW: Splash Screen Button/Status Styles --- */
+        .splash-button {
             position: absolute;
             z-index: 60;
-            background: rgba(239, 68, 68, 0.8);
+            background: rgba(239, 68, 68, 0.8); /* red-500 */
             color: white;
             padding: 1rem 2rem;
             font-family: 'Staatliches', cursive;
@@ -111,20 +113,27 @@
             border: 2px solid rgba(255, 255, 255, 0.5);
             cursor: pointer;
             transition: all 0.3s ease;
-            visibility: visible;
         }
-        #enter-btn:hover {
-            background: rgba(220, 38, 38, 1);
+        .splash-button:hover {
+            background: rgba(220, 38, 38, 1); /* red-600 */
             border-color: white;
             transform: scale(1.05);
         }
-        /* NEW: Style for the button when disabled */
-        #enter-btn:disabled {
+        
+        /* This is the "Checking for Updates..." text */
+        #update-status {
+            position: absolute;
+            z-index: 60;
+            color: white;
+            padding: 1rem 2rem;
+            font-family: 'Staatliches', cursive;
+            font-size: 1.5rem;
+            letter-spacing: 0.1em;
+            /* Style to look like disabled button */
             background: rgba(107, 114, 128, 0.5); /* gray-500 */
-            cursor: wait;
-            transform: none;
-            border-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
+
 
         @keyframes pulseGlow {
             0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0); }
@@ -166,11 +175,14 @@
     <!-- Video Splash Screen -->
     <div id="splash-screen" class="fixed top-0 left-0 w-full h-full bg-gray-900 z-50 flex items-center justify-center opacity-100 transition-opacity duration-1000">
         
-        <!-- The "Click to Begin" Button -->
-        <!-- UPDATED: Starts as "Checking for Updates..." and disabled -->
-        <button id="enter-btn" disabled>Checking for Updates...</button>
+        <!-- NEW: Update Status (This is your "progress bar") -->
+        <div id="update-status" class="splash-button" style="display: none;">Checking for Updates...</div>
+
+        <!-- NEW: "Click to Begin" Button (starts hidden) -->
+        <button id="enter-btn" class="splash-button" style="display: none;">Click to Begin</button>
         
-        <video id="splash-video" class="max-w-full max-h-full object-contain" autoplay playsinline>
+        <!-- UPDATED: REMOVED 'autoplay' -->
+        <video id="splash-video" class="max-w-full max-h-full object-contain" playsinline preload="auto">
             <source src="paint-video.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
@@ -241,11 +253,12 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- 1. SONG DATABASE ---
             const songs = [
+                // ... (All 12 songs are here, truncated for brevity)
                 { 
                     title: "The Crimson Tide", 
                     src: "01-the-crimson-tide.mp3",
                     image_src: "01-the-crimson-tide-art.png",
-                    note: `The Crimson Tide is a driving, high-energy rock anthem...` // Truncated for brevity
+                    note: `The Crimson Tide is a driving, high-energy rock anthem...`
                 },
                 { 
                     title: "Real Women", 
@@ -275,7 +288,6 @@
                     title: "Caps", 
                     src: "06-caps.mp3",
                     image_src: "06-caps-art.png",
-    
                     note: `This is the album’s most direct and playfully sensual love song...`
                 },
                 { 
@@ -324,9 +336,12 @@
             const splashScreen = document.getElementById('splash-screen');
             const splashVideo = document.getElementById('splash-video');
             const enterBtn = document.getElementById('enter-btn');
+            const updateStatusEl = document.getElementById('update-status'); // NEW
+            
             const playerContainer = document.getElementById('player-container');
             const audioPlayer = document.getElementById('audio-player');
             const introAudio = document.getElementById('intro-audio');
+            // ... (all other player element refs)
             const songTitleEl = document.getElementById('song-title');
             const songArtistEl = document.getElementById('song-artist');
             const playlistEl = document.getElementById('playlist');
@@ -345,6 +360,7 @@
             const songArtEl = document.getElementById('song-art');
             const mainPlayerDiv = document.querySelector('.player-texture');
 
+
             // --- 3. PLAYER STATE ---
             let currentSongIndex = 0;
             let isPlaying = false;
@@ -352,11 +368,20 @@
 
             // --- 4. FUNCTIONS ---
 
+            // NEW: Function to show the "Click to Begin" button
+            function showBeginButton() {
+                updateStatusEl.style.display = 'none';
+                enterBtn.textContent = 'Click to Begin';
+                enterBtn.style.display = 'block';
+                enterBtn.disabled = false;
+            }
+
             function startVideoTransition() {
                 if(hasUserInteracted) return;
                 hasUserInteracted = true;
                 
-                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                // Only send cache message if we're in PWA mode
+                if (window.matchMedia('(display-mode: standalone)').matches && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
                     console.log('Sending cache-content message to SW');
                     navigator.serviceWorker.controller.postMessage({ action: 'cache-content' });
                 }
@@ -364,11 +389,12 @@
                 introAudio.load();
                 enterBtn.style.display = 'none';
 
+                // Play the video. This is now safe.
                 splashVideo.play().then(() => {
-                    // Autoplay started!
+                    // Video started!
                 }).catch(error => {
                     console.warn("Video play failed even after click:", error);
-                    transitionToPlayer();
+                    transitionToPlayer(); // Failsafe
                 });
             }
 
@@ -382,6 +408,7 @@
                 }, 1000); // 1-second pause
             }
             
+            // ... (All other player functions remain the same)
             function updatePositionState() {
                 if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
                     const { duration, currentTime } = audioPlayer;
@@ -494,7 +521,6 @@
                 return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             }
 
-A mstonge01 Project
             function setProgress() {
                 const duration = audioPlayer.duration;
                 if (duration) {
@@ -535,15 +561,6 @@ A mstonge01 Project
             // --- 5. EVENT LISTENERS ---
             
             // --- Splash Screen Logic ---
-            // (Video 'autoplay' is already in the HTML)
-            splashVideo.play().then(() => {
-                enterBtn.style.display = 'none';
-                startVideoTransition();
-            }).catch(error => {
-                console.warn("Autoplay with sound failed as expected:", error);
-                // Button is visible, waiting for click
-            });
-
             enterBtn.addEventListener('click', startVideoTransition);
 
             splashVideo.addEventListener('ended', () => {
@@ -591,32 +608,38 @@ A mstonge01 Project
             updateLinerNotes(null);
             
             // --- 7. PWA Service Worker Registration ---
-            // UPDATED: This is the new update-check logic
-            if ('serviceWorker' in navigator) {
-                // Register the SW
+            // UPDATED: This is the new logic to differentiate PC vs. App
+            
+            // Check if it's running as an installed PWA (app mode)
+            const isPwa = window.matchMedia('(display-mode: standalone)').matches;
+
+            if (isPwa && 'serviceWorker' in navigator) {
+                // --- IT'S THE APP ---
+                // Show "Checking for Updates..."
+                updateStatusEl.style.display = 'block';
+
                 navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('ServiceWorker registration successful:', registration);
-                        // Registration is successful. This means the SW is installed
-                        // (or has been updated in the background).
-                        // It's now safe to let the user proceed.
-                        enterBtn.textContent = 'Click to Begin';
-                        enterBtn.disabled = false;
+                        // The SW is installed and running.
+                        // The update check is complete.
+                        // Show the "Click to Begin" button.
+                        showBeginButton();
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
-                        // Even if SW fails, let the user in.
-                        // It will just be an online-only experience.
-                        enterBtn.textContent = 'Click to Begin';
-                        enterBtn.disabled = false;
+                        // SW failed, but let the user in anyway.
+                        showBeginButton();
                     });
             } else {
-                // If SW is not supported, just enable the button
-                enterBtn.textContent = 'Click to Begin';
-                enterBtn.disabled = false;
+                // --- IT'S THE PC (or a normal browser tab) ---
+                // Just show the "Click to Begin" button immediately.
+                console.log('Not in PWA mode, skipping update check.');
+                showBeginButton();
             }
         });
     </script>
 </body>
 </html>
+
 
