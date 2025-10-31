@@ -11,73 +11,101 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap" rel="stylesheet">
     
-    <!-- PWA Manifest Link -->
+    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-    <!-- Theme color for PWA -->
     <meta name="theme-color" content="#EF4444">
     
     <style>
-        /* ... (All your existing styles remain the same) ... */
+        /* Custom styles to match the album art aesthetic */
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        /* Using 'Staatliches' for the main album title to mimic the cover font */
         .font-album-title {
             font-family: 'Staatliches', cursive;
         }
+
+        /* Custom scrollbar for the playlist */
         #playlist::-webkit-scrollbar,
         #flipper-back::-webkit-scrollbar {
             width: 8px;
         }
         #playlist::-webkit-scrollbar-track,
         #flipper-back::-webkit-scrollbar-track {
-            background: #374151;
+            background: #374151; /* gray-700 */
             border-radius: 10px;
         }
         #playlist::-webkit-scrollbar-thumb,
         #flipper-back::-webkit-scrollbar-thumb {
-            background: #EF4444;
+            background: #EF4444; /* red-500 */
             border-radius: 10px;
         }
         #playlist::-webkit-scrollbar-thumb:hover,
         #flipper-back::-webkit-scrollbar-thumb:hover {
-            background: #DC2626;
+            background: #DC2626; /* red-600 */
         }
+
+        /* Style for the currently active playlist item */
         .playlist-item.active {
-            background-color: #EF4444;
-            color: #FFFFFF;
+            background-color: #EF4444; /* red-500 */
+            color: #FFFFFF; /* white */
         }
+
+        /* Custom style for the progress bar slider thumb */
         #progress-bar-container input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 18px;
             height: 18px;
-            background: #EF4444;
+            background: #EF4444; /* red-500 */
             border-radius: 3px;
             cursor: pointer;
-            margin-top: -6px;
+            margin-top: -6px; /* Center the thumb on the track */
         }
+        
         #progress-bar-container input[type=range]::-moz-range-thumb {
             width: 18px;
             height: 18px;
-            background: #EF4444;
+            background: #EF4444; /* red-500 */
             border-radius: 3px;
             cursor: pointer;
         }
+
+        /* Custom style for the progress bar track */
         #progress-bar-container input[type=range] {
-            -webkit-appearance: none;
+             -webkit-appearance: none;
             appearance: none;
             width: 100%;
             height: 6px;
-            background: #4B5563;
+            background: #4B5563; /* gray-600 */
             outline: none;
         }
+
+        /* Class for the player texture */
         .player-texture {
-            background-color: #1F2937;
+            background-color: #1F2937; /* This is Tailwind's bg-gray-800 */
             background-image: url('https://www.transparenttextures.com/patterns/stucco.png');
         }
+        
+        /* 'Live Glow' Pulse Animation */
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(239, 68, 68, 0.4), 0 0 12px rgba(239, 68, 68, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 16px rgba(239, 68, 68, 0.7), 0 0 20px rgba(239, 68, 68, 0.5);
+            }
+        }
+        
+        .is-playing-glow {
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+
+        /* --- Liner Notes Flip Animation --- */
         .flipper-container {
             perspective: 1000px;
-            padding-top: 100%;
+            padding-top: 100%; /* Creates a 1:1 aspect ratio */
         }
         #flipper {
             transform-style: preserve-3d;
@@ -93,93 +121,183 @@
         }
         .flipper-back {
             transform: rotateY(180deg);
-            background-color: #4B5563;
+            background-color: #4B5563; /* gray-600 */
             background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png');
         }
         #note-body {
             white-space: pre-wrap;
         }
-
-        /* --- Splash Screen Button/Status Styles --- */
-        .splash-button {
-            position: absolute;
-            z-index: 60;
-            background: rgba(239, 68, 68, 0.8); /* red-500 */
-            color: white;
-            padding: 1rem 2rem;
-            font-family: 'Staatliches', cursive;
-            font-size: 1.5rem;
-            letter-spacing: 0.1em;
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .splash-button:hover {
-            background: rgba(220, 38, 38, 1); /* red-600 */
-            border-color: white;
-            transform: scale(1.05);
-        }
         
-        /* This is the "Checking for Updates..." text */
-        #update-status {
-            position: absolute;
-            z-index: 60;
-            color: white;
-            padding: 1rem 2rem;
-            font-family: 'Staatliches', cursive;
-            font-size: 1.5rem;
-            letter-spacing: 0.1em;
-            /* Style to look like disabled button */
-            background: rgba(107, 114, 128, 0.5); /* gray-500 */
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-
-
-        @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0); }
-            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2); }
-        }
-        .is-playing-glow {
-            animation: pulseGlow 2.5s infinite ease-in-out;
-        }
-        .album-art-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        #base-art {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-cover;
-        }
+        /* --- Song Art Crossfade --- */
         #song-art {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-cover;
-            opacity: 0;
             transition: opacity 0.5s ease-in-out;
+            opacity: 0;
         }
         #song-art.is-visible {
             opacity: 1;
         }
+
+        /* --- Splash Screen Styles --- */
+        #enter-btn {
+            background: rgba(239, 68, 68, 0.8); /* red-500 with 80% opacity */
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+        #enter-btn:hover {
+            background: rgba(220, 38, 38, 1); /* red-600 */
+            border-color: white;
+            transform: scale(1.05);
+        }
+        #enter-btn:disabled, #update-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #update-status {
+            background: rgba(17, 24, 39, 0.8); /* gray-900 with 80% opacity */
+        }
+
+        /* --- Skip Intro Button Style --- */
+        #skip-intro-btn {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        #skip-intro-btn:hover {
+            background: rgba(0, 0, 0, 0.75);
+            border-color: rgba(255, 255, 255, 0.7);
+        }
+
     </style>
 </head>
 <body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4">
 
-    <!-- ... (All existing HTML is the same) ... -->
+    <!-- Video Splash Screen -->
+    <div id="splash-screen" class="fixed top-0 left-0 w-full h-full bg-gray-900 z-50 flex items-center justify-center opacity-100 transition-opacity duration-1000">
+        
+        <!-- Video: NO Autoplay -->
+        <video id="splash-video" class="max-w-full max-h-full object-contain" preload="auto" playsinline>
+            <source src="paint-video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        
+        <!-- Status / Button Container -->
+        <div class="absolute inset-0 flex items-center justify-center">
+             <!-- "Checking for Updates..." - Only shown on PWA app load -->
+            <div id="update-status" class="hidden p-4 rounded-lg text-white font-album-title text-xl tracking-wider">
+                Checking for Updates...
+            </div>
+
+            <!-- "Click to Begin" Button - Hidden until check is done -->
+            <button id="enter-btn" class="hidden z-60 text-white p-4 px-8 font-album-title text-xl tracking-wider rounded-lg" disabled>
+                Click to Begin
+            </button>
+        </div>
+
+        <!-- Skip Intro Button -->
+        <button id="skip-intro-btn" class="hidden absolute bottom-5 left-1/2 -translate-x-1/2 z-60 text-white px-4 py-2 rounded-lg text-sm hover:bg-black/75 transition">
+            Skip Intro
+        </button>
+    </div>
+
+    <!-- Main Player Container (starts invisible) -->
+    <div id="player-container" class="w-full max-w-4xl opacity-0 transition-opacity duration-1000">
+        
+        <!-- Player Container -->
+        <div class="player-texture shadow-2xl overflow-hidden flex flex-col md:flex-row">
+            
+            <!-- Left Side: Album Artwork & Liner Notes -->
+            <div class="w-full md:w-1/2 flex-shrink-0 flex flex-col">
+                <!-- Flipper container (1:1 aspect ratio) -->
+                <div class="relative w-full flipper-container"> 
+                    <div id="flipper" class="absolute top-0 left-0 w-full h-full">
+                        <!-- FRONT (Album Art) -->
+                        <div class="flipper-front absolute w-full h-full">
+                            <!-- Main Album Art -->
+                            <img src="cover.jpg.jpg" alt="Album Art for Red-Headed Hallelujah" class="w-full h-full object-cover">
+                            <!-- Song-Specific Art (fades in) -->
+                            <img id="song-art" src="" alt="Song-specific art" class="absolute top-0 left-0 w-full h-full object-cover">
+                        </div>
+                        <!-- BACK (Liner Notes) -->
+                        <div id="flipper-back" class="flipper-back absolute w-full h-full p-6 overflow-y-auto">
+                            <h3 id="note-title" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
+                            <p id="note-body" class="text-gray-200"></p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Liner Notes Button -->
+                <button id="liner-notes-btn" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200">
+                    Liner Notes
+                </button>
+            </div>
+
+            <!-- Right Side: Info, Controls, Playlist -->
+            <div class="w-full md:w-1/2 p-6 flex flex-col justify-between">
+                
+                <!-- Top-Right: Current Song Info -->
+                <div class="mb-4">
+                    <p class="text-lg uppercase tracking-widest text-red-500 font-album-title">Now Playing</p>
+                    <h2 id="song-title" class="text-3xl text-yellow-400 truncate font-album-title tracking-wider">Song Title</h2>
+                    <h3 id="song-artist" class="text-lg text-gray-300">A mstonge01 Project</h3>
+                </div>
+
+                <!-- Middle-Right: Controls & Progress Bar -->
+                <div class="mb-4">
+                    <!-- Progress Bar -->
+                    <div id="progress-bar-container" class="mb-3">
+                         <input type="range" id="progress-bar" class="w-full h-1 bg-gray-700 rounded-lg cursor-pointer" value="0" min="0" max="100">
+                    </div>
+                    <!-- Time Display -->
+                    <div class="flex justify-between text-sm text-gray-400">
+                        <span id="current-time">0:00</span>
+                        <span id="duration-time">0:00</span>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="flex justify-center items-center space-x-6 mt-4">
+                        <!-- Previous Button -->
+                        <button id="prev-btn" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.03V5.969a1 1 0 00-1.555-.832L4.12 9.168a1 1 0 000 1.664l4.325 4zM10.879 9.168a1 1 0 000 1.664l4.325 4A1 1 0 0017 14.03V5.969a1 1 0 00-1.555-.832l-4.325 4z"/></svg>
+                        </button>
+                        <!-- Play/Pause Button -->
+                        <button id="play-pause-btn" class="w-16 h-16 bg-red-500 text-white rounded-full flex items-center justify-center text-2xl hover:bg-red-600 transition-colors duration-200 shadow-lg">
+                            <!-- Play Icon -->
+                            <svg id="play-icon" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.002v3.996a1 1 0 001.555.832l3.197-1.998a1 1 0 000-1.664l-3.197-1.998z" clip-rule="evenodd"/></svg>
+                            <!-- Pause Icon (hidden by default) -->
+                            <svg id="pause-icon" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1H8zm5 0a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1h-1z" clip-rule="evenodd"/></svg>
+                        </button>
+                        <!-- Next Button -->
+                        <button id="next-btn" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 5.969v8.062a1 1 0 001.555.832l4.325-4a1 1 0 000-1.664l-4.325-4zM10.879 5.168A1 1 0 009.324 5.97v8.062a1 1 0 001.555.832l4.325-4a1 1 0 000-1.664l-4.325-4z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bottom-Right: Playlist -->
+                <div class="flex-grow min-h-0">
+                    <div id="playlist" class="h-48 md:h-full max-h-48 lg:max-h-56 overflow-y-auto pr-2">
+                        <!-- Playlist items will be injected here by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Update Button (PWA Only) -->
+                <div id="update-container" class="hidden text-center mt-4 p-2 border-t border-gray-700">
+                    <button id="update-btn" class="text-sm text-gray-400 hover:text-red-500 transition-colors">
+                        Check for Updates
+                    </button>
+                    <span id="update-status-text" class="text-sm text-gray-500 ml-2"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The actual audio element, hidden from view -->
     <audio id="audio-player"></audio>
     <audio id="intro-audio" src="hallelujah-intro.mp3" preload="auto"></audio>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- 1. SONG DATABASE ---
-            // (All 12 of your correct liner notes are in here)
             const songs = [
                 { 
                     title: "The Crimson Tide", 
@@ -255,18 +373,17 @@
                     note: `Serving as a beautiful, reflective denouement, this piano arrangement strips the core melody of the Red-Headed Hallelujah down to its purest, most emotional form. It closes the album with a sense of peace and resolution. After the high-energy and emotional turbulence of the preceding tracks, this instrumental piece offers a final, quiet moment of realization that the "Hallelujah"—the source of grace and love—is a constant, gentle presence.`
                 },
             ];
-            // ... (All other constants are the same) ...
             const artistName = "A mstonge01 Project";
             const albumTitle = "for Rebecca";
             const albumNote = ``;
             const albumName = "Red-Headed Hallelujah";
 
             // --- 2. DOM ELEMENT REFERENCES ---
-            // ... (All DOM references are the same) ...
             const splashScreen = document.getElementById('splash-screen');
             const splashVideo = document.getElementById('splash-video');
             const enterBtn = document.getElementById('enter-btn');
-            const updateStatusEl = document.getElementById('update-status');
+            const skipIntroBtn = document.getElementById('skip-intro-btn');
+            const updateStatusEl = document.getElementById('update-status'); // "Checking for Updates..." message
             const playerContainer = document.getElementById('player-container');
             const audioPlayer = document.getElementById('audio-player');
             const introAudio = document.getElementById('intro-audio');
@@ -287,6 +404,11 @@
             const noteBodyEl = document.getElementById('note-body');
             const songArtEl = document.getElementById('song-art');
             const mainPlayerDiv = document.querySelector('.player-texture');
+            
+            // New Update Button Elements
+            const updateContainer = document.getElementById('update-container');
+            const updateBtn = document.getElementById('update-btn');
+            const updateStatusText = document.getElementById('update-status-text');
 
 
             // --- 3. PLAYER STATE ---
@@ -295,44 +417,65 @@
             let hasUserInteracted = false;
 
             // --- 4. FUNCTIONS ---
-            // ... (All player functions are the same) ...
+            
+            // This function now just shows the "Click to Begin" button.
+            // It's called after the PWA check (if any) is complete.
             function showBeginButton() {
-                updateStatusEl.style.display = 'none';
+                updateStatusEl.style.display = 'none'; // Hide "Checking for Updates..."
                 enterBtn.textContent = 'Click to Begin';
-                enterBtn.style.display = 'block';
+                enterBtn.style.display = 'block'; // Show the button
                 enterBtn.disabled = false;
             }
 
+            // This function handles the intro video and audio sequence
             function startVideoTransition() {
                 if(hasUserInteracted) return;
                 hasUserInteracted = true;
                 
+                // Tell the service worker to start caching songs in the background (if it's the app)
                 if (window.matchMedia('(display-mode: standalone)').matches && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
                     console.log('Sending cache-content message to SW');
                     navigator.serviceWorker.controller.postMessage({ action: 'cache-content' });
                 }
                 
-                introAudio.load();
-                enterBtn.style.display = 'none';
+                introAudio.load(); // Preload the intro audio
+                enterBtn.style.display = 'none'; // Hide the "Click to Begin" button
+                skipIntroBtn.classList.remove('hidden'); // Show the "Skip Intro" button
 
+                // Manually play the video (no autoplay)
                 splashVideo.play().then(() => {
                     // Video started!
                 }).catch(error => {
                     console.warn("Video play failed even after click:", error);
-                    transitionToPlayer(); // Failsafe
+                    transitionToPlayer(); // Failsafe in case video fails
                 });
             }
 
+            // New function to skip the intro
+            function skipIntro() {
+                splashVideo.pause();
+                introAudio.pause(); // Stop the intro audio just in case
+                skipIntroBtn.classList.add('hidden'); // Hide skip button
+                transitionToPlayer(); // Go right to the player
+            }
+
+            // This function fades to the player
             function transitionToPlayer() {
+                skipIntroBtn.classList.add('hidden'); // Hide skip button
+                // Wait 1 second after intro audio finishes (or skip is clicked)
                 setTimeout(() => {
                     splashScreen.style.opacity = '0';
                     playerContainer.style.opacity = '1';
+                    
+                    // After the fade, remove the splash screen
                     setTimeout(() => {
                         splashScreen.style.display = 'none';
-                    }, 1000);
+                    }, 1000); // Must match the transition duration
+                    
                 }, 1000); // 1-second pause
             }
             
+            // --- All other player functions (updatePositionState, updateMediaSession, etc.) are correct ---
             function updatePositionState() {
                 if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
                     const { duration, currentTime } = audioPlayer;
@@ -349,6 +492,7 @@
             function updateMediaSession(song) {
                 if ('mediaSession' in navigator) {
                     if (song) {
+                        // Song is playing
                         navigator.mediaSession.metadata = new MediaMetadata({
                             title: song.title,
                             artist: artistName,
@@ -359,11 +503,12 @@
                         });
                         navigator.mediaSession.playbackState = "playing";
                     } else {
+                        // Song is paused
                         if (navigator.mediaSession.metadata) {
                              navigator.mediaSession.playbackState = "paused";
                         }
                     }
-                    updatePositionState();
+                    updatePositionState(); // Update progress bar
                 }
             }
             
@@ -382,9 +527,9 @@
                 songTitleEl.textContent = song.title;
                 songArtistEl.textContent = artistName;
                 audioPlayer.src = song.src;
-                songArtEl.src = song.image_src;
-                songArtEl.classList.remove('is-visible');
-flipper.classList.remove('is-flipped');
+                songArtEl.src = song.image_src; // Set new song art
+                songArtEl.classList.remove('is-visible'); // Make it invisible (ready to fade in)
+                flipper.classList.remove('is-flipped'); // Flip notes back to front
                 updateActivePlaylistItem();
             }
 
@@ -396,8 +541,8 @@ flipper.classList.remove('is-flipped');
                 audioPlayer.play();
                 playIcon.classList.add('hidden');
                 pauseIcon.classList.remove('hidden');
-                songArtEl.classList.add('is-visible');
-                mainPlayerDiv.classList.add('is-playing-glow');
+                songArtEl.classList.add('is-visible'); // Fade in song art
+                mainPlayerDiv.classList.add('is-playing-glow'); // Add glow
                 updateLinerNotes(currentSongIndex);
                 updateMediaSession(songs[currentSongIndex]);
             }
@@ -407,8 +552,8 @@ flipper.classList.remove('is-flipped');
                 audioPlayer.pause();
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
-                songArtEl.classList.remove('is-visible');
-                mainPlayerDiv.classList.remove('is-playing-glow');
+                songArtEl.classList.remove('is-visible'); // Fade out song art
+                mainPlayerDiv.classList.remove('is-playing-glow'); // Remove glow
                 updateLinerNotes(null);
                 updateMediaSession(null);
             }
@@ -434,7 +579,7 @@ flipper.classList.remove('is-flipped');
                     progressBar.value = progressPercent;
                     durationTimeEl.textContent = formatTime(duration);
                     currentTimeEl.textContent = formatTime(currentTime);
-                    updatePositionState();
+                    updatePositionState(); // Update truck progress bar
                 }
             }
 
@@ -445,11 +590,11 @@ flipper.classList.remove('is-flipped');
                 return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             }
 
-function setProgress() {
+            function setProgress() {
                 const duration = audioPlayer.duration;
                 if (duration) {
                      audioPlayer.currentTime = (progressBar.value / 100) * duration;
-                     updatePositionState();
+                     updatePositionState(); // Update truck progress bar
                 }
             }
             
@@ -486,16 +631,19 @@ function setProgress() {
             
             // --- Splash Screen Logic ---
             enterBtn.addEventListener('click', startVideoTransition);
+            skipIntroBtn.addEventListener('click', skipIntro);
 
+            // When video finishes, play the intro audio
             splashVideo.addEventListener('ended', () => {
                 if(hasUserInteracted) {
                     introAudio.play().catch(e => {
                         console.warn("Intro audio failed to play:", e);
-                        transitionToPlayer(); 
+                        transitionToPlayer(); // Failsafe
                     });
                 }
             });
             
+            // When intro audio finishes, fade to player
             introAudio.addEventListener('ended', () => {
                 transitionToPlayer();
             });
@@ -514,7 +662,7 @@ function setProgress() {
                 flipper.classList.toggle('is-flipped');
             });
             
-            // --- Media Session Action Handlers ---
+            // --- Media Session Action Handlers (for truck controls) ---
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.setActionHandler('play', playSong);
                 navigator.mediaSession.setActionHandler('pause', pauseSong);
@@ -532,40 +680,46 @@ function setProgress() {
             updateLinerNotes(null);
             
             // --- 7. PWA Service Worker Registration ---
+            // Check if we're in "app" mode
             const isPwa = window.matchMedia('(display-mode: standalone)').matches;
 
             if (isPwa && 'serviceWorker' in navigator) {
                 // --- IT'S THE APP ---
-                updateStatusEl.style.display = 'block';
+                // We don't show "Checking for Updates..." anymore.
+                // We just show the "Click to Begin" button.
+                showBeginButton();
 
                 navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('ServiceWorker registration successful:', registration);
                         
-                        // --- NEW AGGRESSIVE UPDATE LOGIC ---
-                        
-                        // 1. Force an update check immediately
-                        registration.update(); 
-                        
-                        // 2. Listen for a new service worker
-                        registration.addEventListener('updatefound', () => {
-                            const newWorker = registration.installing;
-                            console.log('New service worker found, installing...');
+                        // Show the "Check for Updates" button in the player
+                        updateContainer.classList.remove('hidden');
 
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    // New SW is installed & waiting.
-                                    // This means new content is downloaded.
-                                    // Force a reload to use the new content.
-                                    console.log('New content installed, reloading app...');
-                                    window.location.reload();
+                        // Handle the button click
+                        updateBtn.addEventListener('click', () => {
+                            updateStatusText.textContent = 'Checking...';
+                            
+                            // Manually trigger the update check
+                            registration.update().then(() => {
+                                if (registration.installing) {
+                                    // An update was found!
+                                    const newWorker = registration.installing;
+                                    newWorker.addEventListener('statechange', () => {
+                                        if (newWorker.state === 'installed') {
+                                            // The new files are downloaded.
+                                            updateStatusText.textContent = 'Update downloaded! Please restart app.';
+                                        }
+                                    });
+                                } else {
+                                    // No new service worker file was found on the server.
+                                    updateStatusText.textContent = 'You are up to date.';
                                 }
+                            }).catch(err => {
+                                console.error('Error updating service worker:', err);
+                                updateStatusText.textContent = 'Update check failed.';
                             });
                         });
-                        // --- END NEW UPDATE LOGIC ---
-                        
-                        // If no update is found, this just proceeds as normal
-                        showBeginButton();
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
@@ -574,7 +728,8 @@ function setProgress() {
                     });
             } else {
                 // --- IT'S THE PC (or a normal browser tab) ---
-                console.log('Not in PWA mode, skipping update check.');
+                console.log('Not in PWA mode, skipping PWA features.');
+                // Just show the "Click to Begin" button
                 showBeginButton();
             }
         });
