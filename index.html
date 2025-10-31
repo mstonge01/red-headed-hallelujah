@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Red-Headed Hallelujah</title>
+    
+    <!-- PWA Manifest Link (REMOVED) -->
+    <!-- <link rel="manifest" href="manifest.json"> -->
+    <!-- Theme color for PWA (REMOVED) -->
+    <!-- <meta name="theme-color" content="#EF4444"> -->
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter (sans-serif) and Staatliches (blocky, for title) -->
@@ -648,8 +654,22 @@ Z            }
             loadSong(songs[currentSongIndex]);
             updateLinerNotes(null);
         });
+
+        // --- PWA Service Worker Registration (REMOVED) ---
+        /*
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered successfully:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+        */
     </script>
 </body>
 </html>
-
 
