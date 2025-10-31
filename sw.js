@@ -1,6 +1,7 @@
-const CACHE_NAME = 'rhh-cache-v2'; // <-- Changed to v2 to force update
+const CACHE_NAME = 'rhh-cache-v3'; // <-- IMPORTANT: Cache name is v3
 
 // 1. App Shell Files: The basic files needed for the app to run.
+// These are cached immediately on install.
 const APP_SHELL_FILES = [
     './', // This caches the index.html
     'index.html',
@@ -11,7 +12,7 @@ const APP_SHELL_FILES = [
     'https://fonts.gstatic.com/s/staatliches/v12/HI_OiY8KO6hCsQSoAPmtMYebvpU.woff2', // Common font file
     'https://www.transparenttextures.com/patterns/stucco.png',
     'https://www.transparenttextures.com/patterns/concrete-wall.png',
-    'cover.jpg.jpg', // <-- UPDATED to new cover
+    'cover.jpg.jpg', // Main cover art
     'paint-video.mp4',
     'hallelujah-intro.mp3'
 ];
@@ -50,6 +51,7 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
             console.log('[SW] Caching App Shell...');
+            // This is the download that happens while "Checking for Updates..." is shown
             return cache.addAll(APP_SHELL_FILES);
         })
     );
@@ -76,7 +78,7 @@ self.addEventListener('activate', event => {
 // 3. Message Step: Listen for message from app to cache content
 self.addEventListener('message', event => {
     if (event.data.action === 'cache-content') {
-        console.log('[SW] Received message to cache content.');
+        console.log('[SW] Received message to cache content (songs/art).');
         event.waitUntil(
             caches.open(CACHE_NAME).then(cache => {
                 console.log('[SW] Caching songs and art in background...');
@@ -99,47 +101,48 @@ self.addEventListener('fetch', event => {
         caches.open(CACHE_NAME).then(cache => {
             return cache.match(event.request).then(response => {
                 // 1. Respond from Cache (Cache-First)
+                // This is the "offline-first" part. It's fast.
                 if (response) {
-                    // console.log(`[SW] Serving from cache: ${event.request.url}`);
                     
                     // 2. Asynchronously update cache (Stale-While-Revalidate)
-                    // This fetches the latest version from the network in the background
-                    // and updates the cache, so the *next* visit has the freshest content.
-                    const fetchPromise = fetch(event.request).then(networkResponse => {
-                        // Check if we received a valid response
-                        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-                            cache.put(event.request, networkResponse.clone());
-                        } else if (networkResponse && (networkResponse.status >= 400 || networkResponse.type !== 'basic')) {
-                             // Don't cache opaque responses (like from a CDN) or errors
-                             // console.log(`[SW] Not caching opaque or error response: ${event.request.url}`);
-                        }
-                        return networkResponse;
-                    }).catch(error => {
-                        // Network fetch failed, which is fine if offline.
-                        // console.warn(`[SW] Network fetch failed: ${error}`);
-                    });
+                    // This fetches the latest version from the network *in the background*
+                    // This part is skipped for the song/art files to save bandwidth,
+                    // as we assume they won't change.
+                    
+                    // We only re-validate the main app files
+                    const isAppShellFile = APP_SHELL_FILES.some(url => event.request.url.includes(url.replace('./', '')));
+
+                    if (isAppShellFile) {
+                        fetch(event.request).then(networkResponse => {
+                            if (networkResponse && networkResponse.status === 200) {
+                                cache.put(event.request, networkResponse.clone());
+                            }
+                        }).catch(error => {
+                            // Offline, network fetch failed, which is fine.
+                        });
+                    }
 
                     return response;
                 }
 
                 // 3. Not in Cache: Fetch from Network, Cache, and Respond
-                // console.log(`[SW] Fetching from network: ${event.request.url}`);
                 return fetch(event.request).then(networkResponse => {
                     // Check if we received a valid response
-                    if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-                        cache.put(event.request, networkResponse.clone());
-                    } else if (networkResponse && (networkResponse.status >= 400 || networkResponse.type !== 'basic')) {
-                        // Don't cache opaque responses (like from a CDN) or errors
-                        // console.log(`[SW] Not caching opaque or error response: ${event.request.url}`);
+                    if (networkResponse && networkResponse.status === 200) {
+                        // Don't cache dynamic CDN requests, only our core files
+                        const isCachable = APP_SHELL_FILES.some(url => event.request.url.includes(url)) ||
+                                         CONTENT_FILES.some(url => event.request.url.includes(url));
+                        
+                        if (isCachable) {
+                            cache.put(event.request, networkResponse.clone());
+                        }
                     }
                     return networkResponse;
                 }).catch(error => {
                     console.error(`[SW] Fetch failed, and not in cache: ${event.request.url}`, error);
-                    // You could return a custom offline page here if you had one
                 });
             });
         })
     );
 });
-
 
