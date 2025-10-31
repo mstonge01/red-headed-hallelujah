@@ -161,12 +161,12 @@
     <div id="player-container" class="w-full max-w-4xl opacity-0 transition-opacity duration-1000">
         
         <!-- Player Container -->
-        <!-- *** RESPONSIVE FIX: Changed md:flex-row to lg:flex-row *** -->
-        <div class="player-texture shadow-2xl overflow-hidden flex flex-col lg:flex-row">
+        <!-- *** RESPONSIVE FIX: Using md:flex-row *** -->
+        <div class="player-texture shadow-2xl overflow-hidden flex flex-col md:flex-row">
             
             <!-- Left Side: Album Artwork & Liner Notes -->
-            <!-- *** RESPONSIVE FIX: Changed md:w-1/2 lg:w-5/12 to lg:w-1/2 *** -->
-            <div class="w-full lg:w-1/2 flex-shrink-0 flex flex-col">
+            <!-- *** RESPONSIVE FIX: Using md:w-1/2 *** -->
+            <div class="w-full md:w-1/2 flex-shrink-0 flex flex-col">
                 <!-- Flipper container (1:1 aspect ratio) -->
                 <div class="relative w-full flipper-container"> 
                     <div id="flipper" class="absolute top-0 left-0 w-full h-full">
@@ -188,8 +188,8 @@
             </div>
 
             <!-- Right Side: Info, Controls, Playlist -->
-            <!-- *** RESPONSIVE FIX: Changed md:w-1/2 lg:w-7/12 to lg:w-1/2 *** -->
-            <div class="w-full lg:w-1/2 p-6 flex flex-col justify-between">
+            <!-- *** RESPONSIVE FIX: Using md:w-1/2 *** -->
+            <div class="w-full md:w-1/2 p-6 flex flex-col justify-between">
                 
                 <!-- Top-Right: Current Song Info -->
                 <div class="mb-4">
@@ -232,8 +232,8 @@
                 
                 <!-- Bottom-Right: Playlist -->
                 <div class="flex-grow min-h-0">
-                    <!-- *** RESPONSIVE FIX: Changed md:h-full max-h-48 lg:max-h-56 to h-64 lg:h-full lg:max-h-full *** -->
-                    <div id="playlist" class="h-64 lg:h-full lg:max-h-full overflow-y-auto pr-2">
+                    <!-- *** RESPONSIVE FIX: h-64 for mobile, md:h-full for desktop *** -->
+                    <div id="playlist" class="h-64 md:h-full md:max-h-full overflow-y-auto pr-2">
                         <!-- Playlist items will be injected here by JavaScript -->
                     </div>
                 </div>
@@ -301,7 +301,7 @@
                 { 
                     title: "Red-Headed Hallelujah (Guitar)", 
                     src: "11-red-headed-hallelujah-guitar.mp3",
-                    note: `This cover is a soaring power ballad about finding a literal and emotional lifeline when life becomes overwhelming. The song chronicles a rough journey of stress and anxiety, only for the world-weary narrator to find instant peace and salvation in a central figure—the Red-Headed Hallelujah. It’s a powerful declaration that love can be a force of redemption, a moment of grace that burns bright enough to banish the darkest nights and make you believe that everything is going to be alright.`
+                    note: `This cover is a soaring power ballad about finding a literal and emotional lifeline when life becomes overwhelming. The song chronicles a rough journey of stress and anxiety, only for the world-weary narrator to find instant peace and salvation in a. central figure—the Red-Headed Hallelujah. It’s a powerful declaration that love can be a force of redemption, a moment of grace that burns bright enough to banish the darkest nights and make you believe that everything is going to be alright.`
                 },
                 { 
                     title: "Red-Headed Hallelujah (Piano)", 
@@ -367,7 +367,7 @@
 
             // Function to fade to the player
             function transitionToPlayer() {
-                // Video has finished, wait 4 seconds
+                // Video has finished, wait 1 second
                 setTimeout(() => {
                     // Start the fade out
                     splashScreen.style.opacity = '0';
@@ -378,7 +378,7 @@
                         splashScreen.style.display = 'none';
                     }, 1000); // Must match the transition duration
                     
-                }, 4000); // 4-second pause
+                }, 1000); // 1-second pause
             }
 
             // --- Player Functions (updateLinerNotes, loadSong, etc.) ---
