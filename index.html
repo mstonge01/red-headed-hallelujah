@@ -302,6 +302,9 @@
 
     <!-- The actual audio element, hidden from view -->
     <audio id="audio-player"></audio>
+    
+    <!-- NEW: Audio element for the intro Hallelujah clip -->
+    <audio id="intro-audio" src="hallelujah-intro.mp3" preload="auto"></audio>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -393,6 +396,9 @@
             const playerContainer = document.getElementById('player-container');
             
             const audioPlayer = document.getElementById('audio-player');
+            // NEW: Get the intro audio element
+            const introAudio = document.getElementById('intro-audio');
+            
             const songTitleEl = document.getElementById('song-title');
             const songArtistEl = document.getElementById('song-artist');
             const playlistEl = document.getElementById('playlist');
@@ -431,6 +437,9 @@
                     navigator.serviceWorker.controller.postMessage({ action: 'cache-content' });
                 }
                 // --- End New ---
+                
+                // NEW: Load the intro audio so it's ready
+                introAudio.load();
                 
                 // Hide the button
                 enterBtn.style.display = 'none';
@@ -650,8 +659,21 @@
             // Listen for the video to end
             splashVideo.addEventListener('ended', () => {
                 if(hasUserInteracted) {
-                    transitionToPlayer();
+                    // OLD: transitionToPlayer();
+                    // NEW: Play the intro audio clip
+                    introAudio.play().catch(e => {
+                        // If audio fails for any reason, just skip to player
+                        console.warn("Intro audio failed to play:", e);
+                        transitionToPlayer(); 
+                    });
                 }
+            });
+            
+            // NEW: Listen for the INTRO AUDIO to end
+            introAudio.addEventListener('ended', () => {
+                // Now that the intro audio is done, call the transition
+                // (which already has the 1-second delay)
+                transitionToPlayer();
             });
             
             // --- Player Logic ---
@@ -705,4 +727,5 @@
     </script>
 </body>
 </html>
+
 
