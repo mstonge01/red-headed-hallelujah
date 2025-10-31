@@ -231,7 +231,8 @@
                         <div class="flipper-front absolute w-full h-full">
                             <!-- New container for crossfade -->
                             <div class="album-art-container">
-                                <img id="base-art" src="cover.jpg.png" alt="Album Art for Red-Headed Hallelujah">
+                                <!-- UPDATED: Pointing to cover.jpg.jpg -->
+                                <img id="base-art" src="cover.jpg.jpg" alt="Album Art for Red-Headed Hallelujah">
                                 <img id="song-art" src="" alt=""> <!-- Song art (starts empty) -->
                             </div>
                         </div>
@@ -303,7 +304,7 @@
     <!-- The actual audio element, hidden from view -->
     <audio id="audio-player"></audio>
     
-    <!-- NEW: Audio element for the intro Hallelujah clip -->
+    <!-- Audio element for the intro Hallelujah clip -->
     <audio id="intro-audio" src="hallelujah-intro.mp3" preload="auto"></audio>
 
     <script>
@@ -396,8 +397,7 @@
             const playerContainer = document.getElementById('player-container');
             
             const audioPlayer = document.getElementById('audio-player');
-            // NEW: Get the intro audio element
-            const introAudio = document.getElementById('intro-audio');
+            const introAudio = document.getElementById('intro-audio'); // Get the intro audio element
             
             const songTitleEl = document.getElementById('song-title');
             const songArtistEl = document.getElementById('song-artist');
@@ -431,14 +431,13 @@
                 if(hasUserInteracted) return; // Only run once
                 hasUserInteracted = true;
                 
-                // --- NEW: Trigger background caching ---
+                // --- Trigger background caching ---
                 if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                     console.log('Sending cache-content message to SW');
                     navigator.serviceWorker.controller.postMessage({ action: 'cache-content' });
                 }
-                // --- End New ---
                 
-                // NEW: Load the intro audio so it's ready
+                // Load the intro audio so it's ready
                 introAudio.load();
                 
                 // Hide the button
@@ -474,7 +473,7 @@
 
             // --- Player Functions ---
             
-            // --- NEW: Function to update the position state for BT devices ---
+            // Function to update the position state for BT devices
             function updatePositionState() {
                 if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
                     const { duration, currentTime } = audioPlayer;
@@ -588,7 +587,7 @@
                     durationTimeEl.textContent = formatTime(duration);
                     currentTimeEl.textContent = formatTime(currentTime);
                     
-                    // --- NEW: Update BT progress bar ---
+                    // Update BT progress bar
                     updatePositionState();
                 }
             }
@@ -605,7 +604,7 @@
                 if (duration) {
                      audioPlayer.currentTime = (progressBar.value / 100) * duration;
                      
-                     // --- NEW: Update BT progress bar when scrubbing ---
+                     // Update BT progress bar when scrubbing
                      updatePositionState();
                 }
             }
@@ -659,8 +658,7 @@
             // Listen for the video to end
             splashVideo.addEventListener('ended', () => {
                 if(hasUserInteracted) {
-                    // OLD: transitionToPlayer();
-                    // NEW: Play the intro audio clip
+                    // Play the intro audio clip
                     introAudio.play().catch(e => {
                         // If audio fails for any reason, just skip to player
                         console.warn("Intro audio failed to play:", e);
@@ -669,7 +667,7 @@
                 }
             });
             
-            // NEW: Listen for the INTRO AUDIO to end
+            // Listen for the INTRO AUDIO to end
             introAudio.addEventListener('ended', () => {
                 // Now that the intro audio is done, call the transition
                 // (which already has the 1-second delay)
@@ -700,7 +698,7 @@
                 navigator.mediaSession.setActionHandler('previoustrack', prevSong);
                 navigator.mediaSession.setActionHandler('nexttrack', nextSong);
                 
-                // --- NEW: Handle scrubbing from BT device ---
+                // Handle scrubbing from BT device
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
                     audioPlayer.currentTime = details.seekTime;
                     updatePositionState();
@@ -727,5 +725,4 @@
     </script>
 </body>
 </html>
-
 
