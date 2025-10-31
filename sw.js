@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhh-cache-v4'; // <-- IMPORTANT: Incremented cache name to v4
+const CACHE_NAME = 'rhh-cache-v5'; // <-- IMPORTANT: Incremented cache name to v5
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
@@ -6,12 +6,12 @@ const APP_SHELL_FILES = [
     './', // This caches the index.html
     'index.html',
     'manifest.json',
-    'https_cdn.tailwindcss.com/', // Use / to cache base URL
-    'https_fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
-    'https_fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
-    'https_fonts.gstatic.com/s/staatliches/v12/HI_OiY8KO6hCsQSoAPmtMYebvpU.woff2', // Common font file
-    'https_www.transparenttextures.com/patterns/stucco.png',
-    'https_www.transparenttextures.com/patterns/concrete-wall.png',
+    'https://cdn.tailwindcss.com/', // Changed to base URL
+    'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
+    'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
+    'https://fonts.gstatic.com/s/staatliches/v12/HI_OiY8KO6hCsQSoAPmtMYebvpU.woff2', // Common font file
+    'https://www.transparenttextures.com/patterns/stucco.png', // <-- TYPO FIX
+    'https://www.transparenttextures.com/patterns/concrete-wall.png', // <-- TYPO FIX
     'cover.jpg.jpg', // Main cover art
     'paint-video.mp4',
     'hallelujah-intro.mp3'
@@ -45,6 +45,14 @@ const CONTENT_FILES = [
     '12-red-headed-hallelujah-piano-art.png'
 ];
 
+// Helper function to cache with CORS
+function cacheRequest(url) {
+    if (url.startsWith('http')) {
+        return new Request(url, { mode: 'cors' });
+    }
+    return new Request(url);
+}
+
 // 1. Install Step: Cache the app shell
 self.addEventListener('install', event => {
     console.log('[SW] Install');
@@ -53,13 +61,7 @@ self.addEventListener('install', event => {
             console.log('[SW] Caching App Shell...');
             // This is the download that happens while "Checking for Updates..." is shown
             return Promise.all(
-                APP_SHELL_FILES.map(url => {
-                    // Handle CDN URLs that might be tricky
-                    if (url.startsWith('http')) {
-                        return cache.add(new Request(url, { mode: 'cors' }));
-                    }
-                    return cache.add(url);
-                })
+                APP_SHELL_FILES.map(url => cache.add(cacheRequest(url)))
             ).catch(err => {
                 console.error('[SW] App Shell caching failed', err);
             });
@@ -92,7 +94,9 @@ self.addEventListener('message', event => {
         event.waitUntil(
             caches.open(CACHE_NAME).then(cache => {
                 console.log('[SW] Caching songs and art in background...');
-                return cache.addAll(CONTENT_FILES).catch(error => {
+                return Promise.all(
+                    CONTENT_FILES.map(url => cache.add(cacheRequest(url)))
+                ).catch(error => {
                     console.error('[SW] Failed to cache content:', error);
                 });
             })
@@ -116,13 +120,13 @@ self.addEventListener('fetch', event => {
 
             // 2. Not in Cache: Fetch from Network, Cache, and Respond
             // console.log(`[SW] Fetching from network: ${event.request.url}`);
-            return fetch(event.request).then(networkResponse => {
+            return fetch(event.request.clone()).then(networkResponse => {
                 
-                // We only want to cache our own files, not all CDN files
-                const isCachable = APP_SHELL_FILES.some(url => event.request.url.includes(url)) ||
+                // We only want to cache our own files and the CDN files specified
+                const isCachable = APP_SHELL_FILES.some(url => event.request.url.includes(url.replace('https://', ''))) ||
                                      CONTENT_FILES.some(url => event.request.url.includes(url));
-
-                if (networkResponse && networkResponse.status === 200 && isCachable) {
+                
+                if (networkResponse && networkResponse.status === 200 && (isCachable || event.request.url.includes('gstatic'))) {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then(cache => {
                         cache.put(event.request, responseToCache);
