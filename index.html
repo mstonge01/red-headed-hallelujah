@@ -141,6 +141,21 @@
             border-color: white;
             transform: scale(1.05);
         }
+
+        /* --- New "Live Glow" Animation --- */
+        @keyframes pulseGlow {
+            from {
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.2);
+            }
+            to {
+                box-shadow: 0 0 30px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.4);
+            }
+        }
+
+        .is-playing-glow {
+            /* Applied to player-container when music is playing */
+            animation: pulseGlow 1.5s infinite alternate ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4">
@@ -411,6 +426,7 @@
                 playIcon.classList.add('hidden');
                 pauseIcon.classList.remove('hidden');
                 updateLinerNotes(currentSongIndex);
+                playerContainer.classList.add('is-playing-glow'); // Add glow
             }
 
             function pauseSong() {
@@ -419,6 +435,7 @@
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
                 updateLinerNotes(null);
+                playerContainer.classList.remove('is-playing-glow'); // Remove glow
             }
 
             function prevSong() {
@@ -538,4 +555,5 @@
     </script>
 </body>
 </html>
+
 
