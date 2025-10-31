@@ -1,0 +1,17 @@
+{
+    "name": "Red-Headed Hallelujah",
+    "short_name": "Hallelujah",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#111827",
+    "theme_color": "#EF4444",
+    "description": "An album for Rebecca.",
+    "icons": [
+        {
+            "src": "cover.jpg.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
+
