@@ -1,11 +1,11 @@
-const CACHE_NAME = 'rhh-cache-v8'; // <-- IMPORTANT: This is v8
+const CACHE_NAME = 'rhh-cache-v9'; // <-- IMPORTANT: This is v9
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
 const APP_SHELL_FILES = [
     './', // This caches the index.html
     'index.html',
-    'manifest.json',
+    'manifest.json?v=2', // <-- Matches the ?v=2 in your index.html
     'https://cdn.tailwindcss.com/',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
     'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
@@ -96,6 +96,7 @@ self.addEventListener('activate', event => {
 });
 
 // 3. Message Step: Listen for message from app to cache content
+// This is triggered when you click "Click to Begin"
 self.addEventListener('message', event => {
     if (event.data.action === 'cache-content') {
         console.log('[SW] Received message to cache content (songs/art).');
