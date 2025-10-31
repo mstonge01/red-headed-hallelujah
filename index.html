@@ -10,6 +10,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap" rel="stylesheet">
+    
+    <!-- PWA Manifest Link -->
+    <link rel="manifest" href="manifest.json">
+    
     <style>
         /* Custom styles to match the album art aesthetic */
         body {
@@ -90,19 +94,12 @@
         .flipper-container {
             perspective: 1000px;
             padding-top: 100%; /* Creates a 1:1 aspect ratio */
-            position: relative;
-            width: 100%;
         }
 
         /* The flipper element */
         #flipper {
             transform-style: preserve-3d;
             transition: transform 0.8s;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
         }
         #flipper.is-flipped {
             transform: rotateY(180deg);
@@ -113,11 +110,6 @@
         .flipper-back {
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
         }
 
         /* Back face (notes) styling */
@@ -153,34 +145,57 @@
             border-color: white;
             transform: scale(1.05);
         }
-
-        /* --- Live Glow Pulse --- */
+        
+        /* --- Live Glow Pulse Animation --- */
         @keyframes pulseGlow {
             0%, 100% {
-                box-shadow: 0 0 10px rgba(239, 68, 68, 0), 0 0 12px rgba(239, 68, 68, 0);
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0); /* red-500, transparent */
             }
             50% {
-                box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), 0 0 24px rgba(239, 68, 68, 0.4);
+                box-shadow: 0 0 25px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2);
             }
         }
-        /* This class will be added to the player when music is playing */
+        /* Class to apply the glow */
         .is-playing-glow {
-            animation: pulseGlow 2s ease-in-out infinite;
+            animation: pulseGlow 2.5s infinite ease-in-out;
         }
         
-        /* --- Song-Specific Art (Simple Crossfade) --- */
+        /* --- Song-Specific Art (Crossfade) --- */
+        
+        /* Container for the album art, now relative */
+        .album-art-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* The base (main) album art */
+        #base-art {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-cover;
+        }
+        
+        /* The song-specific art, sits on top */
         #song-art {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            opacity: 0; /* Start hidden */
+            object-cover;
+            /* Start transparent */
+            opacity: 0;
+            /* Simple transition */
             transition: opacity 0.5s ease-in-out;
         }
-        #song-art.is-active {
-            opacity: 1; /* Fade in when active */
+        
+        /* Class to fade the song-art in */
+        #song-art.is-visible {
+            opacity: 1;
         }
 
     </style>
@@ -200,7 +215,6 @@
     </div>
 
     <!-- Main Player Container (starts invisible) -->
-    <!-- Applying md: breakpoint for horizontal layout on PC/Tablet -->
     <div id="player-container" class="w-full max-w-4xl opacity-0 transition-opacity duration-1000">
         
         <!-- Player Container -->
@@ -209,17 +223,18 @@
             <!-- Left Side: Album Artwork & Liner Notes -->
             <div class="w-full md:w-1/2 lg:w-5/12 flex-shrink-0 flex flex-col">
                 <!-- Flipper container (1:1 aspect ratio) -->
-                <div class="flipper-container"> 
-                    <div id="flipper">
+                <div class="relative w-full flipper-container"> 
+                    <div id="flipper" class="absolute top-0 left-0 w-full h-full">
                         <!-- FRONT (Album Art) -->
-                        <div class="flipper-front">
-                            <!-- Base Album Cover -->
-                            <img src="cover.jpg.png" alt="Album Art for Red-Headed Hallelujah" class="w-full h-full object-cover">
-                            <!-- Song-Specific Art (fades in over top) -->
-                            <img id="song-art" src="" alt="Song-specific art">
+                        <div class="flipper-front absolute w-full h-full">
+                            <!-- New container for crossfade -->
+                            <div class="album-art-container">
+                                <img id="base-art" src="cover.jpg.png" alt="Album Art for Red-Headed Hallelujah">
+                                <img id="song-art" src="" alt=""> <!-- Song art (starts empty) -->
+                            </div>
                         </div>
                         <!-- BACK (Liner Notes) -->
-                        <div id="flipper-back" class="flipper-back p-6 overflow-y-auto">
+                        <div id="flipper-back" class="flipper-back absolute w-full h-full p-6 overflow-y-auto">
                             <h3 id="note-title" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
                             <p id="note-body" class="text-gray-200"></p>
                         </div>
@@ -275,7 +290,7 @@
                 
                 <!-- Bottom-Right: Playlist -->
                 <div class="flex-grow min-h-0">
-                    <div id="playlist" class="h-48 md:h-full max-h-48 md:max-h-56 overflow-y-auto pr-2">
+                    <div id="playlist" class="h-48 md:h-full max-h-48 lg:max-h-56 overflow-y-auto pr-2">
                         <!-- Playlist items will be injected here by JavaScript -->
                     </div>
                 </div>
@@ -289,86 +304,85 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- 1. SONG DATABASE ---
-            const albumName = "Red-Headed Hallelujah";
-            const artistName = "A mstonge01 Project";
-            
             const songs = [
                 { 
                     title: "The Crimson Tide", 
                     src: "01-the-crimson-tide.mp3",
-                    art: "01-the-crimson-tide-art.png",
+                    image_src: "01-the-crimson-tide-art.png",
                     note: `The Crimson Tide is a driving, high-energy rock anthem that dives headfirst into themes of danger and irresistible allure. This track establishes the album's mood, telling the tale of a powerful, siren-like figure—a redhead mermaid—who represents a captivating force no sailor can resist. The "Crimson Tide" itself symbolizes that moment when you are willingly lost to a consuming passion or adventure, abandoning all maps and compasses for the thrill of being pulled under. It's a powerful, thunderous opener about giving yourself over to the pull of the deep unknown.`
                 },
                 { 
                     title: "Real Women", 
                     src: "02-real-women.mp3",
-                    art: "02-real-women-art.png",
+                    image_src: "02-real-women-art.png",
                     note: `This is a fist-pumping, no-nonsense track built around a heavy riff and a fierce, anti-establishment attitude. Real Women is an anthem for authenticity, a celebration of those who refuse to conform to societal expectations or manufactured trends. The song champions the powerful, genuine spirit of a woman who makes her own rules, embraces her rugged freedom, and drives her own path, prioritizing grit and independence over superficial glamour.`
                 },
                 { 
                     title: "Red-Headed Hallelujah", 
                     src: "03-red-headed-hallelujah.mp3",
-                    art: "03-red-headed-hallelujah-art.png",
+                    image_src: "03-red-headed-hallelujah-art.png",
                     note: `Red-Headed Hallelujah serves as the album’s emotional centerpiece, capturing the moment of finding grace and peace amid daily chaos. The lyrics paint a picture of mundane stress and anxiety, only for a brilliant light—the Red Headed Hallelujah—to cut through the darkness. It’s a powerful, soaring track about having that one person or singular moment of clarity that acts as a spiritual lifeline, instantly dissolving stress and restoring faith in the good things.`
                 },
                 { 
                     title: "The Good Stuff", 
                     src: "04-the_good_stuff.mp3",
-                    art: "04-the_good_stuff-art.png",
+                    image_src: "04-the_good_stuff-art.png",
                     note: `This is a mid-tempo, reflective song about the serendipitous nature of life and the lasting value of genuine connection. The Good Stuff tells the story of an unexpected journey—a disastrous start that leads to a profound discovery—that becomes the ultimate reward. It’s a track about recognizing destiny in its simplest form, realizing that all the minor chaos was worth it because it led directly to finding the solid, reliable, sacred trust that forms the foundation of a lasting life.`
                 },
                 { 
                     title: "Zero Degree Beach", 
                     src: "05-zero-degree-beach.mp3",
-                    art: "05-zero-degree-beach-art.png",
+                    image_src: "05-zero-degree-beach-art.png",
                     note: `Zero-Degree Beach is a moody, atmospheric track exploring the idea of mental escapism and resilience. Set against the bleak backdrop of a seemingly endless winter, the song is a tribute to the power of a mindset that can conjure summer out of nowhere. It champions the unshakeable spirit of someone who chooses their own climate, finding personal peace, joy, and freedom in a place others see as inhospitable, effectively creating their own private oasis, even in the middle of a blizzard.`
                 },
                 { 
                     title: "Caps", 
                     src: "06-caps.mp3",
-                    art: "06-caps-art.png",
+                    image_src: "06-caps-art.png",
                     note: `This is the album’s most direct and playfully sensual love song. Built on a catchy groove, Caps uses a surprisingly detailed and affectionate focus—specifically on the knees and legs—to convey deep, sincere infatuation. It’s a lighthearted but utterly celebratory tribute to physical beauty, declaring that in a world full of wonders, the most compelling destination remains the masterpiece of human form that inspires obsession and joy.`
                 },
                 { 
                     title: "Interrupted", 
                     src: "07-interrupted.mp3",
-                    art: "07-interrupted-art.png",
+                    image_src: "07-interrupted-art.png",
                     note: `Interrupted captures the chaotic but relatable comedy of trying to steal a moment of quiet romance in a household with children. The song builds tension as a couple attempts to create a peaceful evening, only to be hilariously derailed by escalating household distractions, from barking dogs to midnight requests from a "little voice." It is a rocking, tongue-in-cheek ode to the realities of modern family life, concluding with the resilient declaration that even when romantic plans fail, the love remains strong enough to survive the interruptions.`
                 },
                 { 
                     title: "Cinnamon Serenade", 
                     src: "08-cinnamon-serenade.mp3",
-                    art: "08-cinnamon-serenade-art.png",
+                    image_src: "08-cinnamon-serenade-art.png",
                     note: `This track is a rugged, deeply romantic look at the less-than-glamorous moments of a relationship that truly define commitment. Cinnamon Serenade contrasts the sugary sweetness of a cinnamon-flavored whisky with the messy reality of being there for someone at their absolute worst—in this case, holding back hair at 3 AM. It’s a rock ballad celebrating unconditional love, where the act of humble service (clutching a plastic bowl) is shown to be far more meaningful than any perfect date, proving that true devotion shines brightest in the face of imperfection.`
                 },
                 { 
                     title: "Golden Devotion", 
                     src: "09-golden-devotion.mp3",
-                    art: "09-golden-devotion-art.png",
+                    image_src: "09-golden-devotion-art.png",
                     note: `Golden Devotion is a sun-drenched, devotional track that feels like a warm escape. It celebrates an individual who possesses a rare, life-affirming energy, described as someone who "worships the sun" and radiates light. The song contrasts the fleeting cold with the subject's unbreakable warmth and spirit, portraying them as a powerful, glowing crown—a central force whose presence is a constant source of heat, love, and bold, quiet strength that inspires those around them.`
                 },
                 { 
                     title: "Natural Magic", 
                     src: "10-natural-magic.mp3",
-                    art: "10-natural-magic-art.png",
+                    image_src: "10-natural-magic-art.png",
                     note: `The album closes with Natural Magic, a tender, observational song that marvels at the quiet, everyday competence of a person who keeps the world running. It paints a picture of domestic chaos—scattered belongings, noise, and disorder—that is effortlessly managed by a central figure who handles everything with natural grace and care. The track is a heartfelt tribute to the instinctual, healing power of a partner, whose presence is a gentle, calming force that brings peace and order to a hectic life.`
                 },
                 { 
                     title: "Red-Headed Hallelujah (Guitar)", 
                     src: "11-red-headed-hallelujah-guitar.mp3",
-                    art: "11-red-headed-hallelujah-guitar-art.png",
+                    image_src: "11-red-headed-hallelujah-guitar-art.png",
                     note: `This cover is a soaring power ballad about finding a literal and emotional lifeline when life becomes overwhelming. The song chronicles a rough journey of stress and anxiety, only for the world-weary narrator to find instant peace and salvation in a central figure—the Red-Headed Hallelujah. It’s a powerful declaration that love can be a force of redemption, a moment of grace that burns bright enough to banish the darkest nights and make you believe that everything is going to be alright.`
                 },
                 { 
                     title: "Red-Headed Hallelujah (Piano)", 
                     src: "12-red-headed-hallelujah-piano.mp3",
-                    art: "12-red-headed-hallelujah-piano-art.png",
+                    image_src: "12-red-headed-hallelujah-piano-art.png",
                     note: `Serving as a beautiful, reflective denouement, this piano arrangement strips the core melody of the Red-Headed Hallelujah down to its purest, most emotional form. It closes the album with a sense of peace and resolution. After the high-energy and emotional turbulence of the preceding tracks, this instrumental piece offers a final, quiet moment of realization that the "Hallelujah"—the source of grace and love—is a constant, gentle presence.`
                 },
             ];
+            const artistName = "A mstonge01 Project";
             
-            const pausedLinerTitle = "for Rebecca";
-            const pausedLinerNote = ``;
+            const albumTitle = "for Rebecca";
+            const albumNote = ``;
+            const albumName = "Red-Headed Hallelujah";
 
             // --- 2. DOM ELEMENT REFERENCES ---
             const splashScreen = document.getElementById('splash-screen');
@@ -393,7 +407,9 @@
             const flipper = document.getElementById('flipper');
             const noteTitleEl = document.getElementById('note-title');
             const noteBodyEl = document.getElementById('note-body');
+            
             const songArtEl = document.getElementById('song-art');
+            const mainPlayerDiv = document.querySelector('.player-texture'); // For the glow
 
             // --- 3. PLAYER STATE ---
             let currentSongIndex = 0;
@@ -415,6 +431,7 @@
                     // Autoplay started!
                 }).catch(error => {
                     // Autoplay was blocked, which shouldn't happen after a click.
+                    // But if it does, we'll just force the transition.
                     console.warn("Video play failed even after click:", error);
                     // Force transition just in case
                     transitionToPlayer();
@@ -436,38 +453,34 @@
                     
                 }, 1000); // 1-second pause
             }
+
+            // --- Player Functions ---
             
-            // --- Media Session API ---
             function updateMediaSession(song) {
                 if ('mediaSession' in navigator) {
-                    if (song === null) {
-                        // Clear media session when paused
-                        navigator.mediaSession.metadata = new MediaMetadata({
-                            title: 'Paused',
-                            artist: artistName,
-                            album: albumName,
-                            artwork: [{ src: 'cover.jpg.png', sizes: '512x512', type: 'image/png' }]
-                        });
-                        navigator.mediaSession.playbackState = "paused";
-                    } else {
-                        // Update with current song
+                    if (song) {
                         navigator.mediaSession.metadata = new MediaMetadata({
                             title: song.title,
                             artist: artistName,
                             album: albumName,
-                            artwork: [{ src: song.art, sizes: '512x512', type: 'image/png' }]
+                            artwork: [
+                                { src: song.image_src, sizes: '512x512', type: 'image/png' }
+                            ]
                         });
                         navigator.mediaSession.playbackState = "playing";
+                    } else {
+                        // On pause, clear metadata or set to 'paused'
+                        if (navigator.mediaSession.metadata) {
+                             navigator.mediaSession.playbackState = "paused";
+                        }
                     }
                 }
             }
-
-            // --- Player Functions ---
             
             function updateLinerNotes(index) {
                 if (index === null) {
-                    noteTitleEl.textContent = pausedLinerTitle;
-                    noteBodyEl.textContent = pausedLinerNote;
+                    noteTitleEl.textContent = albumTitle;
+                    noteBodyEl.textContent = albumNote;
                 } else {
                     const song = songs[index];
                     noteTitleEl.textContent = song.title;
@@ -479,10 +492,15 @@
                 songTitleEl.textContent = song.title;
                 songArtistEl.textContent = artistName;
                 audioPlayer.src = song.src;
-                songArtEl.src = song.art; // Load the new song art
+                
+                // Set song art, but keep it hidden
+                songArtEl.src = song.image_src;
+                songArtEl.classList.remove('is-visible');
+                
                 flipper.classList.remove('is-flipped');
                 updateActivePlaylistItem();
-                // We no longer call updateMediaSession here to prevent mobile crashes
+                
+                // DO NOT call updateMediaSession here - this fixes the mobile white screen bug.
             }
 
             function playSong() {
@@ -493,10 +511,12 @@
                 audioPlayer.play();
                 playIcon.classList.add('hidden');
                 pauseIcon.classList.remove('hidden');
+                
+                songArtEl.classList.add('is-visible'); // Fade in song art
+                mainPlayerDiv.classList.add('is-playing-glow'); // Add glow
+                
                 updateLinerNotes(currentSongIndex);
-                playerContainer.classList.add('is-playing-glow'); // Add glow
-                songArtEl.classList.add('is-active'); // Fade in song art
-                updateMediaSession(songs[currentSongIndex]); // Update info
+                updateMediaSession(songs[currentSongIndex]); // Update BT display
             }
 
             function pauseSong() {
@@ -504,10 +524,12 @@
                 audioPlayer.pause();
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
+                
+                songArtEl.classList.remove('is-visible'); // Fade out song art
+                mainPlayerDiv.classList.remove('is-playing-glow'); // Remove glow
+                
                 updateLinerNotes(null);
-                playerContainer.classList.remove('is-playing-glow'); // Remove glow
-                songArtEl.classList.remove('is-active'); // Fade out song art
-                updateMediaSession(null); // Clear info
+                updateMediaSession(null); // Update BT display
             }
 
             function prevSong() {
@@ -580,13 +602,14 @@
             // --- 5. EVENT LISTENERS ---
             
             // --- New Splash Screen Logic ---
-            // Try to autoplay first
+            // Try to autoplay (muted) first
             splashVideo.play().then(() => {
                 // Autoplay started! Hide the button.
                 enterBtn.style.display = 'none';
                 hasUserInteracted = true; // Mark as "interacted"
             }).catch(error => {
-                // Autoplay was blocked. The button is already visible.
+                // Autoplay was blocked. The button is already visible,
+                // so the user will just click it.
                 console.warn("Autoplay with sound failed as expected:", error);
             });
 
@@ -608,6 +631,7 @@
             
             prevBtn.addEventListener('click', prevSong);
             nextBtn.addEventListener('click', nextSong);
+Red-Headed Hallelujah Music Player
             
             audioPlayer.addEventListener('timeupdate', updateProgress);
             audioPlayer.addEventListener('ended', nextSong);
@@ -630,6 +654,17 @@
             loadSong(songs[currentSongIndex]);
             updateLinerNotes(null);
             // We no longer call updateMediaSession(null) here to prevent the crash on mobile.
+            
+            // --- 7. PWA Service Worker Registration ---
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js').then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    }, err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+                });
+            }
         });
     </script>
 </body>
