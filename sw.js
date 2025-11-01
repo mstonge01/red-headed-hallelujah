@@ -1,9 +1,9 @@
 /*
 Service Worker for Red-Headed Hallelujah
-Version: v13 - Aggressive Update
+Version: v9 - Manual Update Button
 */
 
-const CACHE_NAME = 'rhh-cache-v13';
+const CACHE_NAME = 'rhh-cache-v9';
 const APP_SHELL_URLS = [
     'index.html',
     'cover.jpg.jpg',
@@ -40,54 +40,34 @@ const CONTENT_URLS = [
     '12-red-headed-hallelujah-piano-art.png'
 ];
 
-// --- AGGRESSIVE UPDATE LOGIC ---
-// This tells the new service worker to take over immediately.
 self.addEventListener('install', event => {
-    console.log('[SW v13] Install');
+    console.log('[SW v9] Install');
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            console.log('[SW v13] Caching App Shell');
+            console.log('[SW v9] Caching App Shell');
             return cache.addAll(APP_SHELL_URLS);
-        }).then(() => {
-            // Force the new service worker to activate
-            return self.skipWaiting();
         })
     );
 });
 
 self.addEventListener('activate', event => {
-    console.log('[SW v13] Activate');
-    // Force the new service worker to take control of the page
-    event.waitUntil(self.clients.claim());
-    
+    console.log('[SW v9] Activate');
     // Clean up old caches
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('[SW v13] Deleting old cache:', cacheName);
+                        console.log('[SW v9] Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
             );
-        })
+        }).then(() => self.clients.claim()) // Take control immediately
     );
 });
 
-// --- CACHE & NETWORK STRATEGY ---
 self.addEventListener('fetch', event => {
-    const url = new URL(event.request.url);
-
-    // --- Google Cast SDK ---
-    // This is an online-only feature. Always fetch from the network.
-    // This also fixes the Cast button not appearing.
-    if (url.origin === 'https://www.gstatic.com' || url.pathname.startsWith('/__cast/')) {
-        event.respondWith(fetch(event.request));
-        return;
-    }
-
-    // --- App files ---
     // Serve from cache first, then check network.
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
@@ -97,10 +77,7 @@ self.addEventListener('fetch', event => {
             }
             
             // If not, fetch it from the network.
-            return fetch(event.request).then(networkResponse => {
-                // (Don't cache non-app files, just return them)
-                return networkResponse;
-            });
+            return fetch(event.request);
         })
     );
 });
@@ -110,17 +87,20 @@ self.addEventListener('fetch', event => {
 // Listens for the "cache-music" message from the main page.
 self.addEventListener('message', event => {
     if (event.data.type === 'CACHE_MUSIC') {
-        console.log('[SW v13] Received message to cache music/art.');
+        console.log('[SW v9] Received message to cache music/art.');
         event.waitUntil(
             caches.open(CACHE_NAME).then(cache => {
-                console.log('[SW v13] Starting background cache of music/art...');
+                console.log('[SW v9] Starting background cache of music/art...');
                 return cache.addAll(CONTENT_URLS).then(() => {
-                    console.log('[SW v13] All music/art successfully cached.');
+                    console.log('[SW v9] All music/art successfully cached.');
                 }).catch(error => {
-                    console.error('[SW v13] Failed to cache music/art:', error);
+                    console.error('[SW v9] Failed to cache music/art:', error);
                 });
             })
         );
+    } else if (event.data.type === 'SKIP_WAITING') {
+        // This message comes from the "Restart App" button
+        self.skipWaiting();
     }
 });
 
