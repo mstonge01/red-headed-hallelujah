@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap" rel="stylesheet">
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json?v=2"> <!-- <--- ADDED ?v=2 HERE -->
+    <link rel="manifest" href="manifest.json?v=2">
     <meta name="theme-color" content="#EF4444">
     
     <style>
@@ -98,11 +98,7 @@
             }
         }
         
-        .is-playing-glow {
-            animation: pulseGlow 2.5s infinite ease-in-out;
-        }
-
-        /* --- Liner Notes Flip Animation --- */
+        /* --- Flipper Styles --- */
         .flipper-container {
             perspective: 1000px;
             padding-top: 100%; /* Creates a 1:1 aspect ratio */
@@ -119,7 +115,7 @@
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
         }
-        .flipper-back {
+        #flipper-back {
             transform: rotateY(180deg);
             background-color: #4B5563; /* gray-600 */
             background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png');
@@ -128,6 +124,28 @@
             white-space: pre-wrap;
         }
         
+        /* --- AI Modal Styles --- */
+        #ai-modal {
+            background-color: rgba(0, 0, 0, 0.7);
+            transition: opacity 0.3s ease;
+        }
+        #ai-modal-content {
+            background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png');
+        }
+        /* Spinner Animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .ai-spinner {
+            border: 4px solid #4B5563; /* gray-600 */
+            border-top: 4px solid #EF4444; /* red-500 */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
         /* --- Song Art Crossfade --- */
         #song-art {
             transition: opacity 0.5s ease-in-out;
@@ -219,15 +237,24 @@
                             <img id="song-art" src="" alt="Song-specific art" class="absolute top-0 left-0 w-full h-full object-cover">
                         </div>
                         <!-- BACK (Liner Notes) -->
-                        <div id="flipper-back" class="flipper-back absolute w-full h-full p-6 overflow-y-auto">
-                            <h3 id="note-title" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
-                            <p id="note-body" class="text-gray-200"></p>
+                        <div id="flipper-back" class="flipper-back absolute w-full h-full p-6 overflow-y-auto flex flex-col">
+                            <div class="flex-grow">
+                                <h3 id="note-title" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
+                                <p id="note-body" class="text-gray-200"></p>
+                            </div>
+                            <button id="ask-artist-btn" class="mt-4 w-full bg-yellow-400 text-gray-900 font-album-title tracking-wider text-lg p-2 hover:bg-yellow-300 transition-colors duration-200 rounded-md">
+                                Ask the Artist
+                            </button>
                         </div>
                     </div>
                 </div>
                 <!-- Liner Notes Button -->
                 <button id="liner-notes-btn" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200">
                     Liner Notes
+                </button>
+                <!-- About Button -->
+                <button id="about-btn" class="w-full bg-gray-600 text-white font-album-title tracking-wider text-lg p-3 hover:bg-gray-500 transition-colors duration-200">
+                    About This App
                 </button>
             </div>
 
@@ -294,6 +321,26 @@
     <!-- The actual audio element, hidden from view -->
     <audio id="audio-player"></audio>
     <audio id="intro-audio" src="hallelujah-intro.mp3" preload="auto"></audio>
+
+    <!-- AI Modal -->
+    <div id="ai-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 opacity-0">
+        <div id="ai-modal-content" class="player-texture w-full max-w-lg p-6 rounded-lg shadow-2xl border border-gray-700">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-album-title text-3xl text-yellow-400 tracking-wider">Artist's Note</h3>
+                <button id="ai-modal-close-btn" class="text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+            <!-- AI Content Area -->
+            <div id="ai-modal-body" class="min-h-[150px] flex items-center justify-center">
+                <!-- Spinner -->
+                <div id="ai-modal-spinner" class="ai-spinner hidden"></div>
+                <!-- Text Content -->
+                <p id="ai-modal-text" class="text-gray-200 text-lg"></p>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -405,6 +452,17 @@
             const songArtEl = document.getElementById('song-art');
             const mainPlayerDiv = document.querySelector('.player-texture');
             
+            // AI Modal Elements
+            const aiModal = document.getElementById('ai-modal');
+            const aiModalContent = document.getElementById('ai-modal-content');
+            const aiModalCloseBtn = document.getElementById('ai-modal-close-btn');
+            const askArtistBtn = document.getElementById('ask-artist-btn');
+            const aiModalSpinner = document.getElementById('ai-modal-spinner');
+            const aiModalText = document.getElementById('ai-modal-text');
+
+            // New "About" Button
+            const aboutBtn = document.getElementById('about-btn');
+
             // New Update Button Elements
             const updateContainer = document.getElementById('update-container');
             const updateBtn = document.getElementById('update-btn');
@@ -415,8 +473,13 @@
             let currentSongIndex = 0;
             let isPlaying = false;
             let hasUserInteracted = false;
+            let isAiModalOpen = false; // Track modal state
 
             // --- 4. FUNCTIONS ---
+
+            // About Text
+            const aboutTitle = "About Red-Headed Hallelujah";
+            const aboutText = `Welcome to Red-Headed Hallelujah, a digital music experience that is part concept album, part street-art gallery, and part AI-assisted love letter. This project was conceived and directed by mstonge01 as a dedicated gift to his wife, Rebecca, blending personal storytelling with cutting-edge technology.<br><br>This isn't just a website. It's a custom-built Progressive Web App (PWA), designed from the ground up to work perfectly on any device, from a desktop browser to a mobile phone. When installed, it functions as a complete, offline-first application. The app shell loads instantly, while the entire 12-track album and its corresponding artwork are cached in the background, allowing for a seamless, high-fidelity listening experience anywhere, with or without an internet connection.<br><br>The player is deeply integrated with native Media Session controls, meaning the album's art, titles, and playback can be managed directly from your phone's lock screen or your car's dashboard—a testament to its technical polish.<br><br><b class="text-yellow-400 text-lg">The Concept: A Graffiti Tribute</b><br><br>The album's visual identity is rooted in the raw, authentic aesthetic of urban stencil art. The cover and all accompanying track images were created in this high-contrast style, depicting the "Red-Headed Hallelujah" herself in various moments and personas.<br><br>Like a series of tributes painted on a weathered concrete wall, each image tells a story. You'll find a defiant driver in a doorless Jeep for "Real Women," a saint-like figure bathed in holy light for the title track, and a tender portrait of motherhood for "Natural Magic."<br><br>A central feature of this site is the Liner Notes button. Click it, and the artwork performs a 3D flip, revealing the story and lyrics behind each song, much like discovering a hidden message on the back of a physical record sleeve.<br><br><b class="text-yellow-400 text-lg">The Music: The "Red-Headed Rock" Aesthetic</b><br><br>Musically, Red-Headed Hallelujah is a high-energy "Red-Headed Rock" album at its core, but it masterfully explores the full spectrum of a life lived together. While generated with the assistance of AI, each track was painstakingly directed, with custom lyrics and styling to create a cohesive and deeply personal narrative.<br><br>The album opens with the driving, dangerous hard rock of "The Crimson Tide," a symbolic tale of a siren-like mermaid, before moving into the gritty, fuzzed-out blues-rock defiance of "Real Women."<br><br>The experience flows from chaotic, comedic pop-punk ("Interrupted") and playful funk-rock ("Caps") to moments of profound tenderness, like the intimate acoustic folk of "Natural Magic." The album hits its emotional peak with the soaring, choir-backed anthem "Red-Headed Hallelujah" and the rugged, soulful southern rock ballad "Cinnamon Serenade"—a raw ode to love's less-than-glamorous, unconditional moments.<br><br>This is a technical and artistic creation, a digital monument to a real-world muse. Enjoy the experience.`;
             
             // This function now just shows the "Click to Begin" button.
             // It's called after the PWA check (if any) is complete.
@@ -515,11 +578,11 @@
             function updateLinerNotes(index) {
                 if (index === null) {
                     noteTitleEl.textContent = albumTitle;
-                    noteBodyEl.textContent = albumNote;
+                    noteBodyEl.innerHTML = albumNote; // Use innerHTML for consistency
                 } else {
                     const song = songs[index];
                     noteTitleEl.textContent = song.title;
-                    noteBodyEl.textContent = song.note;
+                    noteBodyEl.textContent = song.note; // Use textContent for plain text notes
                 }
             }
 
@@ -658,10 +721,42 @@
             audioPlayer.addEventListener('timeupdate', updateProgress);
             audioPlayer.addEventListener('ended', nextSong);
             progressBar.addEventListener('input', setProgress);
+            
             linerNotesBtn.addEventListener('click', () => {
+                // Always make sure the correct liner notes are showing when this button is toggled.
+                updateLinerNotes(isPlaying ? currentSongIndex : null);
                 flipper.classList.toggle('is-flipped');
             });
             
+            // --- "About" Button Listener ---
+            aboutBtn.addEventListener('click', () => {
+                noteTitleEl.textContent = aboutTitle;
+                noteBodyEl.innerHTML = aboutText; // Use innerHTML for formatted "About" text
+                flipper.classList.add('is-flipped'); // Show the back panel
+            });
+
+            // --- AI Modal Listeners ---
+            askArtistBtn.addEventListener('click', () => {
+                isAiModalOpen = true;
+                aiModal.classList.remove('hidden');
+                setTimeout(() => aiModal.style.opacity = '1', 10); // Fade in
+                getAiCommentary();
+            });
+
+            aiModalCloseBtn.addEventListener('click', () => {
+                isAiModalOpen = false;
+                aiModal.style.opacity = '0';
+                setTimeout(() => aiModal.classList.add('hidden'), 300); // Hide after fade
+            });
+
+            // Close modal if clicking outside the content
+            aiModal.addEventListener('click', (e) => {
+                if (e.target === aiModal) {
+                    aiModalCloseBtn.click();
+                }
+            });
+
+
             // --- Media Session Action Handlers (for truck controls) ---
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.setActionHandler('play', playSong);
@@ -679,7 +774,93 @@
             loadSong(songs[currentSongIndex]);
             updateLinerNotes(null);
             
-            // --- 7. PWA Service Worker Registration ---
+            // --- 7. NEW AI FUNCTIONS ---
+
+            /**
+             * Calls the Gemini API with exponential backoff.
+             */
+            async function callGeminiApi(payload, retries = 5, delay = 1000) {
+                const apiKey = ""; // Keep this empty, it's handled by the environment
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload),
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && retries > 0) { // Throttling
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            return callGeminiApi(payload, retries - 1, delay * 2); // Exponential backoff
+                        }
+                        throw new Error(`API Error: ${response.statusText}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    if (retries > 0) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return callGeminiApi(payload, retries - 1, delay * 2); // Exponential backoff
+                    }
+                    console.error("Error calling Gemini API after retries:", error);
+                    throw error;
+                }
+            }
+
+            /**
+             * Fetches AI-generated commentary for the current song.
+             */
+            async function getAiCommentary() {
+                if (!isAiModalOpen) return; // Stop if modal was closed
+
+                // 1. Set loading state
+                aiModalSpinner.classList.remove('hidden');
+                aiModalText.classList.add('hidden');
+
+                const currentSong = songs[currentSongIndex];
+                
+                // 2. Define the prompts
+                const systemPrompt = "Act as the artist of the album 'Red-Headed Hallelujah.' You are a creative, thoughtful, and slightly rugged rock musician. Based on the song title and your official notes, write a short, personal, and creative story about what inspired you to write this song, as if you're sharing a secret with a fan. Keep it under 100 words.";
+                
+                const userQuery = `Song Title: "${currentSong.title}"\nMy Official Notes: "${currentSong.note}"\n\nGive me a new creative story about this song.`;
+
+                // 3. Construct the payload
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    },
+                };
+
+                // 4. Call the API
+                try {
+                    const result = await callGeminiApi(payload);
+                    const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (aiText && isAiModalOpen) {
+                        aiModalText.textContent = aiText.trim();
+                    } else if (isAiModalOpen) {
+                        throw new Error("Invalid response structure from API.");
+                    }
+                } catch (error) {
+                    console.error("Failed to get AI commentary:", error);
+                    if (isAiModalOpen) {
+                        aiModalText.textContent = "Couldn't reach the artist right now. Please try again in a moment.";
+                    }
+                } finally {
+                    // 5. Set final state
+                    if (isAiModalOpen) {
+                        aiModalSpinner.classList.add('hidden');
+                        aiModalText.classList.remove('hidden');
+                    }
+                }
+            }
+
+
+            // --- 8. PWA Service Worker Registration ---
             // Check if we're in "app" mode
             const isPwa = window.matchMedia('(display-mode: standalone)').matches;
 
@@ -736,4 +917,5 @@
     </script>
 </body>
 </html>
+
 
