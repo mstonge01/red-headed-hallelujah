@@ -1,19 +1,24 @@
-/*
-Service Worker for Red-Headed Hallelujah
-Version: v9 - Manual Update Button
-*/
+const CACHE_NAME = 'rhh-cache-v9'; // <-- IMPORTANT: This is v9
 
-const CACHE_NAME = 'rhh-cache-v9';
-const APP_SHELL_URLS = [
+// 1. App Shell Files: The basic files needed for the app to run.
+// These are cached immediately on install.
+const APP_SHELL_FILES = [
+    './', // This caches the index.html
     'index.html',
-    'cover.jpg.jpg',
-    'paint-video.mp4',
-    'hallelujah-intro.mp3',
+    'manifest.json?v=2', // <-- Matches the ?v=2 in your index.html
+    'https://cdn.tailwindcss.com/',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
+    'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
+    'https://fonts.gstatic.com/s/staatliches/v12/HI_OiY8KO6hCsQSoAPmtMYebvpU.woff2', // Common font file
     'https://www.transparenttextures.com/patterns/stucco.png',
-    'https://www.transparenttextures.com/patterns/concrete-wall.png'
+    'https://www.transparenttextures.com/patterns/concrete-wall.png',
+    'cover.jpg.jpg', // Main cover art
+    'paint-video.mp4',
+    'hallelujah-intro.mp3'
 ];
-const CONTENT_URLS = [
+
+// 2. Content Files: The songs and art to be cached in the background.
+const CONTENT_FILES = [
     '01-the-crimson-tide.mp3',
     '02-real-women.mp3',
     '03-red-headed-hallelujah.mp3',
@@ -40,67 +45,114 @@ const CONTENT_URLS = [
     '12-red-headed-hallelujah-piano-art.png'
 ];
 
+// Helper function to cache with CORS
+function cacheRequest(url) {
+    // Check if the URL is an absolute URL (starts with http)
+    if (url.startsWith('http')) {
+        // For cross-origin requests (like Google Fonts, textures), we need 'cors' mode
+        return new Request(url, { mode: 'cors' });
+    }
+    // For local files, just return a normal request
+    return new Request(url);
+}
+
+// 1. Install Step: Cache the app shell
 self.addEventListener('install', event => {
-    console.log('[SW v9] Install');
+    console.log('[SW] Install');
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            console.log('[SW v9] Caching App Shell');
-            return cache.addAll(APP_SHELL_URLS);
+            console.log('[SW] Caching App Shell...');
+            // This is the download that happens when the service worker is first installed
+            return Promise.all(
+                APP_SHELL_FILES.map(url => cache.add(cacheRequest(url)))
+            ).catch(err => {
+                console.error('[SW] App Shell caching failed', err);
+            });
+        }).then(() => {
+            // Force this new service worker to activate immediately
+            console.log('[SW] Install complete, skipping waiting.');
+            return self.skipWaiting();
         })
     );
 });
 
+// 2. Activate Step: Clean up old caches
 self.addEventListener('activate', event => {
-    console.log('[SW v9] Activate');
-    // Clean up old caches
+    console.log('[SW] Activate');
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('[SW v9] Deleting old cache:', cacheName);
+                        console.log('[SW] Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
             );
-        }).then(() => self.clients.claim()) // Take control immediately
-    );
-});
-
-self.addEventListener('fetch', event => {
-    // Serve from cache first, then check network.
-    event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-            // If it's in the cache, serve it.
-            if (cachedResponse) {
-                return cachedResponse;
-            }
-            
-            // If not, fetch it from the network.
-            return fetch(event.request);
         })
     );
+    // Tell the active service worker to take control of the page immediately
+    return self.clients.claim();
 });
 
-
-// --- MESSAGE LISTENER ---
-// Listens for the "cache-music" message from the main page.
+// 3. Message Step: Listen for message from app to cache content
+// This is triggered when you click "Click to Begin"
 self.addEventListener('message', event => {
-    if (event.data.type === 'CACHE_MUSIC') {
-        console.log('[SW v9] Received message to cache music/art.');
+    if (event.data.action === 'cache-content') {
+        console.log('[SW] Received message to cache content (songs/art).');
         event.waitUntil(
             caches.open(CACHE_NAME).then(cache => {
-                console.log('[SW v9] Starting background cache of music/art...');
-                return cache.addAll(CONTENT_URLS).then(() => {
-                    console.log('[SW v9] All music/art successfully cached.');
-                }).catch(error => {
-                    console.error('[SW v9] Failed to cache music/art:', error);
+                console.log('[SW] Caching songs and art in background...');
+                return Promise.all(
+                    CONTENT_FILES.map(url => cache.add(cacheRequest(url)))
+                ).catch(error => {
+                    console.error('[SW] Failed to cache content:', error);
                 });
             })
         );
-    } else if (event.data.type === 'SKIP_WAITING') {
-        // This message comes from the "Restart App" button
-        self.skipWaiting();
     }
 });
 
+// 4. Fetch Step: Serve from cache, fallback to network
+self.addEventListener('fetch', event => {
+    // Only handle GET requests
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
+    event.respondWith(
+        caches.match(event.request).then(response => {
+            // 1. Respond from Cache (Cache-First)
+            if (response) {
+                // console.log(`[SW] Serving from cache: ${event.request.url}`);
+                return response;
+            }
+
+            // 2. Not in Cache: Fetch from Network, Cache, and Respond
+            // console.log(`[SW] Fetching from network: ${event.request.url}`);
+            return fetch(event.request.clone()).then(networkResponse => {
+
+                // Check if the response is valid
+                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error') {
+                    return networkResponse;
+                }
+                
+                // We only want to re-cache our own files or known third-party assets
+                const isCachable = APP_SHELL_FILES.some(url => event.request.url.includes(url.replace('https://', ''))) ||
+                                     CONTENT_FILES.some(url => event.request.url.includes(url)) ||
+                                     event.request.url.includes('gstatic.com'); // Cache fonts
+                
+                if (isCachable) {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseToCache);
+                    });
+                }
+                return networkResponse;
+            }).catch(error => {
+                console.error(`[SW] Fetch failed, and not in cache: ${event.request.url}`, error);
+                // We don't have a fallback page, so we just let the browser's default error show
+            });
+        })
+    );
+});
