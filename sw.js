@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhh-cache-v9'; // <-- IMPORTANT: This is v9
+const CACHE_NAME = 'rhh-cache-v10'; // <-- IMPORTANT: This is v10
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
@@ -13,6 +13,7 @@ const APP_SHELL_FILES = [
     'https://www.transparenttextures.com/patterns/stucco.png',
     'https://www.transparenttextures.com/patterns/concrete-wall.png',
     'cover.jpg.jpg', // Main cover art
+    'cover.jpg.png', // ADDED PNG version for manifest
     'paint-video.mp4',
     'hallelujah-intro.mp3'
 ];
@@ -156,3 +157,4 @@ self.addEventListener('fetch', event => {
         })
     );
 });
+
