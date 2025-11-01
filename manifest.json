@@ -1,36 +1,36 @@
 {
-  "name": "Red-Headed Hallelujah",
-  "short_name": "R-H H",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#1F2937",
-  "theme_color": "#EF4444",
-  "description": "An album by A mstonge01 Project",
-  "icons": [
-    {
-      "src": "cover.jpg.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
-      "purpose": "any"
-    },
-    {
-      "src": "cover.jpg.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any"
-    },
-    {
-      "src": "cover.jpg.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg",
-      "purpose": "maskable"
-    },
-    {
-      "src": "cover.jpg.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "maskable"
-    }
-  ]
+    "name": "Red-Headed Hallelujah",
+    "short_name": "Hallelujah",
+    "description": "An album for Rebecca.",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#111827",
+    "theme_color": "#EF4444",
+    "icons": [
+        {
+            "src": "cover.jpg.jpg",
+            "sizes": "192x192",
+            "type": "image/jpeg",
+            "purpose": "any"
+        },
+        {
+            "src": "cover.jpg.jpg",
+            "sizes": "512x512",
+            "type": "image/jpeg",
+            "purpose": "any"
+        },
+        {
+            "src": "cover.jpg.jpg",
+            "sizes": "192x192",
+            "type": "image/jpeg",
+            "purpose": "maskable"
+        },
+        {
+            "src": "cover.jpg.jpg",
+            "sizes": "512x512",
+            "type": "image/jpeg",
+            "purpose": "maskable"
+        }
+    ]
 }
 
