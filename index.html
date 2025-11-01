@@ -12,20 +12,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap" rel="stylesheet">
     
     <!-- Google Cast SDK -->
-    <!-- We load this dynamically in JS, but pre-connect to speed it up -->
-    <link rel="preconnect" href="https://www.gstatic.com">
-    <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+    <!-- This will only load if you're online -->
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json?v=4"> <!-- Version 4 -->
-    <meta name="theme-color" content="#EF4444">
-    
     <style>
         /* Custom styles to match the album art aesthetic */
         body {
             font-family: 'Inter', sans-serif;
-            /* Prevent scrolling bounces on mobile */
-            overscroll-behavior: none;
         }
 
         /* Using 'Staatliches' for the main album title to mimic the cover font */
@@ -66,16 +59,16 @@
             width: 18px;
             height: 18px;
             background: #EF4444; /* red-500 */
-            border-radius: 3px;
+            border-radius: 3px; 
             cursor: pointer;
-            margin-top: -6px; /* Center the thumb on the track */
+            margin-top: -6px; 
         }
         
         #progress-bar-container input[type=range]::-moz-range-thumb {
             width: 18px;
             height: 18px;
             background: #EF4444; /* red-500 */
-            border-radius: 3px;
+            border-radius: 3px; 
             cursor: pointer;
         }
 
@@ -100,6 +93,7 @@
             perspective: 1000px;
             padding-top: 100%; /* Creates a 1:1 aspect ratio */
         }
+
         #flipper {
             transform-style: preserve-3d;
             transition: transform 0.8s;
@@ -107,144 +101,171 @@
         #flipper.is-flipped {
             transform: rotateY(180deg);
         }
+
         .flipper-front,
         .flipper-back {
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
         }
+
         .flipper-back {
             transform: rotateY(180deg);
             background-color: #4B5563; /* gray-600 */
             background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png');
         }
+
         #note-body {
             white-space: pre-wrap;
         }
 
-        /* --- "Live Glow" Pulse Animation --- */
-        @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0); } /* red-500 with 0 opacity */
-            50% { box-shadow: 0 0 20px 5px rgba(239, 68, 68, 0.4); } /* red-500 with 40% opacity */
-        }
-        .is-playing-glow {
-            animation: pulseGlow 3s infinite ease-in-out;
-        }
-        
-        /* --- Simple Crossfade for Song Art --- */
+        /* --- Crossfade Animation for Song Art --- */
         #song-art {
-            /* This is the new art layer, starts invisible */
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
         }
-        #song-art.is-active {
-            /* Fades in when active */
+        #song-art.is-visible {
             opacity: 1;
         }
 
-        /* --- Google Cast Button Styling --- */
-        google-cast-launcher {
-            width: 40px;
-            height: 40px;
-            --cast-button-color: #FFF; /* White, to match splash screen */
+        /* --- Live Glow Pulse --- */
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); /* red-500 */
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(239, 68, 68, 0.7); /* red-500 */
+            }
+        }
+        
+        /* Applied to the main player container */
+        .is-playing-glow {
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+
+        /* --- Splash Screen Buttons --- */
+        #enter-btn, #skip-btn {
+            background: rgba(239, 68, 68, 0.8); /* red-500 with 80% opacity */
+            color: white;
+            padding: 1rem 2rem;
+            font-family: 'Staatliches', cursive;
+            font-size: 1.5rem;
+            letter-spacing: 0.1em;
+            border: 2px solid rgba(255, 255, 255, 0.5);
             cursor: pointer;
-            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        #enter-btn:hover, #skip-btn:hover {
+            background: rgba(220, 38, 38, 1); /* red-600 */
+            border-color: white;
+            transform: scale(1.05);
+        }
+        #skip-btn {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
         }
         
-        /* Container for cast button on splash screen */
-        #cast-button-container {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 60;
+        /* --- Cast Button Sizing Fix --- */
+        /* This rule targets both mobile and desktop containers */
+        #player-cast-btn-container-mobile google-cast-launcher,
+        #player-cast-btn-container-desktop google-cast-launcher {
+            width: 24px;
+            height: 24px;
+            --cast-button-color: #d1d5db; /* gray-300 */
+            margin: 0;
+            padding: 0;
         }
         
-        /* Styling for when the button is in the player (DESKTOP AND MOBILE)
-          This is the fix:
-        */
-        #player-cast-btn-container google-cast-launcher,
-        #player-cast-btn-container-mobile google-cast-launcher {
-             --cast-button-color: #EF4444; /* red-500 */
-             width: 24px;
-             height: 24px;
-             margin: 0;
+        #player-cast-btn-container-mobile google-cast-launcher:hover,
+        #player-cast-btn-container-desktop google-cast-launcher:hover {
+            --cast-button-color: #EF4444; /* red-500 */
         }
+
     </style>
 </head>
-<body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4 overflow-hidden">
+<body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4">
 
-    <!-- 
-      Splash Screen: 
-      Full screen, contains video, update button, and cast button.
-    -->
+    <!-- Single Cast Button (will be moved by JS) -->
+    <!-- Starts hidden, will be shown by Cast SDK if available -->
+    <google-cast-launcher id="cast-btn" style="display: none;"></google-cast-launcher>
+
+    <!-- Video Splash Screen -->
     <div id="splash-screen" class="fixed top-0 left-0 w-full h-full bg-gray-900 z-50 flex items-center justify-center opacity-100 transition-opacity duration-1000">
         
-        <!-- Video -->
-        <video id="splash-video" class="max-w-full max-h-full object-contain" playsinline>
+        <div id="splash-ui-container" class="relative flex flex-col items-center justify-center">
+            <!-- The "Click to Begin" Button -->
+            <button id="enter-btn">Click to Begin</button>
+            
+            <!-- This container will hold the Cast button when it's moved here by JS -->
+            <div id="splash-cast-btn-container" class="absolute -top-16"></div>
+        </div>
+
+        <!-- Video: No 'autoplay' or 'muted' -->
+        <video id="splash-video" class="max-w-full max-h-full object-contain absolute top-0 left-0 w-full h-full" playsinline>
             <source src="paint-video.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
-
-        <!-- "Click to Begin" / Status Button -->
-        <button id="enter-btn" class="absolute z-60 bg-red-500 text-white p-4 px-6 rounded shadow-lg font-album-title text-2xl tracking-wider hover:bg-red-600 transition-all duration-300 disabled:bg-gray-500 disabled:opacity-75">
-            Click to Begin
-        </button>
-
-        <!-- "Skip Intro" Button (hidden initially) -->
-        <button id="skip-btn" class="hidden absolute bottom-10 left-1/2 -translate-x-1/2 z-60 bg-black bg-opacity-50 text-white py-2 px-4 rounded text-sm hover:bg-opacity-75 transition-all">
-            Skip Intro
-        </button>
         
-        <!-- 
-          Cast Button Container
-          This whole container will be *moved* into the player later.
-        -->
-        <div id="cast-button-container">
-            <google-cast-launcher id="cast-btn"></google-cast-launcher>
-        </div>
-
-        <!-- PWA "Checking for Updates" UI (hidden by default) -->
-        <div id="update-ui" class="hidden absolute top-0 left-0 w-full h-full bg-gray-900 bg-opacity-95 z-40 p-8 flex flex-col items-center justify-center text-center">
-            <div id="update-checking" class="text-gray-300">
-                <p class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4">Checking for Updates...</p>
-                <p>Please wait a moment.</p>
-            </div>
-            <div id="update-available" class="hidden text-gray-300">
-                <p class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4">Update Found!</p>
-                <p>Downloading new files... please wait.</p>
-                <p class="mt-4 text-sm text-gray-400">(The app will reload automatically when done.)</p>
-            </div>
-        </div>
+        <!-- Skip Intro Button (hidden by default) -->
+        <button id="skip-btn" class="hidden absolute bottom-8 z-10">Skip Intro</button>
     </div>
+    
+    <!-- Intro "Hallelujah" audio element, hidden from view -->
+    <audio id="intro-audio" src="hallelujah-intro.mp3"></audio>
 
-    <!-- 
-      Main Player Container 
-      (starts invisible, fades in)
-    -->
-    <div id="player-container" class="w-full max-w-4xl opacity-0 transition-opacity duration-1000 hidden md:block">
+    <!-- Main Player Container (starts invisible) -->
+    <div id="player-container" class="w-full max-w-4xl opacity-0 transition-opacity duration-1000">
+        
         <!-- Player Container -->
         <div class="player-texture shadow-2xl overflow-hidden flex flex-col md:flex-row">
             
-            <!-- Left Side: Album Artwork & Liner Notes -->
-            <div class="w-full md:w-1/2 lg:w-5/12 flex-shrink-0 flex flex-col">
+            <!-- Left Side (Mobile): Art, Notes -->
+            <div class="w-full md:hidden">
+                <div class="w-full flex-shrink-0 flex flex-col">
+                    <!-- Flipper container (1:1 aspect ratio) -->
+                    <div class="relative w-full flipper-container"> 
+                        <div id="flipper" class="absolute top-0 left-0 w-full h-full">
+                            <!-- FRONT (Album Art) -->
+                            <div class="flipper-front absolute w-full h-full">
+                                <!-- Base Album Cover -->
+                                <img src="cover.jpg.jpg" alt="Album Art for Red-Headed Hallelujah" class="w-full h-full object-cover">
+                                <!-- Song-specific Art (fades in) -->
+                                <img id="song-art-mobile" src="" alt="" class="song-art absolute top-0 left-0 w-full h-full object-cover">
+                            </div>
+                            <!-- BACK (Liner Notes) -->
+                            <div id="flipper-back-mobile" class="flipper-back absolute w-full h-full p-6 overflow-y-auto">
+                                <h3 id="note-title-mobile" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
+                                <p id="note-body-mobile" class="text-gray-200"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Liner Notes Button -->
+                    <button id="liner-notes-btn-mobile" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200">
+                        Liner Notes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Left Side (Desktop): Art, Notes -->
+            <div class="w-full md:w-1/2 lg:w-5/12 flex-shrink-0 flex-col hidden md:flex">
                 <!-- Flipper container (1:1 aspect ratio) -->
-                <div class="relative w-full flipper-container overflow-hidden"> 
-                    <div id="flipper" class="absolute top-0 left-0 w-full h-full">
+                <div class="relative w-full flipper-container"> 
+                    <div id="flipper-desktop" class="absolute top-0 left-0 w-full h-full">
                         <!-- FRONT (Album Art) -->
                         <div class="flipper-front absolute w-full h-full">
-                            <!-- Base Art (Main Cover) -->
+                            <!-- Base Album Cover -->
                             <img src="cover.jpg.jpg" alt="Album Art for Red-Headed Hallelujah" class="w-full h-full object-cover">
-                            <!-- Song-Specific Art (Fades in over top) -->
-                            <img id="song-art" src="" alt="" class="absolute top-0 left-0 w-full h-full object-cover">
+                            <!-- Song-specific Art (fades in) -->
+                            <img id="song-art-desktop" src="" alt="" class="song-art absolute top-0 left-0 w-full h-full object-cover">
                         </div>
                         <!-- BACK (Liner Notes) -->
-                        <div id="flipper-back" class="flipper-back absolute w-full h-full p-6 overflow-y-auto">
-                            <h3 id="note-title" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
-                            <p id="note-body" class="text-gray-200"></p>
+                        <div id="flipper-back-desktop" class="flipper-back absolute w-full h-full p-6 overflow-y-auto">
+                            <h3 id="note-title-desktop" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
+                            <p id="note-body-desktop" class="text-gray-200"></p>
                         </div>
                     </div>
                 </div>
                 <!-- Liner Notes Button -->
-                <button id="liner-notes-btn" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200">
+                <button id="liner-notes-btn-desktop" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200">
                     Liner Notes
                 </button>
             </div>
@@ -254,15 +275,15 @@
                 
                 <!-- Top-Right: Current Song Info -->
                 <div class="mb-4">
-                    <div class="flex justify-between items-start">
+                    <div class="flex justify-between items-center">
                         <div>
                             <p class="text-lg uppercase tracking-widest text-red-500 font-album-title">Now Playing</p>
                             <h2 id="song-title" class="text-3xl text-yellow-400 truncate font-album-title tracking-wider">Song Title</h2>
                             <h3 id="song-artist" class="text-lg text-gray-300">A mstonge01 Project</h3>
                         </div>
-                        <!-- Container where the Cast Button will be MOVED to -->
-                        <div id="player-cast-btn-container" class="flex-shrink-0 pt-2">
-                            <!-- The cast button will be moved here by JS -->
+                        <!-- Cast Button Container (Desktop) -->
+                        <div id="player-cast-btn-container-desktop" class="hidden md:block ml-4 flex-shrink-0">
+                            <!-- Cast button will be moved here -->
                         </div>
                     </div>
                 </div>
@@ -281,13 +302,23 @@
 
                     <!-- Controls -->
                     <div class="flex justify-center items-center space-x-6 mt-4">
+                        <!-- Cast Button Container (Mobile) -->
+                        <div id="player-cast-btn-container-mobile" class="block md:hidden">
+                            <!-- Cast button will be moved here -->
+                        </div>
+                        
+                        <!-- Previous Button -->
                         <button id="prev-btn" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.03V5.969a1 1 0 00-1.555-.832L4.12 9.168a1 1 0 000 1.664l4.325 4zM10.879 9.168a1 1 0 000 1.664l4.325 4A1 1 0 0017 14.03V5.969a1 1 0 00-1.555-.832l-4.325 4z"/></svg>
                         </button>
+                        <!-- Play/Pause Button -->
                         <button id="play-pause-btn" class="w-16 h-16 bg-red-500 text-white rounded-full flex items-center justify-center text-2xl hover:bg-red-600 transition-colors duration-200 shadow-lg">
+                            <!-- Play Icon -->
                             <svg id="play-icon" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.002v3.996a1 1 0 001.555.832l3.197-1.998a1 1 0 000-1.664l-3.197-1.998z" clip-rule="evenodd"/></svg>
+                            <!-- Pause Icon (hidden by default) -->
                             <svg id="pause-icon" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1H8zm5 0a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1h-1z" clip-rule="evenodd"/></svg>
                         </button>
+                        <!-- Next Button -->
                         <button id="next-btn" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 5.969v8.062a1 1 0 001.555.832l4.325-4a1 1 0 000-1.664l-4.325-4zM10.879 5.168A1 1 0 009.324 5.97v8.062a1 1 0 001.555.832l4.325-4a1 1 0 000-1.664l-4.325-4z"/></svg>
                         </button>
@@ -300,202 +331,15 @@
                         <!-- Playlist items will be injected here by JavaScript -->
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- "Check for Updates" Button (PWA only) -->
-        <div id="update-btn-container" class="text-center mt-4" style="display: none;"> <!-- Hidden by default, shown by PWA JS -->
-             <button id="update-btn" class="text-gray-500 text-sm hover:text-red-500 transition-colors">Check for Updates</button>
-             <p id="update-status" class="text-gray-500 text-sm mt-1"></p>
-        </div>
-    </div>
-    
-    <!-- Mobile/Vertical Layout (hidden on md+) -->
-    <div id="player-container-mobile" class="w-full max-w-md opacity-0 transition-opacity duration-1000 md:hidden">
-        <div class="player-texture shadow-2xl overflow-hidden rounded-lg">
-            <!-- Top: Album Artwork & Liner Notes -->
-            <div class="w-full flex-shrink-0 flex flex-col">
-                <!-- Flipper container (1:1 aspect ratio) -->
-                <div class="relative w-full flipper-container overflow-hidden"> 
-                    <div id="flipper-mobile" class="absolute top-0 left-0 w-full h-full">
-                        <!-- FRONT (Album Art) -->
-                        <div class="flipper-front absolute w-full h-full">
-                            <img src="cover.jpg.jpg" alt="Album Art for Red-Headed Hallelujah" class="w-full h-full object-cover">
-                            <img id="song-art-mobile" src="" alt="" class="absolute top-0 left-0 w-full h-full object-cover">
-                        </div>
-                        <!-- BACK (Liner Notes) -->
-                        <div id="flipper-back-mobile" class="flipper-back absolute w-full h-full p-6 overflow-y-auto">
-                            <h3 id="note-title-mobile" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
-                            <p id="note-body-mobile" class="text-gray-200"></p>
-                        </div>
-                    </div>
-                </div>
-                <!-- Liner Notes Button -->
-                <button id="liner-notes-btn-mobile" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200">
-                    Liner Notes
-                </button>
-            </div>
-
-            <!-- Bottom: Info, Controls, Playlist -->
-            <div class="w-full p-6 flex flex-col justify-between">
-                <!-- Top: Current Song Info -->
-                <div class="mb-4">
-                     <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-lg uppercase tracking-widest text-red-500 font-album-title">Now Playing</p>
-                            <h2 id="song-title-mobile" class="text-3xl text-yellow-400 truncate font-album-title tracking-wider">Song Title</h2>
-                            <h3 id="song-artist-mobile" class="text-lg text-gray-300">A mstonge01 Project</h3>
-                        </div>
-                        <!-- Container where the Cast Button will be MOVED to -->
-                        <div id="player-cast-btn-container-mobile" class="flex-shrink-0 pt-2">
-                            <!-- The cast button will be moved here by JS -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Middle: Controls & Progress Bar -->
-                <div class="mb-4">
-                    <div id="progress-bar-container-mobile" class="mb-3">
-                         <input type="range" id="progress-bar-mobile" class="w-full h-1 bg-gray-700 rounded-lg cursor-pointer" value="0" min="0" max="100">
-                    </div>
-                    <div class="flex justify-between text-sm text-gray-400">
-                        <span id="current-time-mobile">0:00</span>
-                        <span id="duration-time-mobile">0:00</span>
-                    </div>
-                    <div class="flex justify-center items-center space-x-6 mt-4">
-                        <button id="prev-btn-mobile" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.03V5.969a1 1 0 00-1.555-.832L4.12 9.168a1 1 0 000 1.664l4.325 4zM10.879 9.168a1 1 0 000 1.664l4.325 4A1 1 0 0017 14.03V5.969a1 1 0 00-1.555-.832l-4.325 4z"/></svg>
-                        </button>
-                        <button id="play-pause-btn-mobile" class="w-16 h-16 bg-red-500 text-white rounded-full flex items-center justify-center text-2xl hover:bg-red-600 transition-colors duration-200 shadow-lg">
-                            <svg id="play-icon-mobile" class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8.002v3.996a1 1 0 001.555.832l3.197-1.998a1 1 0 000-1.664l-3.197-1.998z" clip-rule="evenodd"/></svg>
-                            <svg id="pause-icon-mobile" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1H8zm5 0a1 1 0 00-1 1v4a1 1 0 001 1h1a1 1 0 001-1V8a1 1 0 00-1-1h-1z" clip-rule="evenodd"/></svg>
-                        </button>
-                        <button id="next-btn-mobile" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M4.555 5.168A1 1 0 003 5.969v8.062a1 1 0 001.555.832l4.325-4a1 1 0 000-1.664l-4.325-4zM10.879 5.168A1 1 0 009.324 5.97v8.062a1 1 0 001.555.832l4.325-4a1 1 0 000-1.664l-4.325-4z"/></svg>
-                        </button>
-                    </div>
-                </div>
                 
-                <!-- Bottom: Playlist -->
-                <div class="flex-grow min-h-0">
-                    <div id="playlist-mobile" class="h-48 overflow-y-auto pr-2">
-                        <!-- Playlist items will be injected here by JavaScript -->
-                    </div>
-                </div>
             </div>
-        </div>
-        
-        <!-- "Check for Updates" Button (PWA only) -->
-        <div id="update-btn-container-mobile" class="text-center mt-4" style="display: none;"> <!-- Hidden by default, shown by PWA JS -->
-             <button id="update-btn-mobile" class="text-gray-500 text-sm hover:text-red-500 transition-colors">Check for Updates</button>
-             <p id="update-status-mobile" class="text-gray-500 text-sm mt-1"></p>
         </div>
     </div>
 
-
-    <!-- Hidden Audio Elements -->
+    <!-- The actual audio element, hidden from view -->
     <audio id="audio-player"></audio>
-    <audio id="intro-audio-clip" src="hallelujah-intro.mp3"></audio>
 
     <script>
-        // --- CAST API INITIALIZATION ---
-        let castContext = null;
-        let castSession = null;
-        let currentMedia = null;
-        let isCasting = false;
-
-        window['__onGCastApiAvailable'] = function(isAvailable) {
-            if (isAvailable) {
-                initializeCastApi();
-            } else {
-                console.log("Cast API not available");
-                // Hide the cast button container if API is not available
-                document.getElementById('cast-button-container').style.display = 'none';
-            }
-        };
-
-        function initializeCastApi() {
-            castContext = cast.framework.CastContext.getInstance();
-            castContext.setOptions({
-                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-            });
-
-            castContext.addEventListener(
-                cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
-                handleCastSessionState
-            );
-            castContext.addEventListener(
-                cast.framework.CastContextEventType.MEDIA_SESSION,
-                handleCastMediaSession
-            );
-        }
-        
-        function handleCastSessionState(event) {
-            const castBtn = document.getElementById('cast-btn');
-            if (event.sessionState === cast.framework.SessionState.SESSION_STARTED) {
-                console.log("Cast session started");
-                castSession = castContext.getCurrentSession();
-                isCasting = true;
-                // If music is already playing, transfer it
-                if (isPlaying) {
-                    playSong(); // This will now load into the cast session
-                }
-                castBtn.style.setProperty('--cast-button-color', '#FACC15'); // Yellow
-            } else if (event.sessionState === cast.framework.SessionState.SESSION_ENDED) {
-                console.log("Cast session ended");
-                castSession = null;
-                isCasting = false;
-                currentMedia = null;
-                if (isPlaying) {
-                    // Session ended, resume playback locally
-                    // We need to reload the song to play locally
-                    const wasPlaying = isPlaying;
-                    pauseSong(); // Pause cast session
-                    if (wasPlaying) {
-                         // Give it a moment, then play locally
-                        setTimeout(() => {
-                            audioPlayer.currentTime = castMediaCurrentTime;
-                            playSong(); // This will now play locally
-                        }, 500);
-                    }
-                }
-                castBtn.style.setProperty('--cast-button-color', isPlayerVisible ? '#EF4444' : '#FFF'); // Red or White
-            } else {
-                 castBtn.style.setProperty('--cast-button-color', isPlayerVisible ? '#EF4444' : '#FFF'); // Red or White
-            }
-        }
-        
-        function handleCastMediaSession(event) {
-            console.log("Cast media session started");
-            currentMedia = event.mediaSession;
-            currentMedia.addUpdateListener(onMediaStatusUpdate);
-        }
-        
-        let castMediaCurrentTime = 0;
-        function onMediaStatusUpdate(isMuted) {
-            if (currentMedia) {
-                castMediaCurrentTime = currentMedia.currentTime;
-                if (currentMedia.playerState === 'IDLE' && currentMedia.idleReason === 'FINISHED') {
-                    // Song finished, play next
-                    nextSong();
-                }
-                // Sync local player UI just in case
-                if (isPlaying) {
-                    const progressPercent = (currentMedia.currentTime / currentMedia.media.duration) * 100;
-                    progressBar.value = progressPercent;
-                    progressBarMobile.value = progressPercent;
-                    currentTimeEl.textContent = formatTime(currentMedia.currentTime);
-                    durationTimeEl.textContent = formatTime(currentMedia.media.duration);
-                    currentTimeMobileEl.textContent = formatTime(currentMedia.currentTime);
-                    durationTimeMobileEl.textContent = formatTime(currentMedia.media.duration);
-                }
-            }
-        }
-
-        // --- END CAST API ---
-
-
         document.addEventListener('DOMContentLoaded', () => {
             // --- 1. SONG DATABASE ---
             const songs = [
@@ -574,31 +418,23 @@
             ];
             const artistName = "A mstonge01 Project";
             
-            // Album-level info for liner notes
             const albumTitle = "for Rebecca";
-            const albumNote = ``; // Empty, as requested
+            const albumNote = ``;
+            const mainCover = "cover.jpg.jpg";
 
             // --- 2. DOM ELEMENT REFERENCES ---
-            // Splash Screen
             const splashScreen = document.getElementById('splash-screen');
             const splashVideo = document.getElementById('splash-video');
-            const introAudioClip = document.getElementById('intro-audio-clip');
+            const introAudio = document.getElementById('intro-audio');
             const enterBtn = document.getElementById('enter-btn');
             const skipBtn = document.getElementById('skip-btn');
-            const castBtnContainer = document.getElementById('cast-button-container'); // The one on the splash screen
-            const castBtn = document.getElementById('cast-btn');
+            const splashCastBtnContainer = document.getElementById('splash-cast-btn-container');
+            const splashUIContainer = document.getElementById('splash-ui-container');
             
-            // Player Containers
             const playerContainer = document.getElementById('player-container');
-            const playerContainerMobile = document.getElementById('player-container-mobile');
-            const playerCastBtnContainer = document.getElementById('player-cast-btn-container'); // Desktop player
-            const playerCastBtnContainerMobile = document.getElementById('player-cast-btn-container-mobile'); // Mobile player
-
-            // Desktop Player Elements
             const audioPlayer = document.getElementById('audio-player');
             const songTitleEl = document.getElementById('song-title');
             const songArtistEl = document.getElementById('song-artist');
-            const songArtEl = document.getElementById('song-art');
             const playlistEl = document.getElementById('playlist');
             const playPauseBtn = document.getElementById('play-pause-btn');
             const playIcon = document.getElementById('play-icon');
@@ -608,109 +444,219 @@
             const progressBar = document.getElementById('progress-bar');
             const currentTimeEl = document.getElementById('current-time');
             const durationTimeEl = document.getElementById('duration-time');
-            const linerNotesBtn = document.getElementById('liner-notes-btn');
-            const flipper = document.getElementById('flipper');
-            const noteTitleEl = document.getElementById('note-title');
-            const noteBodyEl = document.getElementById('note-body');
+            const castBtn = document.getElementById('cast-btn');
+            const playerCastBtnContainerMobile = document.getElementById('player-cast-btn-container-mobile');
+            const playerCastBtnContainerDesktop = document.getElementById('player-cast-btn-container-desktop');
             
-            // Mobile Player Elements
-            const songTitleMobileEl = document.getElementById('song-title-mobile');
-            const songArtistMobileEl = document.getElementById('song-artist-mobile');
-            const songArtMobileEl = document.getElementById('song-art-mobile');
-            const playlistMobileEl = document.getElementById('playlist-mobile');
-            const playPauseBtnMobile = document.getElementById('play-pause-btn-mobile');
-            const playIconMobile = document.getElementById('play-icon-mobile');
-            const pauseIconMobile = document.getElementById('pause-icon-mobile');
-            const prevBtnMobile = document.getElementById('prev-btn-mobile');
-            const nextBtnMobile = document.getElementById('next-btn-mobile');
-            const progressBarMobile = document.getElementById('progress-bar-mobile');
-            const currentTimeMobileEl = document.getElementById('current-time-mobile');
-            const durationTimeMobileEl = document.getElementById('duration-time-mobile');
+            // Flipper elements (Mobile)
+            const flipperMobile = document.getElementById('flipper');
             const linerNotesBtnMobile = document.getElementById('liner-notes-btn-mobile');
-            const flipperMobile = document.getElementById('flipper-mobile');
-            const noteTitleMobileEl = document.getElementById('note-title-mobile');
-            const noteBodyMobileEl = document.getElementById('note-body-mobile');
+            const noteTitleMobile = document.getElementById('note-title-mobile');
+            const noteBodyMobile = document.getElementById('note-body-mobile');
+            const songArtMobile = document.getElementById('song-art-mobile');
 
-            // PWA Update UI
-            const updateUI = document.getElementById('update-ui');
-            const updateChecking = document.getElementById('update-checking');
-            const updateAvailable = document.getElementById('update-available');
-            const updateBtnContainer = document.getElementById('update-btn-container');
-            const updateBtn = document.getElementById('update-btn');
-            const updateStatus = document.getElementById('update-status');
-            const updateBtnContainerMobile = document.getElementById('update-btn-container-mobile');
-            const updateBtnMobile = document.getElementById('update-btn-mobile');
-            const updateStatusMobile = document.getElementById('update-status-mobile');
+            // Flipper elements (Desktop)
+            const flipperDesktop = document.getElementById('flipper-desktop');
+            const linerNotesBtnDesktop = document.getElementById('liner-notes-btn-desktop');
+            const noteTitleDesktop = document.getElementById('note-title-desktop');
+            const noteBodyDesktop = document.getElementById('note-body-desktop');
+            const songArtDesktop = document.getElementById('song-art-desktop');
             
-
             // --- 3. PLAYER STATE ---
             let currentSongIndex = 0;
             let isPlaying = false;
-            let isPlayerVisible = false; // For cast button color
+            let hasUserInteracted = false; 
 
-            // --- 4. FUNCTIONS ---
+            // --- 4. CAST API ---
+            let castSession = null;
+            let currentMedia = null;
+            let isCasting = false;
 
-            // --- Splash Screen & Transition ---
-            function startVideoTransition() {
-                enterBtn.style.display = 'none';
-                skipBtn.classList.remove('hidden');
+            window['__onGCastApiAvailable'] = function(isAvailable) {
+                if (isAvailable) {
+                    initializeCastApi();
+                }
+            };
 
-                // Play main video (with sound)
-                splashVideo.muted = false; // Ensure sound is on
-                splashVideo.play().catch(e => {
-                    console.warn("Video play failed, proceeding anyway.", e);
-                    playIntroAudio(); // If video fails, just play audio
-                });
+            function initializeCastApi() {
+                const sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
+                const apiConfig = new chrome.cast.ApiConfig(sessionRequest,
+                    sessionListener,
+                    receiverListener);
+                chrome.cast.initialize(apiConfig, onCastInitSuccess, onCastError);
             }
 
-            function playIntroAudio() {
-                // Video finished, now play the intro audio clip
-                introAudioClip.play().catch(e => {
-                    console.warn("Intro audio clip failed, proceeding anyway.", e);
-                    transitionToPlayer(); // If audio fails, just transition
-                });
+            function onCastInitSuccess() {
+                // Cast SDK is ready
+                castBtn.style.display = 'block'; // Show the button
+                // Move it to the splash screen
+                splashCastBtnContainer.appendChild(castBtn);
+            }
+
+            function onCastError(e) {
+                console.error('Cast Error:', e);
+            }
+
+            function sessionListener(newSession) {
+                castSession = newSession;
+                castSession.addUpdateListener(sessionUpdateListener);
+                castSession.addMediaListener(mediaListener);
+                isCasting = true;
+                if (isPlaying) {
+                    // If a song is already playing, stop local and cast it
+                    const wasPlaying = isPlaying;
+                    pauseSong(true); // Pause local without updating UI
+                    loadSongAndCast(currentSongIndex, wasPlaying);
+                } else {
+                    // Just update the UI
+                    loadSong(songs[currentSongIndex]);
+                }
             }
             
+            function mediaListener(media) {
+                currentMedia = media;
+            }
+
+            function sessionUpdateListener(isAlive) {
+                if (!isAlive) {
+                    castSession = null;
+                    isCasting = false;
+                    // Switch back to local player
+                    if (currentMedia) {
+                        const currentTime = currentMedia.currentTime;
+                        loadSong(songs[currentSongIndex]);
+                        audioPlayer.currentTime = currentTime;
+                        if (currentMedia.playerState === 'PLAYING') {
+                            playSong();
+                        }
+                        currentMedia = null;
+                    }
+                }
+            }
+
+            function receiverListener(availability) {
+                if (availability === chrome.cast.ReceiverAvailability.AVAILABLE) {
+                    castBtn.style.display = 'block';
+                } else {
+                    castBtn.style.display = 'none';
+                }
+            }
+
+            function loadSongAndCast(songIndex, autoPlay) {
+                if (!castSession) return;
+
+                const song = songs[songIndex];
+                let mediaInfo = new chrome.cast.media.MediaInfo(song.src, 'audio/mp3');
+                mediaInfo.metadata = new chrome.cast.media.MusicTrackMediaMetadata();
+                mediaInfo.metadata.title = song.title;
+                mediaInfo.metadata.artist = artistName;
+                mediaInfo.metadata.albumName = "Red-Headed Hallelujah";
+                
+                // Add artwork
+                const artwork = new chrome.cast.Image(song.image_src);
+                mediaInfo.metadata.images = [artwork];
+
+                let request = new chrome.cast.media.LoadRequest(mediaInfo);
+                request.autoplay = autoPlay;
+
+                castSession.loadMedia(request,
+                    (media) => { 
+                        currentMedia = media; 
+                        if (autoPlay) {
+                            isPlaying = true;
+                            playIcon.classList.add('hidden');
+                            pauseIcon.classList.remove('hidden');
+                            updateMediaSession(song);
+                        }
+                    },
+                    (e) => console.error('Error casting media:', e)
+                );
+            }
+
+            function castPlay() {
+                if (currentMedia) {
+                    currentMedia.play(null, 
+                        () => { 
+                            isPlaying = true;
+                            playIcon.classList.add('hidden');
+                            pauseIcon.classList.remove('hidden');
+                            updateMediaSession(songs[currentSongIndex]);
+                        }, 
+                        (e) => console.error('Cast play error:', e)
+                    );
+                } else if (castSession) {
+                    // No media loaded, so load and play
+                    loadSongAndCast(currentSongIndex, true);
+                }
+            }
+
+            function castPause() {
+                if (currentMedia) {
+                    currentMedia.pause(null, 
+                        () => { 
+                            isPlaying = false;
+                            playIcon.classList.remove('hidden');
+                            pauseIcon.classList.add('hidden');
+                            updateMediaSession(songs[currentSongIndex]);
+                        }, 
+                        (e) => console.error('Cast pause error:', e)
+                    );
+                }
+            }
+            
+            function castSeek(time) {
+                 if (currentMedia) {
+                    let request = new chrome.cast.media.SeekRequest();
+                    request.currentTime = time;
+                    currentMedia.seek(request, null, (e) => console.error('Cast seek error:', e));
+                }
+            }
+
+            // --- 5. INTRO & SPLASH SCREEN ---
+            
+            function startVideoTransition() {
+                if(hasUserInteracted) return; 
+                hasUserInteracted = true;
+                
+                // Hide the main 'Click to Begin' UI, show the 'Skip' button
+                splashUIContainer.style.display = 'none';
+                skipBtn.classList.remove('hidden');
+
+                splashVideo.play().then(() => {
+                    // Video started playing (with sound)
+                }).catch(error => {
+                    console.warn("Video play failed:", error);
+                    // If video fails, just skip to player
+                    transitionToPlayer(); 
+                });
+            }
+
             function skipIntro() {
-                 // Stop both audio sources
+                 // Stop both intro sounds
                 splashVideo.pause();
-                introAudioClip.pause();
-                // Hide skip button
-                skipBtn.classList.add('hidden');
-                // Go straight to transition
+                introAudio.pause();
+                
+                // Manually trigger the transition
                 transitionToPlayer();
             }
 
             function transitionToPlayer() {
-                isPlayerVisible = true;
-                // Fade out splash screen
+                // Start the fade out
                 splashScreen.style.opacity = '0';
-                
-                // Show the correct player based on screen size
                 playerContainer.style.opacity = '1';
-                playerContainerMobile.style.opacity = '1';
-                playerContainer.classList.remove('hidden');
                 
-                // Move the Cast Button into the active player
-                // Check which player is visible (mobile-first check)
-                if (window.getComputedStyle(playerContainerMobile).display !== 'none') {
-                    // We are on mobile
-                    playerCastBtnContainerMobile.appendChild(castBtnContainer);
-                } else {
-                    // We are on desktop
-                    playerCastBtnContainer.appendChild(castBtnContainer);
-                }
-                
-                // Update cast button color for player
-                castBtn.style.setProperty('--cast-button-color', '#EF4444'); // Red
-                
-                // After the fade (1s), remove splash screen
+                // Move the cast button from the splash screen to the player
+                playerCastBtnContainerMobile.appendChild(castBtn);
+                playerCastBtnContainerDesktop.appendChild(castBtn);
+
+                // After the fade, remove the splash screen
                 setTimeout(() => {
                     splashScreen.style.display = 'none';
                 }, 1000); // Must match the transition duration
             }
 
-            // --- Player Functions ---
+            // --- 6. PLAYER FUNCTIONS ---
+            
             function updateLinerNotes(index) {
                 let title, note;
                 if (index === null) {
@@ -721,180 +667,127 @@
                     title = song.title;
                     note = song.note;
                 }
-                // Update both desktop and mobile
-                noteTitleEl.textContent = title;
-                noteBodyEl.textContent = note;
-                noteTitleMobileEl.textContent = title;
-                noteBodyMobileEl.textContent = note;
+                // Update both mobile and desktop
+                noteTitleMobile.textContent = title;
+                noteBodyMobile.textContent = note;
+                noteTitleDesktop.textContent = title;
+                noteBodyDesktop.textContent = note;
             }
 
             function loadSong(song) {
-                // Update UI for both desktop and mobile
                 songTitleEl.textContent = song.title;
                 songArtistEl.textContent = artistName;
-                songArtEl.src = song.image_src;
                 
-                songTitleMobileEl.textContent = song.title;
-                songArtistMobileEl.textContent = artistName;
-                songArtMobileEl.src = song.image_src;
-
-                // --- Media Session API (for truck, etc.) ---
-                if ('mediaSession' in navigator) {
-                    navigator.mediaSession.metadata = new MediaMetadata({
-                        title: song.title,
-                        artist: artistName,
-                        album: 'Red-Headed Hallelujah',
-                        artwork: [
-                            // Use the song-specific art!
-                            { src: song.image_src, sizes: '512x512', type: 'image/png' },
-                        ]
-                    });
+                if (!isCasting) {
+                    audioPlayer.src = song.src;
                 }
-                
-                // --- Load audio for local playback ---
-                audioPlayer.src = song.src;
-                
-                // Reset flippers
-                flipper.classList.remove('is-flipped');
+
+                // Update song art
+                songArtMobile.src = song.image_src;
+                songArtDesktop.src = song.image_src;
+
                 flipperMobile.classList.remove('is-flipped');
-                
-                // Update playlist highlights
+                flipperDesktop.classList.remove('is-flipped');
                 updateActivePlaylistItem();
+                
+                // Don't update media session here, only on play/pause
             }
 
             function playSong() {
-                // Make sure a song is loaded
-                if (!audioPlayer.src || audioPlayer.src.endsWith('/')) {
+                if (isCasting) {
+                    castPlay();
+                    return;
+                }
+
+                if (!audioPlayer.src || audioPlayer.src.endsWith('index.html')) {
                     loadSong(songs[currentSongIndex]);
                 }
-                
-                const song = songs[currentSongIndex];
-                
-                // --- CAST LOGIC ---
-                if (isCasting && castSession) {
-                    // We are casting! Load media on the receiver.
-                    pauseSong(); // Pause local player first
-                    
-                    const mediaInfo = new chrome.cast.media.MediaInfo(song.src, 'audio/mp3');
-                    mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-                    mediaInfo.metadata.title = song.title;
-                    mediaInfo.metadata.artist = artistName;
-                    mediaInfo.metadata.albumName = 'Red-Headed Hallelujah';
-                    mediaInfo.metadata.images = [
-                        new chrome.cast.Image(song.image_src)
-                    ];
-                    
-                    const request = new chrome.cast.media.LoadRequest(mediaInfo);
-                    
-                    castSession.loadMedia(request).then(
-                        () => {
-                            console.log('Media loaded on cast device');
-                            isPlaying = true; // Mark as playing *after* media loads
-                            currentMedia = castSession.getMediaSession();
-                            if (currentMedia) { // Check if currentMedia is set
-                                currentMedia.addUpdateListener(onMediaStatusUpdate);
-                            }
-                            // Update UI
-                            playIcon.classList.add('hidden');
-                            pauseIcon.classList.remove('hidden');
-                            playIconMobile.classList.add('hidden');
-                            pauseIconMobile.classList.remove('hidden');
-                            playerContainer.classList.add('is-playing-glow');
-                            playerContainerMobile.classList.add('is-playing-glow');
-                            songArtEl.classList.add('is-active');
-                            songArtMobileEl.classList.add('is-active');
-                            updateLinerNotes(currentSongIndex);
-                            updateMediaSessionState();
-                        },
-                        (errorCode) => {
-                            console.error('Error loading media on cast device:', errorCode);
-                            isPlaying = false;
-                        }
-                    );
-                    return; // Don't play locally
-                }
-                
-                // --- LOCAL PLAYBACK ---
                 isPlaying = true;
                 audioPlayer.play();
-                
-                // Update UI (both)
                 playIcon.classList.add('hidden');
                 pauseIcon.classList.remove('hidden');
-                playIconMobile.classList.add('hidden');
-                pauseIconMobile.classList.remove('hidden');
-                playerContainer.classList.add('is-playing-glow');
-                playerContainerMobile.classList.add('is-playing-glow');
-                songArtEl.classList.add('is-active');
-                songArtMobileEl.classList.add('is-active');
                 
-                // Update notes and media session
+                songArtMobile.classList.add('is-visible');
+                songArtDesktop.classList.add('is-visible');
+                playerContainer.classList.add('is-playing-glow');
+                
                 updateLinerNotes(currentSongIndex);
-                updateMediaSessionState();
+                updateMediaSession(songs[currentSongIndex]);
             }
 
-            function pauseSong() {
-                isPlaying = false;
-
-                // --- CAST LOGIC ---
-                if (isCasting && currentMedia) {
-                    currentMedia.pause(null, 
-                        () => { console.log("Cast media paused"); }, 
-                        (e) => { console.error("Cast pause failed", e); }
-                    );
+            function pauseSong(isCastingUpdate = false) {
+                if (isCasting) {
+                    // Don't stop local playback if we're just updating cast
+                    if (!isCastingUpdate) {
+                        castPause();
+                    }
+                    return;
                 }
-                
-                // --- LOCAL PLAYBACK ---
+
+                isPlaying = false;
                 audioPlayer.pause();
-                
-                // Update UI (both)
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
-                playIconMobile.classList.remove('hidden');
-                pauseIconMobile.classList.add('hidden');
-                playerContainer.classList.remove('is-playing-glow');
-                playerContainerMobile.classList.remove('is-playing-glow');
-                songArtEl.classList.remove('is-active');
-                songArtMobileEl.classList.remove('is-active');
                 
-                // Update notes and media session
+                songArtMobile.classList.remove('is-visible');
+                songArtDesktop.classList.remove('is-visible');
+                playerContainer.classList.remove('is-playing-glow');
+
                 updateLinerNotes(null);
-                updateMediaSessionState();
+                updateMediaSession(songs[currentSongIndex]);
+                
+                // Send final position state on pause
+                if ('mediaSession' in navigator) {
+                     navigator.mediaSession.setPositionState({
+                        duration: audioPlayer.duration,
+                        playbackRate: audioPlayer.playbackRate,
+                        position: audioPlayer.currentTime
+                    });
+                }
             }
 
             function prevSong() {
                 currentSongIndex--;
                 if (currentSongIndex < 0) currentSongIndex = songs.length - 1;
-                loadSong(songs[currentSongIndex]);
-                if (isPlaying) playSong();
+                
+                if (isCasting) {
+                    loadSongAndCast(currentSongIndex, isPlaying);
+                    loadSong(songs[currentSongIndex]); // Update local UI
+                } else {
+                    loadSong(songs[currentSongIndex]);
+                    if (isPlaying) playSong();
+                }
             }
 
             function nextSong() {
                 currentSongIndex++;
                 if (currentSongIndex > songs.length - 1) currentSongIndex = 0;
-                loadSong(songs[currentSongIndex]);
-                if (isPlaying) playSong();
+                
+                if (isCasting) {
+                    loadSongAndCast(currentSongIndex, isPlaying);
+                    loadSong(songs[currentSongIndex]); // Update local UI
+                } else {
+                    loadSong(songs[currentSongIndex]);
+                    if (isPlaying) playSong();
+                }
             }
 
             function updateProgress(e) {
-                if (isCasting) return; // Cast session handles its own progress
-                
                 const { duration, currentTime } = e.srcElement;
                 if (duration) {
                     const progressPercent = (currentTime / duration) * 100;
                     progressBar.value = progressPercent;
-                    progressBarMobile.value = progressPercent;
-                    
-                    const durationFormatted = formatTime(duration);
-                    const currentFormatted = formatTime(currentTime);
-                    
-                    durationTimeEl.textContent = durationFormatted;
-                    currentTimeEl.textContent = currentFormatted;
-                    durationTimeMobileEl.textContent = durationFormatted;
-                    currentTimeMobileEl.textContent = currentFormatted;
+                    durationTimeEl.textContent = formatTime(duration);
+                    currentTimeEl.textContent = formatTime(currentTime);
                     
                     // Update Media Session progress
-                    updateMediaSessionState(duration, currentTime);
+                    if ('mediaSession' in navigator) {
+                         navigator.mediaSession.setPositionState({
+                            duration: duration,
+                            playbackRate: audioPlayer.playbackRate,
+                            position: currentTime
+                        });
+                    }
                 }
             }
 
@@ -905,24 +798,24 @@
                 return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             }
 
-            function setProgress(e) {
-                const value = e.target.value;
-                if (isCasting && currentMedia) {
-                    // Casting: Seek
-                    const newTime = (value / 100) * currentMedia.media.duration;
-                    const seekRequest = new chrome.cast.media.SeekRequest();
-                    seekRequest.currentTime = newTime;
-                    currentMedia.seek(seekRequest, 
-                        () => console.log('Cast seek success'), 
-                        (e) => console.error('Cast seek failed', e)
-                    );
+            function setProgress() {
+                if (isCasting) {
+                    const duration = currentMedia ? currentMedia.media.duration : songs[currentSongIndex].duration; // Need to get duration
+                    if(duration) {
+                        castSeek((progressBar.value / 100) * duration);
+                    }
                 } else {
-                    // Local: Seek
                     const duration = audioPlayer.duration;
                     if (duration) {
-                        const newTime = (value / 100) * duration;
-                        audioPlayer.currentTime = newTime;
-                        updateMediaSessionState(duration, newTime);
+                         audioPlayer.currentTime = (progressBar.value / 100) * duration;
+                         // Send position state on drag
+                         if ('mediaSession' in navigator) {
+                             navigator.mediaSession.setPositionState({
+                                duration: audioPlayer.duration,
+                                playbackRate: audioPlayer.playbackRate,
+                                position: audioPlayer.currentTime
+                            });
+                        }
                     }
                 }
             }
@@ -932,17 +825,14 @@
                 items.forEach((item, index) => {
                     if (index === currentSongIndex) {
                         item.classList.add('active');
-                        // Only scroll if the item is in a visible playlist
-                        if (item.offsetParent !== null) {
-                             item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        }
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     } else {
                         item.classList.remove('active');
                     }
                 });
             }
-            
-            function createPlaylistItems(playlistContainer, mobile) {
+
+            function createPlaylist() {
                 songs.forEach((song, index) => {
                     const item = document.createElement('div');
                     item.classList.add('playlist-item', 'p-3', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors', 'duration-200');
@@ -952,217 +842,99 @@
                     `;
                     item.addEventListener('click', () => {
                         currentSongIndex = index;
-                        loadSong(song);
-                        playSong();
+                        if(isCasting) {
+                            loadSongAndCast(currentSongIndex, true);
+                            loadSong(song); // update local UI
+                        } else {
+                            loadSong(song);
+                            playSong();
+                        }
                     });
-                    playlistContainer.appendChild(item);
+                    playlistEl.appendChild(item);
                 });
             }
-            
-            // --- Media Session State (for truck progress bar) ---
-            function updateMediaSessionState(duration, currentTime) {
-                if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
-                    try {
-                        const durationValue = isCasting ? currentMedia?.media.duration : audioPlayer.duration;
-                        const currentTimeValue = isCasting ? castMediaCurrentTime : audioPlayer.currentTime;
-                        
-                        if (!isNaN(durationValue) && !isNaN(currentTimeValue)) {
-                            navigator.mediaSession.setPositionState({
-                                duration: durationValue,
-                                playbackRate: 1, 
-                                position: currentTimeValue
-                            });
-                        }
-                        navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
-                    } catch (error) {
-                        console.warn("Failed to set media session state:", error);
-                    }
+
+            // --- 7. MEDIA SESSION API (For Truck Display) ---
+            function updateMediaSession(song) {
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: song.title,
+                        artist: artistName,
+                        album: 'Red-Headed Hallelujah',
+                        artwork: [
+                            { src: song.image_src, sizes: '512x512', type: 'image/png' },
+                        ]
+                    });
+                    
+                    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
                 }
             }
-
-            // --- 5. EVENT LISTENERS ---
             
-            // --- Splash Screen ---
-            enterBtn.addEventListener('click', startVideoTransition);
-            splashVideo.addEventListener('ended', playIntroAudio);
-            introAudioClip.addEventListener('ended', () => {
-                // Wait 1 second after clip ends, then transition
-                setTimeout(transitionToPlayer, 1000);
-            });
-            skipBtn.addEventListener('click', skipIntro);
-
-            // --- Player Controls (Shared Logic) ---
-            const playPauseHandler = () => {
-                if (isPlaying) pauseSong();
-                else playSong();
-            };
-            const prevHandler = () => prevSong();
-            const nextHandler = () => nextSong();
-            const progressHandler = (e) => setProgress(e);
-            const flipperHandler = (e) => {
-                 // Find the flipper for *this* player
-                const flipperEl = e.currentTarget.id.includes('mobile') ? flipperMobile : flipper;
-                flipperEl.classList.toggle('is-flipped');
-            };
-
-            // Desktop Listeners
-            playPauseBtn.addEventListener('click', playPauseHandler);
-            prevBtn.addEventListener('click', prevHandler);
-            nextBtn.addEventListener('click', nextHandler);
-            audioPlayer.addEventListener('timeupdate', updateProgress);
-            audioPlayer.addEventListener('ended', nextSong);
-            progressBar.addEventListener('input', progressHandler);
-            linerNotesBtn.addEventListener('click', flipperHandler);
-            
-            // Mobile Listeners
-            playPauseBtnMobile.addEventListener('click', playPauseHandler);
-            prevBtnMobile.addEventListener('click', prevHandler);
-            nextBtnMobile.addEventListener('click', nextHandler);
-            // We need to listen to timeupdate on the *local* player for *both* mobile and desktop
-            // The `updateProgress` function updates both sets of UI elements
-            progressBarMobile.addEventListener('input', progressHandler);
-            linerNotesBtnMobile.addEventListener('click', flipperHandler);
-            
-            // --- Media Session Actions (for truck buttons, etc.) ---
-            if ('mediaSession' in navigator) {
-                try {
+            function setupMediaSessionActions() {
+                 if ('mediaSession' in navigator) {
                     navigator.mediaSession.setActionHandler('play', playSong);
                     navigator.mediaSession.setActionHandler('pause', pauseSong);
                     navigator.mediaSession.setActionHandler('previoustrack', prevSong);
                     navigator.mediaSession.setActionHandler('nexttrack', nextSong);
-                    // For seeking
                     navigator.mediaSession.setActionHandler('seekto', (details) => {
-                        const newTime = details.seekTime;
-                        if (isCasting && currentMedia) {
-                            const seekRequest = new chrome.cast.media.SeekRequest();
-                            seekRequest.currentTime = newTime;
-                            currentMedia.seek(seekRequest);
+                        if (isCasting) {
+                            castSeek(details.seekTime);
                         } else {
-                            audioPlayer.currentTime = newTime;
+                            audioPlayer.currentTime = details.seekTime;
                         }
                     });
-                } catch (error) {
-                    console.warn('Media Session action handlers failed to set:', error);
-                }
+                 }
             }
-
-            // --- PWA Update Logic ---
-            let newWorker; // To hold the new service worker
-
-            // Show update button ONLY if PWA is installed
-            if ('serviceWorker' in navigator) {
-                 // Check if running as an installed PWA
-                if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-                    updateBtnContainer.style.display = 'block';
-                    updateBtnContainerMobile.style.display = 'block';
-                }
-                
-                const updateButtonHandler = (e) => {
-                    const isMobile = e.currentTarget.id.includes('mobile');
-                    const statusEl = isMobile ? updateStatusMobile : updateStatus;
-                    const btn = isMobile ? updateBtnMobile : updateBtn;
-
-                    btn.disabled = true;
-                    statusEl.textContent = 'Checking for updates...';
-                    
-                    // Manually trigger an update check
-                    navigator.serviceWorker.getRegistration().then(reg => {
-                        if (!reg) {
-                            statusEl.textContent = 'Error: Not installed.';
-                            return;
-                        }
-                        
-                        reg.update().then(() => {
-                            if (!reg.waiting) {
-                                // No new version found
-                                statusEl.textContent = 'You are up to date!';
-                                btn.disabled = false;
-                                setTimeout(() => { statusEl.textContent = ''; }, 3000);
-                            }
-                            // If reg.waiting *exists*, the 'updatefound' listener will handle it
-                        });
-                    });
-                };
-
-                updateBtn.addEventListener('click', updateButtonHandler);
-                updateBtnMobile.addEventListener('click', updateButtonHandler);
-
-                // Listen for a new service worker waiting to activate
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    // This fires when the new SW has taken control
-                    window.location.reload();
-                });
-                
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('Service worker registered.');
-                    
-                    // Listen for the "waiting" state
-                    reg.addEventListener('updatefound', () => {
-                        newWorker = reg.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // New SW is installed & waiting!
-                                // Tell the user to restart
-                                updateStatus.textContent = 'Update downloaded! Please restart app.';
-                                updateStatusMobile.textContent = 'Update downloaded! Please restart app.';
-                                
-                                // Optional: skip waiting and force reload
-                                // newWorker.postMessage({ action: 'skipWaiting' });
-                            }
-                        });
-                    });
-                    
-                    // --- This is the "Checking for Updates" on load logic ---
-                    // It's fast and won't block the UI
-                    enterBtn.disabled = true;
-                    enterBtn.textContent = 'Checking for Updates...';
-                    
-                    reg.update().then(() => {
-                        // Update check is done (or failed, which is fine)
-                        // Enable the "Click to Begin" button
-                        enterBtn.disabled = false;
-                        enterBtn.textContent = 'Click to Begin';
-                    }).catch(err => {
-                        // Fails offline, which is fine.
-                        console.warn('Update check failed (likely offline):', err);
-                        enterBtn.disabled = false;
-                        enterBtn.textContent = 'Click to Begin';
-                    });
-
-                }).catch(err => {
-                    console.error('Service worker registration failed:', err);
-                    // Enable button anyway if SW fails
-                    enterBtn.disabled = false;
-                    enterBtn.textContent = 'Click to Begin';
-                });
-                
-                // --- Message to trigger content caching ---
-                // Send message *after* user clicks "Begin"
-                enterBtn.addEventListener('click', () => {
-                    if (navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.controller.postMessage({
-                            action: 'cache-content'
-                        });
-                    }
-                }, { once: true }); // Only run this once
-            } else {
-                 // No service worker support, just enable the button
-                 enterBtn.disabled = false;
-                 enterBtn.textContent = 'Click to Begin';
-            }
-
-
-            // --- 6. INITIALIZE PLAYER ---
-            createPlaylistItems(playlistEl, false);
-            createPlaylistItems(playlistMobileEl, true);
             
-            // Load first song but don't set liner notes yet
-            loadSong(songs[currentSongIndex]);
-            // Set liner notes to the *album* notes initially
-            updateLinerNotes(null);
+            // --- 8. EVENT LISTENERS ---
             
-            // Set initial state for media session
-            updateMediaSessionState();
+            // --- Splash Screen ---
+            enterBtn.addEventListener('click', startVideoTransition);
+            skipBtn.addEventListener('click', skipIntro);
+
+            splashVideo.addEventListener('ended', () => {
+                // Video finished, play the intro audio
+                introAudio.play();
+                skipBtn.classList.add('hidden'); // Hide skip button
+            });
+            
+            introAudio.addEventListener('ended', () => {
+                // Intro audio finished, wait 1 sec, then transition
+                setTimeout(transitionToPlayer, 1000);
+            });
+            
+            // --- Player Logic ---
+            playPauseBtn.addEventListener('click', () => {
+                if (isPlaying) pauseSong();
+                else playSong();
+            });
+            
+            prevBtn.addEventListener('click', prevSong);
+            nextBtn.addEventListener('click', nextSong);
+            
+            audioPlayer.addEventListener('timeupdate', updateProgress);
+            audioPlayer.addEventListener('ended', nextSong);
+            audioPlayer.addEventListener('loadeddata', () => {
+                 // Update duration when file is loaded
+                 durationTimeEl.textContent = formatTime(audioPlayer.duration);
+            });
+            
+            progressBar.addEventListener('input', setProgress);
+
+            // Liner notes flipper (for both mobile and desktop)
+            linerNotesBtnMobile.addEventListener('click', () => {
+                flipperMobile.classList.toggle('is-flipped');
+            });
+            linerNotesBtnDesktop.addEventListener('click', () => {
+                flipperDesktop.classList.toggle('is-flipped');
+            });
+
+            
+            // --- 9. INITIALIZE APP ---
+            createPlaylist();
+            loadSong(songs[currentSongIndex]); // Load first song but don't play
+            updateLinerNotes(null); // Show "for Rebecca"
+            setupMediaSessionActions();
         });
     </script>
 </body>
