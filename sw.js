@@ -1,11 +1,11 @@
-const CACHE_NAME = 'rhh-cache-v10'; // This version matches your index.html
+const CACHE_NAME = 'rhh-cache-v11'; // Matches the v11 update
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
 const APP_SHELL_FILES = [
     './', // This caches the index.html
     'index.html',
-    'manifest.json?v=3', // Matches the v3 in your index.html
+    'manifest.json?v=4', // Matches the v4 in your index.html
     'https://cdn.tailwindcss.com/',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
     'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
@@ -116,7 +116,7 @@ self.addEventListener('fetch', event => {
     // These are dynamic, online-only scripts. Let them pass through.
     if (event.request.url.includes('gstatic.com/cv/js') || event.request.url.includes('cast.google.com')) {
         // console.log('[SW] Network-only request (Cast):', event.request.url);
-        return; // This will use the default network fetch
+        return fetch(event.request); // <-- This is the fix! It passes the request to the network.
     }
 
     event.respondWith(
