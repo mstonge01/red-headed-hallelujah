@@ -158,8 +158,11 @@
             z-index: 60;
         }
         
-        /* Styling for when the button is in the player */
-        #player-cast-btn-container google-cast-launcher {
+        /* Styling for when the button is in the player (DESKTOP AND MOBILE)
+          This is the fix:
+        */
+        #player-cast-btn-container google-cast-launcher,
+        #player-cast-btn-container-mobile google-cast-launcher {
              --cast-button-color: #EF4444; /* red-500 */
              width: 24px;
              height: 24px;
@@ -653,6 +656,7 @@
                 skipBtn.classList.remove('hidden');
 
                 // Play main video (with sound)
+                splashVideo.muted = false; // Ensure sound is on
                 splashVideo.play().catch(e => {
                     console.warn("Video play failed, proceeding anyway.", e);
                     playIntroAudio(); // If video fails, just play audio
@@ -787,7 +791,9 @@
                             console.log('Media loaded on cast device');
                             isPlaying = true; // Mark as playing *after* media loads
                             currentMedia = castSession.getMediaSession();
-                            currentMedia.addUpdateListener(onMediaStatusUpdate);
+                            if (currentMedia) { // Check if currentMedia is set
+                                currentMedia.addUpdateListener(onMediaStatusUpdate);
+                            }
                             // Update UI
                             playIcon.classList.add('hidden');
                             pauseIcon.classList.remove('hidden');
@@ -900,15 +906,21 @@
             }
 
             function setProgress(e) {
+                const value = e.target.value;
                 if (isCasting && currentMedia) {
                     // Casting: Seek
-                    const newTime = (e.target.value / 100) * currentMedia.media.duration;
-                    currentMedia.seek(new chrome.cast.media.SeekRequest(newTime));
+                    const newTime = (value / 100) * currentMedia.media.duration;
+                    const seekRequest = new chrome.cast.media.SeekRequest();
+                    seekRequest.currentTime = newTime;
+                    currentMedia.seek(seekRequest, 
+                        () => console.log('Cast seek success'), 
+                        (e) => console.error('Cast seek failed', e)
+                    );
                 } else {
                     // Local: Seek
                     const duration = audioPlayer.duration;
                     if (duration) {
-                        const newTime = (e.target.value / 100) * duration;
+                        const newTime = (value / 100) * duration;
                         audioPlayer.currentTime = newTime;
                         updateMediaSessionState(duration, newTime);
                     }
@@ -950,17 +962,21 @@
             // --- Media Session State (for truck progress bar) ---
             function updateMediaSessionState(duration, currentTime) {
                 if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
-                    const durationValue = isCasting ? currentMedia?.media.duration : duration;
-                    const currentTimeValue = isCasting ? castMediaCurrentTime : currentTime;
-                    
-                    if (!isNaN(durationValue) && !isNaN(currentTimeValue)) {
-                        navigator.mediaSession.setPositionState({
-                            duration: durationValue,
-                            playbackRate: 1, // We don't support other rates
-                            position: currentTimeValue
-                        });
+                    try {
+                        const durationValue = isCasting ? currentMedia?.media.duration : audioPlayer.duration;
+                        const currentTimeValue = isCasting ? castMediaCurrentTime : audioPlayer.currentTime;
+                        
+                        if (!isNaN(durationValue) && !isNaN(currentTimeValue)) {
+                            navigator.mediaSession.setPositionState({
+                                duration: durationValue,
+                                playbackRate: 1, 
+                                position: currentTimeValue
+                            });
+                        }
+                        navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+                    } catch (error) {
+                        console.warn("Failed to set media session state:", error);
                     }
-                     navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
                 }
             }
 
@@ -1002,31 +1018,39 @@
             playPauseBtnMobile.addEventListener('click', playPauseHandler);
             prevBtnMobile.addEventListener('click', prevHandler);
             nextBtnMobile.addEventListener('click', nextHandler);
+            // We need to listen to timeupdate on the *local* player for *both* mobile and desktop
+            // The `updateProgress` function updates both sets of UI elements
             progressBarMobile.addEventListener('input', progressHandler);
             linerNotesBtnMobile.addEventListener('click', flipperHandler);
             
             // --- Media Session Actions (for truck buttons, etc.) ---
             if ('mediaSession' in navigator) {
-                navigator.mediaSession.setActionHandler('play', playSong);
-                navigator.mediaSession.setActionHandler('pause', pauseSong);
-                navigator.mediaSession.setActionHandler('previoustrack', prevSong);
-                navigator.mediaSession.setActionHandler('nexttrack', nextSong);
-                // For seeking
-                navigator.mediaSession.setActionHandler('seekto', (details) => {
-                    const newTime = details.seekTime;
-                    if (isCasting && currentMedia) {
-                        currentMedia.seek(new chrome.cast.media.SeekRequest(newTime));
-                    } else {
-                        audioPlayer.currentTime = newTime;
-                    }
-                });
+                try {
+                    navigator.mediaSession.setActionHandler('play', playSong);
+                    navigator.mediaSession.setActionHandler('pause', pauseSong);
+                    navigator.mediaSession.setActionHandler('previoustrack', prevSong);
+                    navigator.mediaSession.setActionHandler('nexttrack', nextSong);
+                    // For seeking
+                    navigator.mediaSession.setActionHandler('seekto', (details) => {
+                        const newTime = details.seekTime;
+                        if (isCasting && currentMedia) {
+                            const seekRequest = new chrome.cast.media.SeekRequest();
+                            seekRequest.currentTime = newTime;
+                            currentMedia.seek(seekRequest);
+                        } else {
+                            audioPlayer.currentTime = newTime;
+                        }
+                    });
+                } catch (error) {
+                    console.warn('Media Session action handlers failed to set:', error);
+                }
             }
 
             // --- PWA Update Logic ---
             let newWorker; // To hold the new service worker
 
             // Show update button ONLY if PWA is installed
-            if (navigator.serviceWorker) {
+            if ('serviceWorker' in navigator) {
                  // Check if running as an installed PWA
                 if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
                     updateBtnContainer.style.display = 'block';
@@ -1034,8 +1058,11 @@
                 }
                 
                 const updateButtonHandler = (e) => {
-                    const statusEl = e.currentTarget.id.includes('mobile') ? updateStatusMobile : updateStatus;
-                    e.currentTarget.disabled = true;
+                    const isMobile = e.currentTarget.id.includes('mobile');
+                    const statusEl = isMobile ? updateStatusMobile : updateStatus;
+                    const btn = isMobile ? updateBtnMobile : updateBtn;
+
+                    btn.disabled = true;
                     statusEl.textContent = 'Checking for updates...';
                     
                     // Manually trigger an update check
@@ -1049,9 +1076,10 @@
                             if (!reg.waiting) {
                                 // No new version found
                                 statusEl.textContent = 'You are up to date!';
-                                e.currentTarget.disabled = false;
+                                btn.disabled = false;
                                 setTimeout(() => { statusEl.textContent = ''; }, 3000);
                             }
+                            // If reg.waiting *exists*, the 'updatefound' listener will handle it
                         });
                     });
                 };
@@ -1074,7 +1102,7 @@
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                                 // New SW is installed & waiting!
-                                // We've already updated, so just tell the user.
+                                // Tell the user to restart
                                 updateStatus.textContent = 'Update downloaded! Please restart app.';
                                 updateStatusMobile.textContent = 'Update downloaded! Please restart app.';
                                 
