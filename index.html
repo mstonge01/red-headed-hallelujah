@@ -11,9 +11,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap" rel="stylesheet">
     
-    <!-- Google Cast SDK -->
-    <!-- This will only load if you're online -->
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+    <!-- PWA Manifest Link (with version query to force update) -->
+    <link rel="manifest" href="manifest.json?v=2">
+    <!-- PWA Theme color -->
+    <meta name="theme-color" content="#1F2937">
 
     <style>
         /* Custom styles to match the album art aesthetic */
@@ -119,11 +120,11 @@
         }
 
         /* --- Crossfade Animation for Song Art --- */
-        #song-art {
+        #song-art-mobile, #song-art-desktop {
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
         }
-        #song-art.is-visible {
+        #song-art-mobile.is-visible, #song-art-desktop.is-visible {
             opacity: 1;
         }
 
@@ -163,30 +164,10 @@
             font-size: 1rem;
             padding: 0.5rem 1rem;
         }
-        
-        /* --- Cast Button Sizing Fix --- */
-        /* This rule targets both mobile and desktop containers */
-        #player-cast-btn-container-mobile google-cast-launcher,
-        #player-cast-btn-container-desktop google-cast-launcher {
-            width: 24px;
-            height: 24px;
-            --cast-button-color: #d1d5db; /* gray-300 */
-            margin: 0;
-            padding: 0;
-        }
-        
-        #player-cast-btn-container-mobile google-cast-launcher:hover,
-        #player-cast-btn-container-desktop google-cast-launcher:hover {
-            --cast-button-color: #EF4444; /* red-500 */
-        }
 
     </style>
 </head>
 <body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4">
-
-    <!-- Single Cast Button (will be moved by JS) -->
-    <!-- Starts hidden, will be shown by Cast SDK if available -->
-    <google-cast-launcher id="cast-btn" style="display: none;"></google-cast-launcher>
 
     <!-- Video Splash Screen -->
     <div id="splash-screen" class="fixed top-0 left-0 w-full h-full bg-gray-900 z-50 flex items-center justify-center opacity-100 transition-opacity duration-1000">
@@ -194,9 +175,6 @@
         <div id="splash-ui-container" class="relative flex flex-col items-center justify-center">
             <!-- The "Click to Begin" Button -->
             <button id="enter-btn">Click to Begin</button>
-            
-            <!-- This container will hold the Cast button when it's moved here by JS -->
-            <div id="splash-cast-btn-container" class="absolute -top-16"></div>
         </div>
 
         <!-- Video: No 'autoplay' or 'muted' -->
@@ -281,10 +259,6 @@
                             <h2 id="song-title" class="text-3xl text-yellow-400 truncate font-album-title tracking-wider">Song Title</h2>
                             <h3 id="song-artist" class="text-lg text-gray-300">A mstonge01 Project</h3>
                         </div>
-                        <!-- Cast Button Container (Desktop) -->
-                        <div id="player-cast-btn-container-desktop" class="hidden md:block ml-4 flex-shrink-0">
-                            <!-- Cast button will be moved here -->
-                        </div>
                     </div>
                 </div>
 
@@ -302,11 +276,6 @@
 
                     <!-- Controls -->
                     <div class="flex justify-center items-center space-x-6 mt-4">
-                        <!-- Cast Button Container (Mobile) -->
-                        <div id="player-cast-btn-container-mobile" class="block md:hidden">
-                            <!-- Cast button will be moved here -->
-                        </div>
-                        
                         <!-- Previous Button -->
                         <button id="prev-btn" class="text-gray-400 hover:text-red-500 transition-colors duration-200">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.03V5.969a1 1 0 00-1.555-.832L4.12 9.168a1 1 0 000 1.664l4.325 4zM10.879 9.168a1 1 0 000 1.664l4.325 4A1 1 0 0017 14.03V5.969a1 1 0 00-1.555-.832l-4.325 4z"/></svg>
@@ -332,6 +301,11 @@
                     </div>
                 </div>
                 
+                <!-- PWA Update Button -->
+                <div id="update-container" class="hidden text-center mt-4">
+                    <button id="update-btn" class="text-sm text-gray-400 hover:text-red-500 transition-colors">Check for Updates</button>
+                    <p id="update-status" class="text-sm text-gray-500"></p>
+                </div>
             </div>
         </div>
     </div>
@@ -428,7 +402,6 @@
             const introAudio = document.getElementById('intro-audio');
             const enterBtn = document.getElementById('enter-btn');
             const skipBtn = document.getElementById('skip-btn');
-            const splashCastBtnContainer = document.getElementById('splash-cast-btn-container');
             const splashUIContainer = document.getElementById('splash-ui-container');
             
             const playerContainer = document.getElementById('player-container');
@@ -444,10 +417,7 @@
             const progressBar = document.getElementById('progress-bar');
             const currentTimeEl = document.getElementById('current-time');
             const durationTimeEl = document.getElementById('duration-time');
-            const castBtn = document.getElementById('cast-btn');
-            const playerCastBtnContainerMobile = document.getElementById('player-cast-btn-container-mobile');
-            const playerCastBtnContainerDesktop = document.getElementById('player-cast-btn-container-desktop');
-            
+
             // Flipper elements (Mobile)
             const flipperMobile = document.getElementById('flipper');
             const linerNotesBtnMobile = document.getElementById('liner-notes-btn-mobile');
@@ -462,157 +432,17 @@
             const noteBodyDesktop = document.getElementById('note-body-desktop');
             const songArtDesktop = document.getElementById('song-art-desktop');
             
+            // PWA Update elements
+            const updateContainer = document.getElementById('update-container');
+            const updateBtn = document.getElementById('update-btn');
+            const updateStatus = document.getElementById('update-status');
+
             // --- 3. PLAYER STATE ---
             let currentSongIndex = 0;
             let isPlaying = false;
             let hasUserInteracted = false; 
 
-            // --- 4. CAST API ---
-            let castSession = null;
-            let currentMedia = null;
-            let isCasting = false;
-
-            window['__onGCastApiAvailable'] = function(isAvailable) {
-                if (isAvailable) {
-                    initializeCastApi();
-                }
-            };
-
-            function initializeCastApi() {
-                const sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
-                const apiConfig = new chrome.cast.ApiConfig(sessionRequest,
-                    sessionListener,
-                    receiverListener);
-                chrome.cast.initialize(apiConfig, onCastInitSuccess, onCastError);
-            }
-
-            function onCastInitSuccess() {
-                // Cast SDK is ready
-                castBtn.style.display = 'block'; // Show the button
-                // Move it to the splash screen
-                splashCastBtnContainer.appendChild(castBtn);
-            }
-
-            function onCastError(e) {
-                console.error('Cast Error:', e);
-            }
-
-            function sessionListener(newSession) {
-                castSession = newSession;
-                castSession.addUpdateListener(sessionUpdateListener);
-                castSession.addMediaListener(mediaListener);
-                isCasting = true;
-                if (isPlaying) {
-                    // If a song is already playing, stop local and cast it
-                    const wasPlaying = isPlaying;
-                    pauseSong(true); // Pause local without updating UI
-                    loadSongAndCast(currentSongIndex, wasPlaying);
-                } else {
-                    // Just update the UI
-                    loadSong(songs[currentSongIndex]);
-                }
-            }
-            
-            function mediaListener(media) {
-                currentMedia = media;
-            }
-
-            function sessionUpdateListener(isAlive) {
-                if (!isAlive) {
-                    castSession = null;
-                    isCasting = false;
-                    // Switch back to local player
-                    if (currentMedia) {
-                        const currentTime = currentMedia.currentTime;
-                        loadSong(songs[currentSongIndex]);
-                        audioPlayer.currentTime = currentTime;
-                        if (currentMedia.playerState === 'PLAYING') {
-                            playSong();
-                        }
-                        currentMedia = null;
-                    }
-                }
-            }
-
-            function receiverListener(availability) {
-                if (availability === chrome.cast.ReceiverAvailability.AVAILABLE) {
-                    castBtn.style.display = 'block';
-                } else {
-                    castBtn.style.display = 'none';
-                }
-            }
-
-            function loadSongAndCast(songIndex, autoPlay) {
-                if (!castSession) return;
-
-                const song = songs[songIndex];
-                let mediaInfo = new chrome.cast.media.MediaInfo(song.src, 'audio/mp3');
-                mediaInfo.metadata = new chrome.cast.media.MusicTrackMediaMetadata();
-                mediaInfo.metadata.title = song.title;
-                mediaInfo.metadata.artist = artistName;
-                mediaInfo.metadata.albumName = "Red-Headed Hallelujah";
-                
-                // Add artwork
-                const artwork = new chrome.cast.Image(song.image_src);
-                mediaInfo.metadata.images = [artwork];
-
-                let request = new chrome.cast.media.LoadRequest(mediaInfo);
-                request.autoplay = autoPlay;
-
-                castSession.loadMedia(request,
-                    (media) => { 
-                        currentMedia = media; 
-                        if (autoPlay) {
-                            isPlaying = true;
-                            playIcon.classList.add('hidden');
-                            pauseIcon.classList.remove('hidden');
-                            updateMediaSession(song);
-                        }
-                    },
-                    (e) => console.error('Error casting media:', e)
-                );
-            }
-
-            function castPlay() {
-                if (currentMedia) {
-                    currentMedia.play(null, 
-                        () => { 
-                            isPlaying = true;
-                            playIcon.classList.add('hidden');
-                            pauseIcon.classList.remove('hidden');
-                            updateMediaSession(songs[currentSongIndex]);
-                        }, 
-                        (e) => console.error('Cast play error:', e)
-                    );
-                } else if (castSession) {
-                    // No media loaded, so load and play
-                    loadSongAndCast(currentSongIndex, true);
-                }
-            }
-
-            function castPause() {
-                if (currentMedia) {
-                    currentMedia.pause(null, 
-                        () => { 
-                            isPlaying = false;
-                            playIcon.classList.remove('hidden');
-                            pauseIcon.classList.add('hidden');
-                            updateMediaSession(songs[currentSongIndex]);
-                        }, 
-                        (e) => console.error('Cast pause error:', e)
-                    );
-                }
-            }
-            
-            function castSeek(time) {
-                 if (currentMedia) {
-                    let request = new chrome.cast.media.SeekRequest();
-                    request.currentTime = time;
-                    currentMedia.seek(request, null, (e) => console.error('Cast seek error:', e));
-                }
-            }
-
-            // --- 5. INTRO & SPLASH SCREEN ---
+            // --- 4. INTRO & SPLASH SCREEN ---
             
             function startVideoTransition() {
                 if(hasUserInteracted) return; 
@@ -645,17 +475,13 @@
                 splashScreen.style.opacity = '0';
                 playerContainer.style.opacity = '1';
                 
-                // Move the cast button from the splash screen to the player
-                playerCastBtnContainerMobile.appendChild(castBtn);
-                playerCastBtnContainerDesktop.appendChild(castBtn);
-
                 // After the fade, remove the splash screen
                 setTimeout(() => {
                     splashScreen.style.display = 'none';
                 }, 1000); // Must match the transition duration
             }
 
-            // --- 6. PLAYER FUNCTIONS ---
+            // --- 5. PLAYER FUNCTIONS ---
             
             function updateLinerNotes(index) {
                 let title, note;
@@ -677,10 +503,7 @@
             function loadSong(song) {
                 songTitleEl.textContent = song.title;
                 songArtistEl.textContent = artistName;
-                
-                if (!isCasting) {
-                    audioPlayer.src = song.src;
-                }
+                audioPlayer.src = song.src;
 
                 // Update song art
                 songArtMobile.src = song.image_src;
@@ -694,11 +517,6 @@
             }
 
             function playSong() {
-                if (isCasting) {
-                    castPlay();
-                    return;
-                }
-
                 if (!audioPlayer.src || audioPlayer.src.endsWith('index.html')) {
                     loadSong(songs[currentSongIndex]);
                 }
@@ -715,15 +533,7 @@
                 updateMediaSession(songs[currentSongIndex]);
             }
 
-            function pauseSong(isCastingUpdate = false) {
-                if (isCasting) {
-                    // Don't stop local playback if we're just updating cast
-                    if (!isCastingUpdate) {
-                        castPause();
-                    }
-                    return;
-                }
-
+            function pauseSong() {
                 isPlaying = false;
                 audioPlayer.pause();
                 playIcon.classList.remove('hidden');
@@ -749,27 +559,15 @@
             function prevSong() {
                 currentSongIndex--;
                 if (currentSongIndex < 0) currentSongIndex = songs.length - 1;
-                
-                if (isCasting) {
-                    loadSongAndCast(currentSongIndex, isPlaying);
-                    loadSong(songs[currentSongIndex]); // Update local UI
-                } else {
-                    loadSong(songs[currentSongIndex]);
-                    if (isPlaying) playSong();
-                }
+                loadSong(songs[currentSongIndex]);
+                if (isPlaying) playSong();
             }
 
             function nextSong() {
                 currentSongIndex++;
                 if (currentSongIndex > songs.length - 1) currentSongIndex = 0;
-                
-                if (isCasting) {
-                    loadSongAndCast(currentSongIndex, isPlaying);
-                    loadSong(songs[currentSongIndex]); // Update local UI
-                } else {
-                    loadSong(songs[currentSongIndex]);
-                    if (isPlaying) playSong();
-                }
+                loadSong(songs[currentSongIndex]);
+                if (isPlaying) playSong();
             }
 
             function updateProgress(e) {
@@ -799,23 +597,16 @@
             }
 
             function setProgress() {
-                if (isCasting) {
-                    const duration = currentMedia ? currentMedia.media.duration : songs[currentSongIndex].duration; // Need to get duration
-                    if(duration) {
-                        castSeek((progressBar.value / 100) * duration);
-                    }
-                } else {
-                    const duration = audioPlayer.duration;
-                    if (duration) {
-                         audioPlayer.currentTime = (progressBar.value / 100) * duration;
-                         // Send position state on drag
-                         if ('mediaSession' in navigator) {
-                             navigator.mediaSession.setPositionState({
-                                duration: audioPlayer.duration,
-                                playbackRate: audioPlayer.playbackRate,
-                                position: audioPlayer.currentTime
-                            });
-                        }
+                const duration = audioPlayer.duration;
+                if (duration) {
+                     audioPlayer.currentTime = (progressBar.value / 100) * duration;
+                     // Send position state on drag
+                     if ('mediaSession' in navigator) {
+                         navigator.mediaSession.setPositionState({
+                            duration: audioPlayer.duration,
+                            playbackRate: audioPlayer.playbackRate,
+                            position: audioPlayer.currentTime
+                        });
                     }
                 }
             }
@@ -842,19 +633,14 @@
                     `;
                     item.addEventListener('click', () => {
                         currentSongIndex = index;
-                        if(isCasting) {
-                            loadSongAndCast(currentSongIndex, true);
-                            loadSong(song); // update local UI
-                        } else {
-                            loadSong(song);
-                            playSong();
-                        }
+                        loadSong(song);
+                        playSong();
                     });
                     playlistEl.appendChild(item);
                 });
             }
 
-            // --- 7. MEDIA SESSION API (For Truck Display) ---
+            // --- 6. MEDIA SESSION API (For Truck Display) ---
             function updateMediaSession(song) {
                 if ('mediaSession' in navigator) {
                     navigator.mediaSession.metadata = new MediaMetadata({
@@ -877,19 +663,76 @@
                     navigator.mediaSession.setActionHandler('previoustrack', prevSong);
                     navigator.mediaSession.setActionHandler('nexttrack', nextSong);
                     navigator.mediaSession.setActionHandler('seekto', (details) => {
-                        if (isCasting) {
-                            castSeek(details.seekTime);
-                        } else {
-                            audioPlayer.currentTime = details.seekTime;
-                        }
+                        audioPlayer.currentTime = details.seekTime;
                     });
                  }
             }
             
+            // --- 7. PWA UPDATE LOGIC ---
+            let swRegistration; // To hold the service worker registration
+            let newWorker; // To hold the new worker if one is found
+
+            // Only show update button if running as a PWA
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                updateContainer.classList.remove('hidden');
+            }
+
+            function registerServiceWorker() {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('sw.js?v=9')
+                        .then(reg => {
+                            swRegistration = reg;
+                            console.log('Service Worker registered (v9)');
+
+                            // Listen for a new worker installing
+                            reg.addEventListener('updatefound', () => {
+                                newWorker = reg.installing;
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // New update is ready to install!
+                                        updateStatus.textContent = 'Update downloaded! Please restart app.';
+                                        updateBtn.textContent = 'Restart App';
+                                        updateBtn.onclick = () => {
+                                            newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                            // Reload the page to activate the new worker
+                                            window.location.reload();
+                                        };
+                                    }
+                                });
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Service Worker registration failed:', error);
+                        });
+                }
+            }
+            
+            updateBtn.addEventListener('click', () => {
+                // Manual update check
+                if (swRegistration) {
+                    updateStatus.textContent = 'Checking for updates...';
+                    swRegistration.update().then(reg => {
+                        if (!reg.installing && !reg.waiting) {
+                            updateStatus.textContent = 'You are up to date.';
+                        }
+                    }).catch(err => {
+                        updateStatus.textContent = 'Update check failed.';
+                        console.error('SW Update failed:', err);
+                    });
+                }
+            });
+
+
             // --- 8. EVENT LISTENERS ---
             
             // --- Splash Screen ---
-            enterBtn.addEventListener('click', startVideoTransition);
+            enterBtn.addEventListener('click', () => {
+                startVideoTransition();
+                // Tell the service worker to start caching music in the background
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'CACHE_MUSIC' });
+                }
+            });
             skipBtn.addEventListener('click', skipIntro);
 
             splashVideo.addEventListener('ended', () => {
@@ -935,6 +778,7 @@
             loadSong(songs[currentSongIndex]); // Load first song but don't play
             updateLinerNotes(null); // Show "for Rebecca"
             setupMediaSessionActions();
+            registerServiceWorker(); // Start the PWA logic
         });
     </script>
 </body>
