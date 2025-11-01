@@ -16,7 +16,7 @@
     <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json?v=3"> <!-- Bumped to v3 -->
+    <link rel="manifest" href="manifest.json?v=4"> <!-- Bumped to v4 -->
     <meta name="theme-color" content="#EF4444">
     
     <style>
@@ -644,7 +644,7 @@
                 skipBtn.classList.remove('hidden');
 
                 // Mute and play video
-                splashVideo.muted = true;
+                // splashVideo.muted = true; // <-- This line is removed!
                 splashVideo.play().catch(e => {
                     console.warn("Video play failed, proceeding anyway.", e);
                     // If video fails, just skip to audio
@@ -999,4 +999,5 @@
     </script>
 </body>
 </html>
+
 
