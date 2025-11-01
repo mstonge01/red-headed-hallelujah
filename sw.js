@@ -1,24 +1,19 @@
-const CACHE_NAME = 'rhh-cache-v11'; // Matches the v11 update
+/*
+Service Worker for Red-Headed Hallelujah
+Version: v13 - Aggressive Update
+*/
 
-// 1. App Shell Files: The basic files needed for the app to run.
-// These are cached immediately on install.
-const APP_SHELL_FILES = [
-    './', // This caches the index.html
+const CACHE_NAME = 'rhh-cache-v13';
+const APP_SHELL_URLS = [
     'index.html',
-    'manifest.json?v=4', // Matches the v4 in your index.html
-    'https://cdn.tailwindcss.com/',
-    'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
-    'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
-    'https://fonts.gstatic.com/s/staatliches/v12/HI_OiY8KO6hCsQSoAPmtMYebvpU.woff2', // Common font file
-    'https://www.transparenttextures.com/patterns/stucco.png',
-    'https://www.transparenttextures.com/patterns/concrete-wall.png',
-    'cover.jpg.jpg', // Main cover art
+    'cover.jpg.jpg',
     'paint-video.mp4',
-    'hallelujah-intro.mp3'
+    'hallelujah-intro.mp3',
+    'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
+    'https://www.transparenttextures.com/patterns/stucco.png',
+    'https://www.transparenttextures.com/patterns/concrete-wall.png'
 ];
-
-// 2. Content Files: The songs and art to be cached in the background.
-const CONTENT_FILES = [
+const CONTENT_URLS = [
     '01-the-crimson-tide.mp3',
     '02-real-women.mp3',
     '03-red-headed-hallelujah.mp3',
@@ -45,112 +40,87 @@ const CONTENT_FILES = [
     '12-red-headed-hallelujah-piano-art.png'
 ];
 
-// Helper function to cache with CORS
-function cacheRequest(url) {
-    if (url.startsWith('http')) {
-        return new Request(url, { mode: 'cors' });
-    }
-    return new Request(url);
-}
-
-// 1. Install Step: Cache the app shell
+// --- AGGRESSIVE UPDATE LOGIC ---
+// This tells the new service worker to take over immediately.
 self.addEventListener('install', event => {
-    console.log('[SW] Install');
+    console.log('[SW v13] Install');
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            console.log('[SW] Caching App Shell...');
-            return Promise.all(
-                APP_SHELL_FILES.map(url => cache.add(cacheRequest(url)))
-            ).catch(err => {
-                console.error('[SW] App Shell caching failed', err);
-            });
+            console.log('[SW v13] Caching App Shell');
+            return cache.addAll(APP_SHELL_URLS);
         }).then(() => {
-            console.log('[SW] Install complete, skipping waiting.');
+            // Force the new service worker to activate
             return self.skipWaiting();
         })
     );
 });
 
-// 2. Activate Step: Clean up old caches
 self.addEventListener('activate', event => {
-    console.log('[SW] Activate');
+    console.log('[SW v13] Activate');
+    // Force the new service worker to take control of the page
+    event.waitUntil(self.clients.claim());
+    
+    // Clean up old caches
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('[SW] Deleting old cache:', cacheName);
+                        console.log('[SW v13] Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
             );
         })
     );
-    return self.clients.claim();
 });
 
-// 3. Message Step: Listen for message from app to cache content
+// --- CACHE & NETWORK STRATEGY ---
+self.addEventListener('fetch', event => {
+    const url = new URL(event.request.url);
+
+    // --- Google Cast SDK ---
+    // This is an online-only feature. Always fetch from the network.
+    // This also fixes the Cast button not appearing.
+    if (url.origin === 'https://www.gstatic.com' || url.pathname.startsWith('/__cast/')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
+    // --- App files ---
+    // Serve from cache first, then check network.
+    event.respondWith(
+        caches.match(event.request).then(cachedResponse => {
+            // If it's in the cache, serve it.
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+            
+            // If not, fetch it from the network.
+            return fetch(event.request).then(networkResponse => {
+                // (Don't cache non-app files, just return them)
+                return networkResponse;
+            });
+        })
+    );
+});
+
+
+// --- MESSAGE LISTENER ---
+// Listens for the "cache-music" message from the main page.
 self.addEventListener('message', event => {
-    if (event.data.action === 'cache-content') {
-        console.log('[SW] Received message to cache content (songs/art).');
+    if (event.data.type === 'CACHE_MUSIC') {
+        console.log('[SW v13] Received message to cache music/art.');
         event.waitUntil(
             caches.open(CACHE_NAME).then(cache => {
-                console.log('[SW] Caching songs and art in background...');
-                return Promise.all(
-                    CONTENT_FILES.map(url => cache.add(cacheRequest(url)))
-                ).catch(error => {
-                    console.error('[SW] Failed to cache content:', error);
+                console.log('[SW v13] Starting background cache of music/art...');
+                return cache.addAll(CONTENT_URLS).then(() => {
+                    console.log('[SW v13] All music/art successfully cached.');
+                }).catch(error => {
+                    console.error('[SW v13] Failed to cache music/art:', error);
                 });
             })
         );
     }
-});
-
-// 4. Fetch Step: Serve from cache, fallback to network
-self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET') {
-        return;
-    }
-
-    // --- Do NOT cache Google Cast SDK ---
-    // These are dynamic, online-only scripts. Let them pass through.
-    if (event.request.url.includes('gstatic.com/cv/js') || event.request.url.includes('cast.google.com')) {
-        // console.log('[SW] Network-only request (Cast):', event.request.url);
-        return fetch(event.request); // <-- This is the fix! It passes the request to the network.
-    }
-
-    event.respondWith(
-        caches.match(event.request).then(response => {
-            // 1. Respond from Cache (Cache-First)
-            if (response) {
-                // console.log(`[SW] Serving from cache: ${event.request.url}`);
-                return response;
-            }
-
-            // 2. Not in Cache: Fetch from Network, Cache, and Respond
-            // console.log(`[SW] Fetching from network: ${event.request.url}`);
-            return fetch(event.request.clone()).then(networkResponse => {
-
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error') {
-                    return networkResponse;
-                }
-                
-                // Check if this is a file we want to cache
-                const isCachable = APP_SHELL_FILES.some(url => event.request.url.includes(url.replace('https://', ''))) ||
-                                     CONTENT_FILES.some(url => event.request.url.includes(url)) ||
-                                     event.request.url.includes('gstatic.com/s/'); // Cache Google Fonts
-                
-                if (isCachable) {
-                    const responseToCache = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, responseToCache);
-                    });
-                }
-                return networkResponse;
-            }).catch(error => {
-                console.error(`[SW] Fetch failed, and not in cache: ${event.request.url}`, error);
-            });
-        })
-    );
 });
 
