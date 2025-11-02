@@ -26,22 +26,26 @@
             font-family: 'Staatliches', cursive;
         }
 
-        /* Custom scrollbar for the playlist */
+        /* Custom scrollbar for playlists */
         #playlist::-webkit-scrollbar,
+        #video-playlist::-webkit-scrollbar,
         #flipper-back::-webkit-scrollbar {
             width: 8px;
         }
         #playlist::-webkit-scrollbar-track,
+        #video-playlist::-webkit-scrollbar-track,
         #flipper-back::-webkit-scrollbar-track {
             background: #374151; /* gray-700 */
             border-radius: 10px;
         }
         #playlist::-webkit-scrollbar-thumb,
+        #video-playlist::-webkit-scrollbar-thumb,
         #flipper-back::-webkit-scrollbar-thumb {
             background: #EF4444; /* red-500 */
             border-radius: 10px;
         }
         #playlist::-webkit-scrollbar-thumb:hover,
+        #video-playlist::-webkit-scrollbar-thumb:hover,
         #flipper-back::-webkit-scrollbar-thumb:hover {
             background: #DC2626; /* red-600 */
         }
@@ -186,6 +190,30 @@
             border-color: rgba(255, 255, 255, 0.7);
         }
 
+        /* --- Video Modal Styles --- */
+        #video-modal {
+            background-color: rgba(0, 0, 0, 0.9);
+            transition: opacity 0.3s ease;
+        }
+        #video-modal-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 110;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s ease;
+        }
+        #video-modal-close-btn:hover {
+            color: white;
+            transform: scale(1.1);
+        }
+        #video-player {
+            width: 100%;
+            height: 100%;
+            max-width: 95vw;
+            max-height: 95vh;
+        }
+
     </style>
 </head>
 <body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4">
@@ -300,12 +328,31 @@
                     </div>
                 </div>
                 
-                <!-- Bottom-Right: Playlist -->
-                <div class="flex-grow min-h-0">
-                    <div id="playlist" class="h-48 md:h-full max-h-48 lg:max-h-56 overflow-y-auto pr-2">
-                        <!-- Playlist items will be injected here by JavaScript -->
+                <!-- Bottom-Right: Tabs & Playlists -->
+                <div class="flex-grow min-h-0 flex flex-col">
+                    <!-- Tab Buttons -->
+                    <div class="flex border-b border-gray-700 mb-2">
+                        <button id="audio-tab-btn" class="flex-1 py-2 px-4 font-album-title tracking-wider text-lg bg-gray-700 text-white rounded-t-md">
+                            Audio
+                        </button>
+                        <button id="video-tab-btn" class="flex-1 py-2 px-4 font-album-title tracking-wider text-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors rounded-t-md">
+                            Video
+                        </button>
+                    </div>
+
+                    <!-- Playlist Container -->
+                    <div class="flex-grow min-h-0 relative">
+                        <!-- Audio Playlist -->
+                        <div id="playlist" class="absolute inset-0 h-48 md:h-full max-h-48 lg:max-h-56 overflow-y-auto pr-2">
+                            <!-- Playlist items will be injected here by JavaScript -->
+                        </div>
+                        <!-- Video Playlist -->
+                        <div id="video-playlist" class="absolute inset-0 h-48 md:h-full max-h-48 lg:max-h-56 overflow-y-auto pr-2 hidden">
+                            <!-- Video items will be injected here by JavaScript -->
+                        </div>
                     </div>
                 </div>
+
 
                 <!-- Update Button (PWA Only) -->
                 <div id="update-container" class="hidden text-center mt-4 p-2 border-t border-gray-700">
@@ -341,10 +388,20 @@
         </div>
     </div>
 
+    <!-- Video Player Modal -->
+    <div id="video-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 opacity-0">
+        <button id="video-modal-close-btn" class="text-gray-400 hover:text-white transition-colors">
+            <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+        </button>
+        <video id="video-player" controls class="rounded-lg shadow-2xl" style="background-color: black;">
+            <!-- Source will be set by JS -->
+        </video>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- 1. SONG DATABASE ---
+            // --- 1. DATABASES ---
             const songs = [
                 { 
                     title: "The Crimson Tide", 
@@ -419,6 +476,16 @@
                     note: `<b class="text-yellow-400 text-lg">The Song: The "Vulnerable" Lullaby Version</b><br><br>This final track is the album's most vulnerable and emotionally raw statement. It strips the song down to its absolute, barest essentials: a sparse, delicate piano and a single, soulful vocal. The tempo is slowed slightly, and the vocal delivery is softer, more fragile, and filled with a tender reverence.<br><br>This is the "Hallelujah" as a whisper in the dark. It is the "lullaby" version, the "quiet moment after the kids are finally asleep" version. The piano notes hang in the air, giving weight to every word. The "desperation" of the original ("breath is short," "walls are closing") feels more immediate and real in this sparse setting, making the "red-headed light" feel like an even more profound, quiet miracle.<br><br><b class="text-yellow-400 text-lg">Role on the Album</b><br><br>As the album's closer, this track is a masterstroke. It’s the final, definitive, and most intimate reading of the album's central theme. The record, which began with a raucous, stomping "Hey! Ho!" ("The Crimson Tide"), now ends on the quietest, most delicate note possible. It’s a perfect bookend, resolving all the "chaos" (from "Interrupted," "Real Women," etc.) into this one, simple, beautiful moment of peace. It's the final "Amen" to the album's prayer.`
                 },
             ];
+
+            const videos = [
+                {
+                    title: "Red-Headed Hallelujah",
+                    src: "red-headed-hallelujah.mp4",
+                    thumbnail: "03-red-headed-hallelujah-art.png" // Use song art as thumbnail
+                }
+                // Add more videos here as you make them
+            ];
+
             const artistName = "A mstonge01 Project";
             const albumTitle = "Red-Headed Hallelujah";
             const albumNote = `A Raw, Raucous, and Deeply Personal Sonic Biography<br><br>'Red-Headed Hallelujah' is not merely an album; it is a meticulously crafted sonic biography, a "mixtape" of a life shared. Under the artist name 'A mstonge01 Project', this collection of songs serves as a hyper-specific and unflinchingly honest tribute to a single muse: the artist's wife, Rebecca. The album's power lies in its complete rejection of generic, greeting-card sentiment. Instead, it builds a musical monument out of specific, shared memories—from the hilarious and the quirky to the profound and the sacred.<br><br>The album title itself is the record's central thesis. "Red-Headed" is the physical identifier, the recurring visual motif, the muse. "Hallelujah" is the emotional response—a word that is at once a cry of praise, a sigh of relief, and an acknowledgment of salvation. This concept is so central, it is rightfully presented in three different musical settings (gospel, acoustic, and piano), acting as the album's anchor.<br><br><b class="text-yellow-400 text-lg">The Visual Aesthetic: A Street-Art Shrine</b><br><br>The album's visual language is as powerful and defined as its music. The cover and all accompanying song art share a unified "stencil graffiti" style. This choice is brilliant. It presents these images as raw, edgy, and permanent declarations, spray-painted on the rough, imperfect texture of a concrete wall.<br><br>The palette is a stark, high-contrast black on grey, which makes the one, singular "pop" color—that vibrant, defiant red—all the more explosive. This red is used almost exclusively for Rebecca's hair, visually cementing her as the album's central, blazing focus.<br><br>This is not a soft-focus fantasy. This is a cool, real, and undeniable tribute. The specificity is astounding, most notably on the album cover and the art for "The Crimson Tide," which perfectly capture the real-life mermaid tattoo on her arm. This is not a generic woman; this is her. The art says what the music confirms: this love is not polished or perfect, it is real, it has grit, and it's worthy of being shouted from the rooftops (or, in this case, immortalized on a public wall).<br><br><b class="text-yellow-400 text-lg">The Sonic Journey: A Mixtape of a Life</b><br><br>Musically, 'Red-Headed Hallelujah' is a wonderfully eclectic journey, mirroring the diverse "record collection" of a life lived together. It refuses to be boxed into one genre, instead pulling from the perfect sound to tell each specific story.<br><br>The album opens with the stomping, mythic sea shanty of "The Crimson Tide."<br>It swerves into the gritty, southern blues-rock of "Real Women," a track that feels like it could have been pulled from a Black Keys or The Sheepdogs record.<br>It then explodes into the full-throated, choir-backed gospel of the title track, "Red-Headed Hallelujah."<br>This is followed by the upbeat, narrative-driven country-rock of "The Good Stuff," the quirky and tender indie-pop of "Zero-Degree Beach," and the plucky, comedic acoustic folk of "Caps."<br><br>The back half of the album leans into raucous, bar-room rock and roll with "Interrupted," gets low and swampy with the bluesy, storytelling of "Cinnamon Serenade," and then quiets down for the reverent, acoustic hymn "Golden Devotion" and the tender, lofi ballad "Natural Magic."<br><br>The common thread is an raw authenticity. The production is clean but never sterile, allowing the storytelling and the genuine, varied instrumentation—from roaring electric guitars and banjos to soulful choirs and intimate piano—to take center stage.<br><br><b class="text-yellow-400 text-lg">The Lyrical Pillars: A Biography in Song</b><br><br>This is the heart of the album. The lyrics form a mosaic of a shared history, built on three distinct pillars.<br><br><b class="text-yellow-400 text-lg">1. The Origin & The "Lore":</b> The album documents the legendary "key moments" that build a relationship's private lore. "The Good Stuff" is the perfect "meet-cute" origin story, a fantastic piece of country-rock narrative about a comically failed high-school plan that led to the most important meeting of his life. On the other end of the spectrum is "Cinnamon Serenade," a raw, hilarious, and deeply "in-joke" story of a specific, messy night with Fireball. It’s a testament to loving someone through the imperfect, real-life moments, not just the idealized ones.<br><br><b class="text-yellow-400 text-lg">2. A Hymn to the Muse (The Quirks and the Power):</b> Several tracks are pure, observational praise of Rebecca's unique personality. "The Crimson Tide" is a brilliant, mythic anthem that transforms her red hair and mermaid tattoo into the stuff of legends. "Real Women" is a badass, gritty anthem celebrating her attitude and her Jeep. Then, you have the more intimate odes: "Zero-Degree Beach" is a tender, loving portrait of a magnificent "quirk"—her insistence on wearing flip-flops in the Canadian winter, which he re-frames as her "secret summer." And most audaciously, there is "Caps," a plucky, hilarious "dad joke" of a song that finds beauty and adoration in the most specific and mundane of places: her kneecaps.<br><br><b class="text-yellow-400 text-lg">3. The Anchor in the Chaos (The "Hallelujah"):</b> This is the album's emotional core. The title track, "Red-Headed Hallelujah," serves as the thesis: the world is chaos ("Boss man's yelling," "two boys screaming"), but she is the "red-headed light" who burns through it and makes him "gonna be alright."<br><br>The album then beautifully explores both the sacred and the profane sides of this. "Natural Magic" is a stunning, quiet, and reverent ballad about her power as a mother—her "quiet strength," her "healing the world with your hand," her "calmest place I've ever known." It is the album at its most tender. This is immediately and hilariously contrasted by "Interrupted," the real-life, rock-and-roll sequel. It’s a song about the chaotic, un-sexy, and loving reality of being parents—the dog, the nightmares ("Dad, I'm thirsty!"), and the constant, loving failure to find a moment alone. It is the perfect encapsulation of the album's themes: the love is sacred, but the life is a glorious, interrupted mess.<br><br><b class="text-yellow-400 text-lg">Conclusion: A Masterpiece of Personalization</b><br><br>'Red-Headed Hallelujah' is an overwhelming success as a project. It works because it is so unflinchingly specific. The love here is not defined by clichés, but by "tiny bottle caps," a "cinnamon serenade," flip-flops in the snow, and a Jeep.<br><br>By presenting the title track in three distinct versions, the album hammers home its central message: this person is a source of praise (the gospel version), a source of comfort (the acoustic version), and a source of profound, quiet love (the piano version).<br><br>It is a raw, funny, edgy, and beautiful testament to a life built together—a complete and stunningly personal work of art.`;
@@ -435,7 +502,7 @@
             const introAudio = document.getElementById('intro-audio');
             const songTitleEl = document.getElementById('song-title');
             const songArtistEl = document.getElementById('song-artist');
-            const playlistEl = document.getElementById('playlist');
+            
             const playPauseBtn = document.getElementById('play-pause-btn');
             const playIcon = document.getElementById('play-icon');
             const pauseIcon = document.getElementById('pause-icon');
@@ -459,13 +526,22 @@
             const aiModalSpinner = document.getElementById('ai-modal-spinner');
             const aiModalText = document.getElementById('ai-modal-text');
 
-            // New "About" Button
+            // "About" Button
             const aboutBtn = document.getElementById('about-btn');
 
-            // New Update Button Elements
+            // Update Button Elements
             const updateContainer = document.getElementById('update-container');
             const updateBtn = document.getElementById('update-btn');
             const updateStatusText = document.getElementById('update-status-text');
+
+            // Video & Tab Elements
+            const audioTabBtn = document.getElementById('audio-tab-btn');
+            const videoTabBtn = document.getElementById('video-tab-btn');
+            const playlistEl = document.getElementById('playlist');
+            const videoPlaylistEl = document.getElementById('video-playlist');
+            const videoModal = document.getElementById('video-modal');
+            const videoModalCloseBtn = document.getElementById('video-modal-close-btn');
+            const videoPlayer = document.getElementById('video-player');
 
 
             // --- 3. PLAYER STATE ---
@@ -473,6 +549,7 @@
             let isPlaying = false;
             let hasUserInteracted = false;
             let isAiModalOpen = false; // Track modal state
+            let isVideoModalOpen = false; // Track video modal state
 
             // --- 4. FUNCTIONS ---
 
@@ -537,7 +614,7 @@
                 }, 1000); // 1-second pause
             }
             
-            // --- All other player functions (updatePositionState, updateMediaSession, etc.) are correct ---
+            // --- Player Functions ---
             function updatePositionState() {
                 if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
                     const { duration, currentTime } = audioPlayer;
@@ -596,6 +673,7 @@
             }
 
             function playSong() {
+                closeVideoModal(); // Close video if it's open
                 if (!audioPlayer.src || audioPlayer.src.endsWith('index.html')) {
                     loadSong(songs[currentSongIndex]);
                 }
@@ -604,7 +682,6 @@
                 playIcon.classList.add('hidden');
                 pauseIcon.classList.remove('hidden');
                 songArtEl.classList.add('is-visible'); // Fade in song art
-                mainPlayerDiv.classList.add('is-playing-glow'); // Add glow
                 updateLinerNotes(currentSongIndex);
                 updateMediaSession(songs[currentSongIndex]);
             }
@@ -615,7 +692,6 @@
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
                 songArtEl.classList.remove('is-visible'); // Fade out song art
-                mainPlayerDiv.classList.remove('is-playing-glow'); // Remove glow
                 updateLinerNotes(null);
                 updateMediaSession(null);
             }
@@ -689,13 +765,49 @@
                 });
             }
 
+            // --- New Video Functions ---
+            function createVideoPlaylist() {
+                videos.forEach((video, index) => {
+                    const item = document.createElement('div');
+                    item.classList.add('playlist-item', 'p-3', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors', 'duration-200', 'flex', 'items-center', 'space-x-4');
+                    item.innerHTML = `
+                        <img src="${video.thumbnail}" alt="${video.title}" class="w-16 h-9 object-cover rounded-md flex-shrink-0">
+                        <div>
+                            <p class="font-album-title tracking-wider truncate text-white">${video.title}</p>
+                            <p class="text-sm text-gray-400">${artistName}</p>
+                        </div>
+                    `;
+                    item.addEventListener('click', () => {
+                        playVideo(video);
+                    });
+                    videoPlaylistEl.appendChild(item);
+                });
+            }
+
+            function playVideo(video) {
+                pauseSong(); // Stop the music
+                isVideoModalOpen = true;
+                videoPlayer.src = video.src;
+                videoModal.classList.remove('hidden');
+                setTimeout(() => videoModal.style.opacity = '1', 10); // Fade in
+                videoPlayer.play();
+            }
+
+            function closeVideoModal() {
+                if (!isVideoModalOpen) return;
+                isVideoModalOpen = false;
+                videoModal.style.opacity = '0';
+                setTimeout(() => videoModal.classList.add('hidden'), 300); // Hide after fade
+                videoPlayer.pause();
+                videoPlayer.src = ""; // Stop loading
+            }
+
+
             // --- 5. EVENT LISTENERS ---
             
             // --- Splash Screen Logic ---
             enterBtn.addEventListener('click', startVideoTransition);
             skipIntroBtn.addEventListener('click', skipIntro);
-
-            // When video finishes, play the intro audio
             splashVideo.addEventListener('ended', () => {
                 if(hasUserInteracted) {
                     introAudio.play().catch(e => {
@@ -704,11 +816,7 @@
                     });
                 }
             });
-            
-            // When intro audio finishes, fade to player
-            introAudio.addEventListener('ended', () => {
-                transitionToPlayer();
-            });
+            introAudio.addEventListener('ended', transitionToPlayer);
             
             // --- Player Logic ---
             playPauseBtn.addEventListener('click', () => {
@@ -722,7 +830,6 @@
             progressBar.addEventListener('input', setProgress);
             
             linerNotesBtn.addEventListener('click', () => {
-                // Always make sure the correct liner notes are showing when this button is toggled.
                 updateLinerNotes(isPlaying ? currentSongIndex : null);
                 flipper.classList.toggle('is-flipped');
             });
@@ -736,23 +843,49 @@
 
             // --- AI Modal Listeners ---
             askArtistBtn.addEventListener('click', () => {
-                isAiModalOpen = true;
-                aiModal.classList.remove('hidden');
-                setTimeout(() => aiModal.style.opacity = '1', 10); // Fade in
-                getAiCommentary();
+                if (flipper.classList.contains('is-flipped')) {
+                    isAiModalOpen = true;
+                    aiModal.classList.remove('hidden');
+                    setTimeout(() => aiModal.style.opacity = '1', 10); // Fade in
+                    getAiCommentary();
+                }
             });
-
             aiModalCloseBtn.addEventListener('click', () => {
                 isAiModalOpen = false;
                 aiModal.style.opacity = '0';
                 setTimeout(() => aiModal.classList.add('hidden'), 300); // Hide after fade
             });
-
-            // Close modal if clicking outside the content
             aiModal.addEventListener('click', (e) => {
-                if (e.target === aiModal) {
-                    aiModalCloseBtn.click();
-                }
+                if (e.target === aiModal) aiModalCloseBtn.click();
+            });
+
+            // --- Video Modal Listeners ---
+            videoModalCloseBtn.addEventListener('click', closeVideoModal);
+            videoModal.addEventListener('click', (e) => {
+                if (e.target === videoModal) closeVideoModal();
+            });
+
+            // --- Tab Listeners ---
+            audioTabBtn.addEventListener('click', () => {
+                // Show audio, hide video
+                playlistEl.classList.remove('hidden');
+                videoPlaylistEl.classList.add('hidden');
+                // Style tabs
+                audioTabBtn.classList.add('bg-gray-700', 'text-white');
+                audioTabBtn.classList.remove('text-gray-400', 'hover:bg-gray-700');
+                videoTabBtn.classList.add('text-gray-400', 'hover:bg-gray-700');
+                videoTabBtn.classList.remove('bg-gray-700', 'text-white');
+            });
+
+            videoTabBtn.addEventListener('click', () => {
+                // Show video, hide audio
+                videoPlaylistEl.classList.remove('hidden');
+                playlistEl.classList.add('hidden');
+                // Style tabs
+                videoTabBtn.classList.add('bg-gray-700', 'text-white');
+                videoTabBtn.classList.remove('text-gray-400', 'hover:bg-gray-700');
+                audioTabBtn.classList.add('text-gray-400', 'hover:bg-gray-700');
+                audioTabBtn.classList.remove('bg-gray-700', 'text-white');
             });
 
 
@@ -770,6 +903,7 @@
 
             // --- 6. INITIALIZE PLAYER ---
             createPlaylist();
+            createVideoPlaylist(); // Create the new video list
             loadSong(songs[currentSongIndex]);
             updateLinerNotes(null);
             
@@ -819,12 +953,29 @@
                 aiModalSpinner.classList.remove('hidden');
                 aiModalText.classList.add('hidden');
 
-                const currentSong = songs[currentSongIndex];
+                // Determine which note to use
+                let promptTitle, promptNote;
+                if (isPlaying) {
+                    // Use current song
+                    const currentSong = songs[currentSongIndex];
+                    promptTitle = currentSong.title;
+                    promptNote = currentSong.note;
+                } else {
+                    // Use album note
+                    promptTitle = albumTitle;
+                    promptNote = albumNote; 
+                }
+
+                // If "About" page is showing, use that instead
+                if (noteTitleEl.textContent === aboutTitle) {
+                    promptTitle = "About This App";
+                    promptNote = aboutText;
+                }
                 
                 // 2. Define the prompts
-                const systemPrompt = "Act as the artist of the album 'Red-Headed Hallelujah.' You are a creative, thoughtful, and slightly rugged rock musician. Based on the song title and your official notes, write a short, personal, and creative story about what inspired you to write this song, as if you're sharing a secret with a fan. Keep it under 100 words.";
+                const systemPrompt = "Act as the artist of the album 'Red-Headed Hallelujah.' You are a creative, thoughtful, and slightly rugged rock musician. Based on the song title and your official notes, write a short, personal, and creative story about what inspired you to write this song, as if you're sharing a secret with a fan. Keep it under 100 words. If the notes are about the whole album or 'About This App', provide a brief, appreciative 'behind-the-scenes' comment as the creator.";
                 
-                const userQuery = `Song Title: "${currentSong.title}"\nMy Official Notes: "${currentSong.note.replace(/<[^>]*>?/gm, '')}"\n\nGive me a new creative story about this song.`;
+                const userQuery = `Topic: "${promptTitle}"\nMy Official Notes: "${promptNote.replace(/<[^>]*>?/gm, '')}"\n\nGive me a new creative story or comment about this.`;
 
                 // 3. Construct the payload
                 const payload = {
@@ -860,39 +1011,29 @@
 
 
             // --- 8. PWA Service Worker Registration ---
-            // Check if we're in "app" mode
             const isPwa = window.matchMedia('(display-mode: standalone)').matches;
 
             if (isPwa && 'serviceWorker' in navigator) {
-                // --- IT'S THE APP ---
-                // We don't show "Checking for Updates..." anymore.
-                // We just show the "Click to Begin" button.
                 showBeginButton();
 
                 navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('ServiceWorker registration successful:', registration);
                         
-                        // Show the "Check for Updates" button in the player
                         updateContainer.classList.remove('hidden');
 
-                        // Handle the button click
                         updateBtn.addEventListener('click', () => {
                             updateStatusText.textContent = 'Checking...';
                             
-                            // Manually trigger the update check
                             registration.update().then(() => {
                                 if (registration.installing) {
-                                    // An update was found!
                                     const newWorker = registration.installing;
                                     newWorker.addEventListener('statechange', () => {
                                         if (newWorker.state === 'installed') {
-                                            // The new files are downloaded.
                                             updateStatusText.textContent = 'Update downloaded! Please restart app.';
                                         }
                                     });
                                 } else {
-                                    // No new service worker file was found on the server.
                                     updateStatusText.textContent = 'You are up to date.';
                                 }
                             }).catch(err => {
@@ -903,13 +1044,10 @@
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
-                        // Even if SW fails, show the button
                         showBeginButton();
                     });
             } else {
-                // --- IT'S THE PC (or a normal browser tab) ---
                 console.log('Not in PWA mode, skipping PWA features.');
-                // Just show the "Click to Begin" button
                 showBeginButton();
             }
         });
