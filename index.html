@@ -207,11 +207,23 @@
             color: white;
             transform: scale(1.1);
         }
-        #video-player {
+        /* Container for the iframe to maintain aspect ratio */
+        #video-player-container {
+            position: relative;
+            width: 90vw;
+            height: 0;
+            padding-bottom: 50.625%; /* 16:9 Aspect Ratio */
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #video-player-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            max-width: 95vw;
-            max-height: 95vh;
+            border: 0;
         }
 
     </style>
@@ -393,9 +405,16 @@
         <button id="video-modal-close-btn" class="text-gray-400 hover:text-white transition-colors">
             <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
         </button>
-        <video id="video-player" controls class="rounded-lg shadow-2xl" style="background-color: black;">
-            <!-- Source will be set by JS -->
-        </video>
+        <!-- This is now an iframe container -->
+        <div id="video-player-container" class="shadow-2xl">
+            <iframe id="video-player-iframe" 
+                src="" 
+                title="YouTube video player" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowfullscreen>
+            </iframe>
+        </div>
     </div>
 
 
@@ -460,7 +479,7 @@
                 { 
                     title: "Natural Magic", 
                     src: "10-natural-magic.mp3",
-                    image_src: "10-natural-magic-art.png",
+                    image_src: "10-natural-magic.png",
                     note: `<b class="text-yellow-400 text-lg">The Song: The Reverent, Emotional Climax</b><br><br>This track is the true, emotional climax of the album. It is a stunningly tender, quiet, and reverent lofi ballad. The song's instrumentation is a perfect shift, creating a sense of intimacy and awe. It's built on a simple, gentle beat, a warm bassline, and a soft, almost-whispered vocal. This is the "Red-Headed Hallelujah" in its most personal and sacred form: the "Hallelujah" of a mother.<br><br>The lyrics are a direct, loving observation of his wife in her role as a mother, and he frames her abilities as a kind of effortless, "Natural Magic."<br><br><b class="text-yellow-400 text-lg">Verse 1</b> sets the scene of domestic chaos: "Coffee's cold on the counter," "Fifty sets of boots by the door," "came-in-stuff being scattered like a technicolor storm." He is lost in this chaos ("I'm just trying to find my keys").<br><br><b class="text-yellow-400 text-lg">The Chorus</b> is the revelation. He sees her in the middle of it all, not just coping, but commanding the chaos with a grace he can't understand:<br>"You're the calm inside the hurricane<br>A whisper word that stops the rain<br>It's an instinct I can't understand<br>How you heal the world just with your hand "<br><br><b class="text-yellow-400 text-lg">Verse 2</b> reinforces this theme, showing her as the ultimate protector and nurturer: "A nose bleed and a sudden cry / You're there before the tear can dry." He describes her as "a judge, a nurse, a storyteller / A fortress and a soft warm pillow."<br><br>The song is a profound admission of awe. He is "just caught here in the view," watching her "Natural Magic." The final, beautiful line of the chorus—"Oh, the way you mother, making everything right"—is the song's entire thesis. It's the ultimate expression of his "Hallelujah."<br><br><b class="text-yellow-400 text-lg">The Art: A Modern "Madonna and Child"</b><br><br>The artwork for "Natural Magic" is the most emotionally resonant piece in the collection. It is a direct, visual representation of the song's theme, rendered in the album's signature "stencil" style.<br><br>It depicts the red-headed muse holding a small child, an infant or toddler, in her arms. She is looking out at the viewer with a gentle, knowing, and powerful "mother's" expression. The child is nestled securely against her.<br><br>This image is a modern-day "Madonna and Child." It is a sacred, iconic portrait of her in her most powerful role: the "mother" from the lyrics. The use of the "graffiti" style on a concrete wall adds a beautiful layer of "real-world" strength to this traditionally "soft" image. She is not just a gentle, classical mother; she is a strong, real, "concrete" protector.<br><br><b class="text-yellow-400 text-lg">Role on the Album</b><br><br>This track is the emotional heart of the entire record. If "Red-Headed Hallelujah" is the thesis (she is his salvation), "Natural Magic" is the proof. It provides the deepest, most profound reason for his praise.<br><br>It comes late in the album, serving as the emotional peak before the bonus-track "encores." It's the culmination of all the other songs: the "mermaid," the "real woman," the "high school sweetheart," the "cinnamon queen" – all of these roles have led to this one, the most sacred of all: the "mother" who makes everything right. It is, perhaps, the album's truest, deepest "Hallelujah."`
                 },
                 { 
@@ -473,14 +492,15 @@
                     title: "Red-Headed Hallelujah (Piano)", 
                     src: "12-red-headed-hallelujah-piano.mp3",
                     image_src: "12-red-headed-hallelujah-piano-art.png",
-                    note: `<b class="text-yellow-400 text-lg">The Song: The "Vulnerable" Lullaby Version</b><br><br>This final track is the album's most vulnerable and emotionally raw statement. It strips the song down to its absolute, barest essentials: a sparse, delicate piano and a single, soulful vocal. The tempo is slowed slightly, and the vocal delivery is softer, more fragile, and filled with a tender reverence.<br><br>This is the "Hallelujah" as a whisper in the dark. It is the "lullaby" version, the "quiet moment after the kids are finally asleep" version. The piano notes hang in the air, giving weight to every word. The "desperation" of the original ("breath is short," "walls are closing") feels more immediate and real in this sparse setting, making the "red-headed light" feel like an even more profound, quiet miracle.<br><br><b class="text-yellow-400 text-lg">Role on the Album</b><br><br>As the album's closer, this track is a masterstroke. It’s the final, definitive, and most intimate reading of the album's central theme. The record, which began with a raucous, stomping "Hey! Ho!" ("The Crimson Tide"), now ends on the quietest, most delicate note possible. It’s a perfect bookend, resolving all the "chaos" (from "Interrupted," "Real Women," etc.) into this one, simple, beautiful moment of peace. It's the final "Amen" to the album's prayer.`
+                    note: `<b class="text-yellow-400 text-lg">The Song: The "Vulnerable" Lullaby Version</b><br><br>This final track is the album's most vulnerable and emotionally raw statement. It strips the song down to its absolute, barest essentials: a sparse, delicate piano and a single, soulful vocal. The tempo is slowed slightly, and the vocal delivery is softer, more fragile, and filled with a tender reverence.<br><br>This is the "Hallelujah" as a whisper in the dark. It is the "lullaby" version, the "quiet moment after the kids are  finally  asleep" version. The piano notes hang in the air, giving weight to every word. The "desperation" of the original ("breath is short," "walls are closing") feels more immediate and real in this sparse setting, making the "red-headed light" feel like an even more profound, quiet miracle.<br><br><b class="text-yellow-400 text-lg">Role on the Album</b><br><br>As the album's closer, this track is a masterstroke. It’s the final, definitive, and most intimate reading of the album's central theme. The record, which began with a raucous, stomping "Hey! Ho!" ("The Crimson Tide"), now ends on the quietest, most delicate note possible. It’s a perfect bookend, resolving all the "chaos" (from "Interrupted," "Real Women," etc.) into this one, simple, beautiful moment of peace. It's the final "Amen" to the album's prayer.`
                 },
             ];
 
             const videos = [
                 {
                     title: "Red-Headed Hallelujah",
-                    src: "red-headed-hallelujah.mp4",
+                    // UPDATED with your embed link!
+                    src: "https://www.youtube.com/embed/UDf9TQ6QDsc",
                     thumbnail: "03-red-headed-hallelujah-art.png" // Use song art as thumbnail
                 }
                 // Add more videos here as you make them
@@ -489,8 +509,7 @@
             const artistName = "A mstonge01 Project";
             const albumTitle = "Red-Headed Hallelujah";
             const albumNote = `A Raw, Raucous, and Deeply Personal Sonic Biography<br><br>'Red-Headed Hallelujah' is not merely an album; it is a meticulously crafted sonic biography, a "mixtape" of a life shared. Under the artist name 'A mstonge01 Project', this collection of songs serves as a hyper-specific and unflinchingly honest tribute to a single muse: the artist's wife, Rebecca. The album's power lies in its complete rejection of generic, greeting-card sentiment. Instead, it builds a musical monument out of specific, shared memories—from the hilarious and the quirky to the profound and the sacred.<br><br>The album title itself is the record's central thesis. "Red-Headed" is the physical identifier, the recurring visual motif, the muse. "Hallelujah" is the emotional response—a word that is at once a cry of praise, a sigh of relief, and an acknowledgment of salvation. This concept is so central, it is rightfully presented in three different musical settings (gospel, acoustic, and piano), acting as the album's anchor.<br><br><b class="text-yellow-400 text-lg">The Visual Aesthetic: A Street-Art Shrine</b><br><br>The album's visual language is as powerful and defined as its music. The cover and all accompanying song art share a unified "stencil graffiti" style. This choice is brilliant. It presents these images as raw, edgy, and permanent declarations, spray-painted on the rough, imperfect texture of a concrete wall.<br><br>The palette is a stark, high-contrast black on grey, which makes the one, singular "pop" color—that vibrant, defiant red—all the more explosive. This red is used almost exclusively for Rebecca's hair, visually cementing her as the album's central, blazing focus.<br><br>This is not a soft-focus fantasy. This is a cool, real, and undeniable tribute. The specificity is astounding, most notably on the album cover and the art for "The Crimson Tide," which perfectly capture the real-life mermaid tattoo on her arm. This is not a generic woman; this is her. The art says what the music confirms: this love is not polished or perfect, it is real, it has grit, and it's worthy of being shouted from the rooftops (or, in this case, immortalized on a public wall).<br><br><b class="text-yellow-400 text-lg">The Sonic Journey: A Mixtape of a Life</b><br><br>Musically, 'Red-Headed Hallelujah' is a wonderfully eclectic journey, mirroring the diverse "record collection" of a life lived together. It refuses to be boxed into one genre, instead pulling from the perfect sound to tell each specific story.<br><br>The album opens with the stomping, mythic sea shanty of "The Crimson Tide."<br>It swerves into the gritty, southern blues-rock of "Real Women," a track that feels like it could have been pulled from a Black Keys or The Sheepdogs record.<br>It then explodes into the full-throated, choir-backed gospel of the title track, "Red-Headed Hallelujah."<br>This is followed by the upbeat, narrative-driven country-rock of "The Good Stuff," the quirky and tender indie-pop of "Zero-Degree Beach," and the plucky, comedic acoustic folk of "Caps."<br><br>The back half of the album leans into raucous, bar-room rock and roll with "Interrupted," gets low and swampy with the bluesy, storytelling of "Cinnamon Serenade," and then quiets down for the reverent, acoustic hymn "Golden Devotion" and the tender, lofi ballad "Natural Magic."<br><br>The common thread is an raw authenticity. The production is clean but never sterile, allowing the storytelling and the genuine, varied instrumentation—from roaring electric guitars and banjos to soulful choirs and intimate piano—to take center stage.<br><br><b class="text-yellow-400 text-lg">The Lyrical Pillars: A Biography in Song</b><br><br>This is the heart of the album. The lyrics form a mosaic of a shared history, built on three distinct pillars.<br><br><b class="text-yellow-400 text-lg">1. The Origin & The "Lore":</b> The album documents the legendary "key moments" that build a relationship's private lore. "The Good Stuff" is the perfect "meet-cute" origin story, a fantastic piece of country-rock narrative about a comically failed high-school plan that led to the most important meeting of his life. On the other end of the spectrum is "Cinnamon Serenade," a raw, hilarious, and deeply "in-joke" story of a specific, messy night with Fireball. It’s a testament to loving someone through the imperfect, real-life moments, not just the idealized ones.<br><br><b class="text-yellow-400 text-lg">2. A Hymn to the Muse (The Quirks and the Power):</b> Several tracks are pure, observational praise of Rebecca's unique personality. "The Crimson Tide" is a brilliant, mythic anthem that transforms her red hair and mermaid tattoo into the stuff of legends. "Real Women" is a badass, gritty anthem celebrating her attitude and her Jeep. Then, you have the more intimate odes: "Zero-Degree Beach" is a tender, loving portrait of a magnificent "quirk"—her insistence on wearing flip-flops in the Canadian winter, which he re-frames as her "secret summer." And most audaciously, there is "Caps," a plucky, hilarious "dad joke" of a song that finds beauty and adoration in the most specific and mundane of places: her kneecaps.<br><br><b class="text-yellow-400 text-lg">3. The Anchor in the Chaos (The "Hallelujah"):</b> This is the album's emotional core. The title track, "Red-Headed Hallelujah," serves as the thesis: the world is chaos ("Boss man's yelling," "two boys screaming"), but she is the "red-headed light" who burns through it and makes him "gonna be alright."<br><br>The album then beautifully explores both the sacred and the profane sides of this. "Natural Magic" is a stunning, quiet, and reverent ballad about her power as a mother—her "quiet strength," her "healing the world with your hand," her "calmest place I've ever known." It is the album at its most tender. This is immediately and hilariously contrasted by "Interrupted," the real-life, rock-and-roll sequel. It’s a song about the chaotic, un-sexy, and loving reality of being parents—the dog, the nightmares ("Dad, I'm thirsty!"), and the constant, loving failure to find a moment alone. It is the perfect encapsulation of the album's themes: the love is sacred, but the life is a glorious, interrupted mess.<br><br><b class="text-yellow-400 text-lg">Conclusion: A Masterpiece of Personalization</b><br><br>'Red-Headed Hallelujah' is an overwhelming success as a project. It works because it is so unflinchingly specific. The love here is not defined by clichés, but by "tiny bottle caps," a "cinnamon serenade," flip-flops in the snow, and a Jeep.<br><br>By presenting the title track in three distinct versions, the album hammers home its central message: this person is a source of praise (the gospel version), a source of comfort (the acoustic version), and a source of profound, quiet love (the piano version).<br><br>It is a raw, funny, edgy, and beautiful testament to a life built together—a complete and stunningly personal work of art.`;
-            const albumName = "Red-Headed Hallelujah";
-
+            
             // --- 2. DOM ELEMENT REFERENCES ---
             const splashScreen = document.getElementById('splash-screen');
             const splashVideo = document.getElementById('splash-video');
@@ -541,7 +560,7 @@
             const videoPlaylistEl = document.getElementById('video-playlist');
             const videoModal = document.getElementById('video-modal');
             const videoModalCloseBtn = document.getElementById('video-modal-close-btn');
-            const videoPlayer = document.getElementById('video-player');
+            const videoPlayerIframe = document.getElementById('video-player-iframe');
 
 
             // --- 3. PLAYER STATE ---
@@ -682,6 +701,7 @@
                 playIcon.classList.add('hidden');
                 pauseIcon.classList.remove('hidden');
                 songArtEl.classList.add('is-visible'); // Fade in song art
+                mainPlayerDiv.classList.add('is-playing-glow'); // Add glow
                 updateLinerNotes(currentSongIndex);
                 updateMediaSession(songs[currentSongIndex]);
             }
@@ -692,6 +712,7 @@
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
                 songArtEl.classList.remove('is-visible'); // Fade out song art
+                mainPlayerDiv.classList.remove('is-playing-glow'); // Remove glow
                 updateLinerNotes(null);
                 updateMediaSession(null);
             }
@@ -787,10 +808,10 @@
             function playVideo(video) {
                 pauseSong(); // Stop the music
                 isVideoModalOpen = true;
-                videoPlayer.src = video.src;
+                // Set the iframe src. Added autoplay and other parameters.
+                videoPlayerIframe.src = `${video.src}?autoplay=1&modestbranding=1&rel=0`;
                 videoModal.classList.remove('hidden');
                 setTimeout(() => videoModal.style.opacity = '1', 10); // Fade in
-                videoPlayer.play();
             }
 
             function closeVideoModal() {
@@ -798,8 +819,8 @@
                 isVideoModalOpen = false;
                 videoModal.style.opacity = '0';
                 setTimeout(() => videoModal.classList.add('hidden'), 300); // Hide after fade
-                videoPlayer.pause();
-                videoPlayer.src = ""; // Stop loading
+                // Set src to empty to stop the video
+                videoPlayerIframe.src = ""; 
             }
 
 
@@ -862,7 +883,10 @@
             // --- Video Modal Listeners ---
             videoModalCloseBtn.addEventListener('click', closeVideoModal);
             videoModal.addEventListener('click', (e) => {
-                if (e.target === videoModal) closeVideoModal();
+                // Check for the container ID
+                if (e.target.id === 'video-modal' || e.target.id === 'video-player-container') {
+                    closeVideoModal();
+                }
             });
 
             // --- Tab Listeners ---
@@ -975,9 +999,14 @@
                 // 2. Define the prompts
                 const systemPrompt = "Act as the artist of the album 'Red-Headed Hallelujah.' You are a creative, thoughtful, and slightly rugged rock musician. Based on the song title and your official notes, write a short, personal, and creative story about what inspired you to write this song, as if you're sharing a secret with a fan. Keep it under 100 words. If the notes are about the whole album or 'About This App', provide a brief, appreciative 'behind-the-scenes' comment as the creator.";
                 
-                const userQuery = `Topic: "${promptTitle}"\nMy Official Notes: "${promptNote.replace(/<[^>]*>?/gm, '')}"\n\nGive me a new creative story or comment about this.`;
+                // 3. Clean the prompt text
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = promptNote;
+                const cleanedNote = tempDiv.textContent || tempDiv.innerText || "";
 
-                // 3. Construct the payload
+                const userQuery = `Topic: "${promptTitle}"\nMy Official Notes: "${cleanedNote}"\n\nGive me a new creative story or comment about this.`;
+
+                // 4. Construct the payload
                 const payload = {
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: {
@@ -985,7 +1014,7 @@
                     },
                 };
 
-                // 4. Call the API
+                // 5. Call the API
                 try {
                     const result = await callGeminiApi(payload);
                     const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -1001,7 +1030,7 @@
                         aiModalText.textContent = "Couldn't reach the artist right now. Please try again in a moment.";
                     }
                 } finally {
-                    // 5. Set final state
+                    // 6. Set final state
                     if (isAiModalOpen) {
                         aiModalSpinner.classList.add('hidden');
                         aiModalText.classList.remove('hidden');
