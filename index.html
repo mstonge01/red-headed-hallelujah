@@ -128,28 +128,6 @@
             white-space: pre-wrap;
         }
         
-        /* --- AI Modal Styles --- */
-        #ai-modal {
-            background-color: rgba(0, 0, 0, 0.7);
-            transition: opacity 0.3s ease;
-        }
-        #ai-modal-content {
-            background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png');
-        }
-        /* Spinner Animation */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .ai-spinner {
-            border: 4px solid #4B5563; /* gray-600 */
-            border-top: 4px solid #EF4444; /* red-500 */
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-
         /* --- Song Art Crossfade --- */
         #song-art {
             transition: opacity 0.5s ease-in-out;
@@ -282,9 +260,7 @@
                                 <h3 id="note-title" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
                                 <p id="note-body" class="text-gray-200"></p>
                             </div>
-                            <button id="ask-artist-btn" class="mt-4 w-full bg-yellow-400 text-gray-900 font-album-title tracking-wider text-lg p-2 hover:bg-yellow-300 transition-colors duration-200 rounded-md">
-                                Ask the Artist
-                            </button>
+                            <!-- "Ask the Artist" button REMOVED -->
                         </div>
                     </div>
                 </div>
@@ -355,11 +331,11 @@
                     <!-- Playlist Container -->
                     <div class="flex-grow min-h-0 relative">
                         <!-- Audio Playlist -->
-                        <div id="playlist" class="absolute inset-0 h-48 md:h-full max-h-48 lg:max-h-56 overflow-y-auto pr-2">
+                        <div id="playlist" class="absolute inset-0 h-80 md:h-full max-h-80 md:max-h-full lg:max-h-56 overflow-y-auto pr-2">
                             <!-- Playlist items will be injected here by JavaScript -->
                         </div>
                         <!-- Video Playlist -->
-                        <div id="video-playlist" class="absolute inset-0 h-48 md:h-full max-h-48 lg:max-h-56 overflow-y-auto pr-2 hidden">
+                        <div id="video-playlist" class="absolute inset-0 h-80 md:h-full max-h-80 md:max-h-full lg:max-h-56 overflow-y-auto pr-2 hidden">
                             <!-- Video items will be injected here by JavaScript -->
                         </div>
                     </div>
@@ -381,24 +357,7 @@
     <audio id="audio-player"></audio>
     <audio id="intro-audio" src="hallelujah-intro.mp3" preload="auto"></audio>
 
-    <!-- AI Modal -->
-    <div id="ai-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 opacity-0">
-        <div id="ai-modal-content" class="player-texture w-full max-w-lg p-6 rounded-lg shadow-2xl border border-gray-700">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-album-title text-3xl text-yellow-400 tracking-wider">Artist's Note</h3>
-                <button id="ai-modal-close-btn" class="text-gray-400 hover:text-white transition-colors">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                </button>
-            </div>
-            <!-- AI Content Area -->
-            <div id="ai-modal-body" class="min-h-[150px] flex items-center justify-center">
-                <!-- Spinner -->
-                <div id="ai-modal-spinner" class="ai-spinner hidden"></div>
-                <!-- Text Content -->
-                <p id="ai-modal-text" class="text-gray-200 text-lg"></p>
-            </div>
-        </div>
-    </div>
+    <!-- AI Modal REMOVED -->
 
     <!-- Video Player Modal -->
     <div id="video-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 opacity-0">
@@ -450,7 +409,7 @@
                     title: "Zero Degree Beach", 
                     src: "05-zero-degree-beach.mp3",
                     image_src: "05-zero-degree-beach-art.png",
-                    note: `<b class="text-yellow-400 text-lg">The Song: An Ode to an Adorable Quirk</b><br><br>This track is a piece of charming, quirky indie-pop. It's light, bouncy, and filled with a sense of playful adoration. The instrumentation, featuring bright, clean electric guitars and a simple, driving beat, gives the song an optimistic and sweet-natured feel.<br><br>The lyrics are a hyper-specific, tender, and deeply personal portrait of one of the muse's most unique habits. The song opens by setting a vivid scene: it is a freezing cold Canadian day ("I check the thermostat, read the outside air... 'don't go out there'"), and the artist is layering up ("zipping up my jacket, putting gloves on my hand").<br><br>But then, he hears the "click-clack coming down the hall." It's his wife, who, in defiance of the "freezer-grip" of the "northern land," is heading out in her flip-flops.<br><br>The chorus is a brilliant piece of lyrical re-framing. He doesn't just call it a "quirk"; he elevates it to a place of defiant, personal freedom. He lovingly calls her habit the "Zero-Degree Beach"—a place of comfort and independence that only she can access.<br>"She's walking on the zero-degree beach,<br>The comfort of that plastic, nothing else can reach.<br>...A beautiful, stubborn habit that the cold can't teach."<br><br>He sees this act not as madness, but as a "secret summer" and "the only summer that exists beneath her feet." He even calls it the "perfect life hack," a "choice of her own weather" and "her own peace." The song is a beautiful testament to finding profound meaning and beauty in a partner's smallest, most specific eccentricities.<br><br><b class="text-yellow-400 text-lg">The Art: A Whimsical, Focused Snapshot</b><br><br>The artwork for this track is a whimsical and perfect visual summary. It's a "snapshot" in the stencil style, focusing only on a pair of legs and feet, clad in a patterned skirt or dress and a pair of flip-flops.<br><br>The image is focused, just like the song, on this single, defining quirk. The only color used is the pop of red, but this time it's not on the hair—it's on the toenails. This is a clever and subtle visual twist that keeps the "red" motif alive while being 100% faithful to the song's subject. It’s a playful, intimate, and loving visual representation of her "beautiful, stubborn habit."<br><br><b class="text-yellow-400 text-lg">Role on the Album</b><br><br>This song adds a crucial layer of deep intimacy to the album. We've had the "myth," the "attitude," the "salvation," and the "origin story." This track is the "intimate portrait." It’s a song that could only be written by someone who has spent years lovingly observing this person, someone who knows and adores her every lovable "weird" habit. It shows that his "Hallelujah" isn't just for the big, legendary moments; it's for the small, quiet, "Zero-Degree Beach" moments, too.`
+                    note: `<b class="text-yellow-400 text-lg">The Song: An Ode to an Adorable Quirk</b><br><br>This track is a piece of charming, quirky indie-pop. It's light, bouncy, and filled with a sense of playful adoration. The instrumentation, featuring bright, clean electric guitars and a simple, driving beat, gives the song an optimistic and sweet-natured feel.<br><br>The lyrics are a hyper-specific, tender, and deeply personal portrait of one of the muse's most unique habits. The song opens by setting a vivid scene: it is a freezing cold Canadian day ("I check the thermostat, read the outside air... 'don't go out there'"), and the artist is layering up ("zipping up my jacket, putting gloves on my hand").<br><br>But then, he hears the "click-clack coming down the hall." It's his wife, who, in defiance of the "freezer-grip" of the "northern land," is heading out in her flip-flops.<br><br>The chorus is a brilliant piece of lyrical re-framing. He doesn't just call it a "quirk"; he elevates it to a place of defiant, personal freedom. He lovingly calls her habit the "Zero-Degree Beach"—a place of comfort and independence that only she can access.<br>"She's walking on the zero-degree beach,<br>The comfort of that plastic, nothing else can reach.<br>...A beautiful, stubborn habit that the cold can't teach."<br><br>He sees this act not as madness, but as a "secret summer" and "the only summer that exists beneath her feet." He even calls it the "perfect life hack," a "choice of her own weather" and "her own peace." The song is a beautiful testament to finding profound meaning and beauty in a partner's smallest, most specific eccentricities.<br><br><b class="text-yellow-400 text-lg">The Art: A Whimiscal, Focused Snapshot</b><br><br>The artwork for this track is a whimsical and perfect visual summary. It's a "snapshot" in the stencil style, focusing only on a pair of legs and feet, clad in a patterned skirt or dress and a pair of flip-flops.<br><br>The image is focused, just like the song, on this single, defining quirk. The only color used is the pop of red, but this time it's not on the hair—it's on the toenails. This is a clever and subtle visual twist that keeps the "red" motif alive while being 100% faithful to the song's subject. It’s a playful, intimate, and loving visual representation of her "beautiful, stubborn habit."<br><br><b class="text-yellow-400 text-lg">Role on the Album</b><br><br>This song adds a crucial layer of deep intimacy to the album. We've had the "myth," the "attitude," the "salvation," and the "origin story." This track is the "intimate portrait." It’s a song that could only be written by someone who has spent years lovingly observing this person, someone who knows and adores her every lovable "weird" habit. It shows that his "Hallelujah" isn't just for the big, legendary moments; it's for the small, quiet, "Zero-Degree Beach" moments, too.`
                 },
                 { 
                     title: "Caps", 
@@ -537,13 +496,7 @@
             const songArtEl = document.getElementById('song-art');
             const mainPlayerDiv = document.querySelector('.player-texture');
             
-            // AI Modal Elements
-            const aiModal = document.getElementById('ai-modal');
-            const aiModalContent = document.getElementById('ai-modal-content');
-            const aiModalCloseBtn = document.getElementById('ai-modal-close-btn');
-            const askArtistBtn = document.getElementById('ask-artist-btn');
-            const aiModalSpinner = document.getElementById('ai-modal-spinner');
-            const aiModalText = document.getElementById('ai-modal-text');
+            // AI Modal Elements - REMOVED
 
             // "About" Button
             const aboutBtn = document.getElementById('about-btn');
@@ -562,7 +515,7 @@
             let currentSongIndex = 0;
             let isPlaying = false;
             let hasUserInteracted = false;
-            let isAiModalOpen = false; // Track modal state
+            // let isAiModalOpen = false; // REMOVED
             let isVideoModalOpen = false; // Track video modal state
 
             // --- 4. FUNCTIONS ---
@@ -857,23 +810,7 @@
                 flipper.classList.add('is-flipped'); // Show the back panel
             });
 
-            // --- AI Modal Listeners ---
-            askArtistBtn.addEventListener('click', () => {
-                if (flipper.classList.contains('is-flipped')) {
-                    isAiModalOpen = true;
-                    aiModal.classList.remove('hidden');
-                    setTimeout(() => aiModal.style.opacity = '1', 10); // Fade in
-                    getAiCommentary();
-                }
-            });
-            aiModalCloseBtn.addEventListener('click', () => {
-                isAiModalOpen = false;
-                aiModal.style.opacity = '0';
-                setTimeout(() => aiModal.classList.add('hidden'), 300); // Hide after fade
-            });
-            aiModal.addEventListener('click', (e) => {
-                if (e.target === aiModal) aiModalCloseBtn.click();
-            });
+            // --- AI Modal Listeners - REMOVED ---
 
             // --- Video Modal Listeners ---
             videoModalCloseBtn.addEventListener('click', closeVideoModal);
@@ -926,113 +863,7 @@
             loadSong(songs[currentSongIndex]);
             updateLinerNotes(null);
             
-            // --- 7. NEW AI FUNCTIONS ---
-
-            /**
-             * Calls the Gemini API with exponential backoff.
-             */
-            async function callGeminiApi(payload, retries = 5, delay = 1000) {
-                const apiKey = ""; // Keep this empty, it's handled by the environment
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(payload),
-                    });
-
-                    if (!response.ok) {
-                        if (response.status === 429 && retries > 0) { // Throttling
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                            return callGeminiApi(payload, retries - 1, delay * 2); // Exponential backoff
-                        }
-                        throw new Error(`API Error: ${response.statusText}`);
-                    }
-                    return await response.json();
-                } catch (error) {
-                    if (retries > 0) {
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        return callGeminiApi(payload, retries - 1, delay * 2); // Exponential backoff
-                    }
-                    console.error("Error calling Gemini API after retries:", error);
-                    throw error;
-                }
-            }
-
-            /**
-             * Fetches AI-generated commentary for the current song.
-             */
-            async function getAiCommentary() {
-                if (!isAiModalOpen) return; // Stop if modal was closed
-
-                // 1. Set loading state
-                aiModalSpinner.classList.remove('hidden');
-                aiModalText.classList.add('hidden');
-
-                // Determine which note to use
-                let promptTitle, promptNote;
-                if (isPlaying) {
-                    // Use current song
-                    const currentSong = songs[currentSongIndex];
-                    promptTitle = currentSong.title;
-                    promptNote = currentSong.note;
-                } else {
-                    // Use album note
-                    promptTitle = albumTitle;
-                    promptNote = albumNote; 
-                }
-
-                // If "About" page is showing, use that instead
-                if (noteTitleEl.textContent === aboutTitle) {
-                    promptTitle = "About This App";
-                    promptNote = aboutText;
-                }
-                
-                // 2. Define the prompts
-                const systemPrompt = "Act as the artist of the album 'Red-Headed Hallelujah.' You are a creative, thoughtful, and slightly rugged rock musician. Based on the song title and your official notes, write a short, personal, and creative story about what inspired you to write this song, as if you're sharing a secret with a fan. Keep it under 100 words. If the notes are about the whole album or 'About This App', provide a brief, appreciative 'behind-the-scenes' comment as the creator.";
-                
-                // 3. Clean the prompt text
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = promptNote;
-                const cleanedNote = tempDiv.textContent || tempDiv.innerText || "";
-
-                const userQuery = `Topic: "${promptTitle}"\nMy Official Notes: "${cleanedNote}"\n\nGive me a new creative story or comment about this.`;
-
-                // 4. Construct the payload
-                const payload = {
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    systemInstruction: {
-                        parts: [{ text: systemPrompt }]
-                    },
-                };
-
-                // 5. Call the API
-                try {
-                    const result = await callGeminiApi(payload);
-                    const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                    if (aiText && isAiModalOpen) {
-                        aiModalText.textContent = aiText.trim();
-                    } else if (isAiModalOpen) {
-                        throw new Error("Invalid response structure from API.");
-                    }
-                } catch (error) {
-                    console.error("Failed to get AI commentary:", error);
-                    if (isAiModalOpen) {
-                        aiModalText.textContent = "Couldn't reach the artist right now. Please try again in a moment.";
-                    }
-                } finally {
-                    // 6. Set final state
-                    if (isAiModalOpen) {
-                        aiModalSpinner.classList.add('hidden');
-                        aiModalText.classList.remove('hidden');
-                    }
-                }
-            }
-
+            // --- 7. NEW AI FUNCTIONS - REMOVED ---
 
             // --- 8. PWA Service Worker Registration ---
             const isPwa = window.matchMedia('(display-mode: standalone)').matches;
@@ -1046,7 +877,7 @@
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
-                        showBeginButton();
+                        showBegiButton();
                     });
             } else {
                 console.log('Not in PWA mode, skipping PWA features.');
@@ -1056,4 +887,5 @@
     </script>
 </body>
 </html>
+
 
