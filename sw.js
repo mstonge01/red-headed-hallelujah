@@ -1,11 +1,11 @@
-const CACHE_NAME = 'rhh-cache-v10'; // <-- IMPORTANT: This is v10
+const CACHE_NAME = 'rhh-cache-v11'; // <-- Updated cache version!
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
 const APP_SHELL_FILES = [
     './', // This caches the index.html
     'index.html',
-    'manifest.json?v=2', // <-- Matches the ?v=2 in your index.html
+    'manifest.json?v=2', 
     'https://cdn.tailwindcss.com/',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
     'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
@@ -13,13 +13,14 @@ const APP_SHELL_FILES = [
     'https://www.transparenttextures.com/patterns/stucco.png',
     'https://www.transparenttextures.com/patterns/concrete-wall.png',
     'cover.jpg.jpg', // Main cover art
-    'cover.jpg.png', // ADDED PNG version for manifest
+    'cover.jpg.png', // Main cover art PNG
     'paint-video.mp4',
     'hallelujah-intro.mp3'
 ];
 
 // 2. Content Files: The songs and art to be cached in the background.
 const CONTENT_FILES = [
+    // Music
     '01-the-crimson-tide.mp3',
     '02-real-women.mp3',
     '03-red-headed-hallelujah.mp3',
@@ -32,6 +33,8 @@ const CONTENT_FILES = [
     '10-natural-magic.mp3',
     '11-red-headed-hallelujah-guitar.mp3',
     '12-red-headed-hallelujah-piano.mp3',
+    
+    // Song Art
     '01-the-crimson-tide-art.png',
     '02-real-women-art.png',
     '03-red-headed-hallelujah-art.png',
@@ -41,9 +44,12 @@ const CONTENT_FILES = [
     '07-interrupted-art.png',
     '08-cinnamon-serenade-art.png',
     '09-golden-devotion-art.png',
-    '10-natural-magic-art.png',
+    '10-natural-magic.png',
     '11-red-headed-hallelujah-guitar-art.png',
-    '12-red-headed-hallelujah-piano-art.png'
+    '12-red-headed-hallelujah-piano-art.png',
+
+    // NEW VIDEO FILE
+    'red-headed-hallelujah.mp4' 
 ];
 
 // Helper function to cache with CORS
@@ -97,13 +103,12 @@ self.addEventListener('activate', event => {
 });
 
 // 3. Message Step: Listen for message from app to cache content
-// This is triggered when you click "Click to Begin"
 self.addEventListener('message', event => {
     if (event.data.action === 'cache-content') {
-        console.log('[SW] Received message to cache content (songs/art).');
+        console.log('[SW] Received message to cache content (songs/art/video).');
         event.waitUntil(
             caches.open(CACHE_NAME).then(cache => {
-                console.log('[SW] Caching songs and art in background...');
+                console.log('[SW] Caching songs, art, and video in background...');
                 return Promise.all(
                     CONTENT_FILES.map(url => cache.add(cacheRequest(url)))
                 ).catch(error => {
