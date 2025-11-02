@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhh-cache-v11'; // <-- Updated cache version!
+const CACHE_NAME = 'rhh-cache-v12'; // <-- Updated cache version!
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
@@ -48,8 +48,7 @@ const CONTENT_FILES = [
     '11-red-headed-hallelujah-guitar-art.png',
     '12-red-headed-hallelujah-piano-art.png',
 
-    // NEW VIDEO FILE
-    'red-headed-hallelujah.mp4' 
+    // The .mp4 file has been removed from this list and will be streamed from YouTube
 ];
 
 // Helper function to cache with CORS
@@ -105,10 +104,10 @@ self.addEventListener('activate', event => {
 // 3. Message Step: Listen for message from app to cache content
 self.addEventListener('message', event => {
     if (event.data.action === 'cache-content') {
-        console.log('[SW] Received message to cache content (songs/art/video).');
+        console.log('[SW] Received message to cache content (songs/art).');
         event.waitUntil(
             caches.open(CACHE_NAME).then(cache => {
-                console.log('[SW] Caching songs, art, and video in background...');
+                console.log('[SW] Caching songs and art in background...');
                 return Promise.all(
                     CONTENT_FILES.map(url => cache.add(cacheRequest(url)))
                 ).catch(error => {
@@ -124,6 +123,11 @@ self.addEventListener('fetch', event => {
     // Only handle GET requests
     if (event.request.method !== 'GET') {
         return;
+    }
+
+    // Don't try to cache YouTube videos
+    if (event.request.url.includes('youtube.com') || event.request.url.includes('ytimg.com')) {
+        return; // Let the browser handle it
     }
 
     event.respondWith(
