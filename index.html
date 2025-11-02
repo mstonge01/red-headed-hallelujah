@@ -330,10 +330,10 @@
 
                     <!-- 
                         *** SCROLL FIX IS HERE ***
-                        Height classes are now on this parent container instead of the children.
-                        - h-80 (20rem) on mobile.
-                        - md:h-full on tablet (fills available space).
-                        - lg:max-h-56 (14rem) on desktop.
+                        Removed fixed height `h-80` and `md:h-auto`. 
+                        The parent is `flex-grow min-h-0 flex flex-col`, so this child
+                        with `flex-grow min-h-0` will now correctly fill the
+                        remaining space and become scrollable.
                     -->
                     <div class="flex-grow min-h-0 relative">
                         <!-- Audio Playlist -->
@@ -897,5 +897,4 @@
     </script>
 </body>
 </html>
-
 
