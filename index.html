@@ -170,7 +170,7 @@
             border-color: white;
             transform: scale(1.05);
         }
-        #enter-btn:disabled, #update-btn:disabled {
+        #enter-btn:disabled {
             opacity: 0.7;
             cursor: not-allowed;
             transform: none;
@@ -366,8 +366,8 @@
                 </div>
 
 
-                <!-- Update Button (PWA Only) -->
-                <div id="update-container" class="hidden text-center mt-4 p-2 border-t border-gray-700">
+                <!-- Update Button (PWA Only) - REMOVED -->
+                <div id="update-container" class="hidden text-center mt-4 p-2 border-t border-gray-700" style="display: none;">
                     <button id="update-btn" class="text-sm text-gray-400 hover:text-red-500 transition-colors">
                         Check for Updates
                     </button>
@@ -547,11 +547,6 @@
 
             // "About" Button
             const aboutBtn = document.getElementById('about-btn');
-
-            // Update Button Elements
-            const updateContainer = document.getElementById('update-container');
-            const updateBtn = document.getElementById('update-btn');
-            const updateStatusText = document.getElementById('update-status-text');
 
             // Video & Tab Elements
             const audioTabBtn = document.getElementById('audio-tab-btn');
@@ -1048,28 +1043,6 @@
                 navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('ServiceWorker registration successful:', registration);
-                        
-                        updateContainer.classList.remove('hidden');
-
-                        updateBtn.addEventListener('click', () => {
-                            updateStatusText.textContent = 'Checking...';
-                            
-                            registration.update().then(() => {
-                                if (registration.installing) {
-                                    const newWorker = registration.installing;
-                                    newWorker.addEventListener('statechange', () => {
-                                        if (newWorker.state === 'installed') {
-                                            updateStatusText.textContent = 'Update downloaded! Please restart app.';
-                                        }
-                                    });
-                                } else {
-                                    updateStatusText.textContent = 'You are up to date.';
-                                }
-                            }).catch(err => {
-                                console.error('Error updating service worker:', err);
-                                updateStatusText.textContent = 'Update check failed.';
-                            });
-                        });
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
