@@ -8,25 +8,25 @@
   "description": "An album by A mstonge01 Project",
   "icons": [
     {
-      "src": "cover.jpg.png",
+      "src": "cover.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "cover.jpg.png",
+      "src": "cover.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "cover.jpg.png",
+      "src": "cover.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "cover.jpg.png",
+      "src": "cover.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
