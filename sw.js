@@ -1,11 +1,11 @@
-const CACHE_NAME = 'rhh-cache-v13'; // <-- IMPORTANT: Incremented cache version
+const CACHE_NAME = 'rhh-cache-v14'; // <-- IMPORTANT: Incremented cache version
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
 const APP_SHELL_FILES = [
     './', // This caches the index.html
     'index.html',
-    'manifest.json?v=3', // <-- Incremented manifest version
+    'manifest.json?v=3', // <-- Matches the ?v=3 in index.html
     'https://cdn.tailwindcss.com/',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
     'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
@@ -33,7 +33,7 @@ const CONTENT_FILES = [
     '11-natural-magic.mp3',
     '12-outro.mp3',
     '13-red-headed-hallelujah-guitar.mp3',
-    '14-red-headed-hallelujah-piano.mp3',
+    '14-natural-magic-acoustic.mp3', // <-- Updated track
     
     // New art list
     '01-intro-art.png',
@@ -48,8 +48,8 @@ const CONTENT_FILES = [
     '10-golden-devotion-art.png',
     '11-natural-magic-art.png',
     '12-outro-art.png',
-    '13-red-headed-hallelujah-guitar-art.png',
-    '14-red-headed-hallelujah-piano-art.png'
+    '13-red-headed-hallelujah-guitar-art.png'
+    // 14-red-headed-hallelujah-piano-art.png removed, as new track uses 11's art
 ];
 
 // Helper function to cache with CORS
@@ -127,7 +127,7 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Network-first for manifest.json to ensure updates are checked
+    // Network-first for manifest.json to ensure updates are checked.
     if (event.request.url.includes('manifest.json')) {
         event.respondWith(
             fetch(event.request).catch(() => {
@@ -151,13 +151,21 @@ self.addEventListener('fetch', event => {
 
                 // Check if the response is valid
                 if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error') {
+                    // Don't cache bad responses
                     return networkResponse;
                 }
                 
                 // We only want to re-cache our own files or known third-party assets
-                const isCachable = APP_SHELL_FILES.some(url => event.request.url.includes(url.replace('https://', ''))) ||
-                                     CONTENT_FILES.some(url => event.request.url.includes(url)) ||
-                                     event.request.url.includes('gstatic.com'); // Cache fonts
+                const requestUrl = new URL(event.request.url);
+                const isCachable = 
+                    // Is it a local file from our content/shell lists?
+                    (requestUrl.origin === self.location.origin && 
+                        (APP_SHELL_FILES.some(url => event.request.url.endsWith(url)) ||
+                         CONTENT_FILES.some(url => event.request.url.endsWith(url)))) ||
+                    // Is it a known third-party asset?
+                    requestUrl.hostname.includes('gstatic.com') ||
+                    requestUrl.hostname.includes('tailwindcss.com') ||
+                    requestUrl.hostname.includes('transparenttextures.com');
                 
                 if (isCachable) {
                     const responseToCache = networkResponse.clone();
