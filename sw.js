@@ -1,54 +1,55 @@
-const CACHE_NAME = 'rhh-cache-v12'; // <-- Updated cache version!
+const CACHE_NAME = 'rhh-cache-v13'; // <-- IMPORTANT: Incremented cache version
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
 const APP_SHELL_FILES = [
     './', // This caches the index.html
     'index.html',
-    'manifest.json?v=2', 
+    'manifest.json?v=3', // <-- Incremented manifest version
     'https://cdn.tailwindcss.com/',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
     'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
     'https://fonts.gstatic.com/s/staatliches/v12/HI_OiY8KO6hCsQSoAPmtMYebvpU.woff2', // Common font file
     'https://www.transparenttextures.com/patterns/stucco.png',
     'https://www.transparenttextures.com/patterns/concrete-wall.png',
-    'cover.jpg.jpg', // Main cover art
-    'cover.jpg.png', // Main cover art PNG
+    'cover.png', // <-- Updated main cover art
     'paint-video.mp4',
     'hallelujah-intro.mp3'
 ];
 
 // 2. Content Files: The songs and art to be cached in the background.
 const CONTENT_FILES = [
-    // Music
-    '01-the-crimson-tide.mp3',
-    '02-real-women.mp3',
-    '03-red-headed-hallelujah.mp3',
-    '04-the_good_stuff.mp3',
-    '05-zero-degree-beach.mp3',
-    '06-caps.mp3',
-    '07-interrupted.mp3',
-    '08-cinnamon-serenade.mp3',
-    '09-golden-devotion.mp3',
-    '10-natural-magic.mp3',
-    '11-red-headed-hallelujah-guitar.mp3',
-    '12-red-headed-hallelujah-piano.mp3',
+    // New song list
+    '01-intro.mp3',
+    '02-the-crimson-tide.mp3',
+    '03-real-women.mp3',
+    '04-red-headed-hallelujah.mp3',
+    '05-the_good_stuff.mp3',
+    '06-zero-degree-beach.mp3',
+    '07-caps.mp3',
+    '08-interrupted.mp3',
+    '09-cinnamon-serenade.mp3',
+    '10-golden-devotion.mp3',
+    '11-natural-magic.mp3',
+    '12-outro.mp3',
+    '13-red-headed-hallelujah-guitar.mp3',
+    '14-red-headed-hallelujah-piano.mp3',
     
-    // Song Art
-    '01-the-crimson-tide-art.png',
-    '02-real-women-art.png',
-    '03-red-headed-hallelujah-art.png',
-    '04-the_good_stuff-art.png',
-    '05-zero-degree-beach-art.png',
-    '06-caps-art.png',
-    '07-interrupted-art.png',
-    '08-cinnamon-serenade-art.png',
-    '09-golden-devotion-art.png',
-    '10-natural-magic.png',
-    '11-red-headed-hallelujah-guitar-art.png',
-    '12-red-headed-hallelujah-piano-art.png',
-
-    // The .mp4 file has been removed from this list and will be streamed from YouTube
+    // New art list
+    '01-intro-art.png',
+    '02-the-crimson-tide-art.png',
+    '03-real-women-art.png',
+    '04-red-headed-hallelujah-art.png',
+    '05-the_good_stuff-art.png',
+    '06-zero-degree-beach-art.png',
+    '07-caps-art.png',
+    '08-interrupted-art.png',
+    '09-cinnamon-serenade-art.png',
+    '10-golden-devotion-art.png',
+    '11-natural-magic-art.png',
+    '12-outro-art.png',
+    '13-red-headed-hallelujah-guitar-art.png',
+    '14-red-headed-hallelujah-piano-art.png'
 ];
 
 // Helper function to cache with CORS
@@ -102,6 +103,7 @@ self.addEventListener('activate', event => {
 });
 
 // 3. Message Step: Listen for message from app to cache content
+// This is triggered when you click "Click to Begin"
 self.addEventListener('message', event => {
     if (event.data.action === 'cache-content') {
         console.log('[SW] Received message to cache content (songs/art).');
@@ -125,9 +127,14 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Don't try to cache YouTube videos
-    if (event.request.url.includes('youtube.com') || event.request.url.includes('ytimg.com')) {
-        return; // Let the browser handle it
+    // Network-first for manifest.json to ensure updates are checked
+    if (event.request.url.includes('manifest.json')) {
+        event.respondWith(
+            fetch(event.request).catch(() => {
+                return caches.match(event.request);
+            })
+        );
+        return;
     }
 
     event.respondWith(
