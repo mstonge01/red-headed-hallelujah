@@ -1,7 +1,7 @@
 {
   "name": "Red-Headed Hallelujah",
   "short_name": "R-H H",
-  "start_url": ".",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1F2937",
   "theme_color": "#EF4444",
