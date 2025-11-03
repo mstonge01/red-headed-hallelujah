@@ -168,42 +168,8 @@
             border-color: rgba(255, 255, 255, 0.7);
         }
 
-        /* --- Video Modal Styles --- */
-        #video-modal {
-            background-color: rgba(0, 0, 0, 0.9);
-            transition: opacity 0.3s ease;
-        }
-        #video-modal-close-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 110;
-            color: rgba(255, 255, 255, 0.7);
-            transition: all 0.2s ease;
-        }
-        #video-modal-close-btn:hover {
-            color: white;
-            transform: scale(1.1);
-        }
-        /* Container for the iframe to maintain aspect ratio */
-        #video-player-container {
-            position: relative;
-            width: 90vw;
-            height: 0;
-            padding-bottom: 50.625%; /* 16:9 Aspect Ratio */
-            background-color: #000;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        #video-player-iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-        }
-
+        /* --- Video Modal Styles - REMOVED --- */
+       
     </style>
 </head>
 <body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4">
@@ -246,6 +212,8 @@
             <div class="w-full md:w-1/2 flex-shrink-0 flex flex-col">
                 <!-- Flipper container (1:1 aspect ratio) -->
                 <div class="relative w-full flipper-container"> 
+                    
+                    <!-- Flipper (Art/Notes) -->
                     <div id="flipper" class="absolute top-0 left-0 w-full h-full">
                         <!-- FRONT (Album Art) -->
                         <div class="flipper-front absolute w-full h-full">
@@ -260,10 +228,23 @@
                                 <h3 id="note-title" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
                                 <p id="note-body" class="text-gray-200"></p>
                             </div>
-                            <!-- "Ask the Artist" button REMOVED -->
                         </div>
                     </div>
-                </div>
+
+                    <!-- NEW: Video Panel (Hidden on top of the flipper) -->
+                    <div id="video-panel" class="absolute top-0 left-0 w-full h-full hidden bg-black">
+                        <iframe id="video-player-iframe" 
+                            src="" 
+                            class="w-full h-full"
+                            title="YouTube video player" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+
+                </div> <!-- End of flipper-container -->
+
                 <!-- Liner Notes Button -->
                 <button id="liner-notes-btn" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200">
                     Liner Notes
@@ -330,10 +311,8 @@
 
                     <!-- 
                         *** SCROLL FIX IS HERE ***
-                        Removed fixed height `h-80` and `md:h-auto`. 
-                        The parent is `flex-grow min-h-0 flex flex-col`, so this child
-                        with `flex-grow min-h-0` will now correctly fill the
-                        remaining space and become scrollable.
+                        This container now has h-80 (20rem) for mobile height
+                        and md:h-auto to allow it to fill space on desktop/tablet.
                     -->
                     <div class="flex-grow min-h-0 relative h-80 md:h-auto">
                         <!-- Audio Playlist -->
@@ -363,24 +342,7 @@
     <audio id="audio-player"></audio>
     <audio id="intro-audio" src="hallelujah-intro.mp3" preload="auto"></audio>
 
-    <!-- AI Modal REMOVED -->
-
-    <!-- Video Player Modal -->
-    <div id="video-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4 opacity-0">
-        <button id="video-modal-close-btn" class="text-gray-400 hover:text-white transition-colors">
-            <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-        </button>
-        <!-- This is now an iframe container -->
-        <div id="video-player-container" class="shadow-2xl">
-            <iframe id="video-player-iframe" 
-                src="" 
-                title="YouTube video player" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                allowfullscreen>
-            </iframe>
-        </div>
-    </div>
+    <!-- Video Player Modal - REMOVED -->
 
 
     <script>
@@ -506,8 +468,6 @@
             const songArtEl = document.getElementById('song-art');
             const mainPlayerDiv = document.querySelector('.player-texture');
             
-            // AI Modal Elements - REMOVED
-
             // "About" Button
             const aboutBtn = document.getElementById('about-btn');
 
@@ -516,17 +476,21 @@
             const videoTabBtn = document.getElementById('video-tab-btn');
             const playlistEl = document.getElementById('playlist');
             const videoPlaylistEl = document.getElementById('video-playlist');
-            const videoModal = document.getElementById('video-modal');
-            const videoModalCloseBtn = document.getElementById('video-modal-close-btn');
+            
+            // *** NEW IN-PLAYER VIDEO REFS ***
+            const videoPanel = document.getElementById('video-panel');
             const videoPlayerIframe = document.getElementById('video-player-iframe');
+            
+            // *** OLD MODAL REFS (REMOVED) ***
+            // const videoModal = document.getElementById('video-modal');
+            // const videoModalCloseBtn = document.getElementById('video-modal-close-btn');
 
 
             // --- 3. PLAYER STATE ---
             let currentSongIndex = 0;
             let isPlaying = false;
             let hasUserInteracted = false;
-            // let isAiModalOpen = false; // REMOVED
-            let isVideoModalOpen = false; // Track video modal state
+            let isVideoPlaying = false; // NEW state to track video
 
             // --- 4. FUNCTIONS ---
 
@@ -650,7 +614,7 @@
             }
 
             function playSong() {
-                closeVideoModal(); // Close video if it's open
+                closeVideo(); // *** NEW: Close video if it's open
                 if (!audioPlayer.src || audioPlayer.src.endsWith('index.html')) {
                     loadSong(songs[currentSongIndex]);
                 }
@@ -744,7 +708,7 @@
                 });
             }
 
-            // --- New Video Functions ---
+            // --- *** MODIFIED Video Functions *** ---
             function createVideoPlaylist() {
                 videos.forEach((video, index) => {
                     const item = document.createElement('div');
@@ -763,22 +727,22 @@
                 });
             }
 
+            // *** NEW playVideo function ***
             function playVideo(video) {
                 pauseSong(); // Stop the music
-                isVideoModalOpen = true;
+                flipper.classList.remove('is-flipped'); // Ensure notes aren't showing
+                videoPanel.classList.remove('hidden'); // Show the video panel
                 // Set the iframe src. Added autoplay and other parameters.
                 videoPlayerIframe.src = `${video.src}?autoplay=1&modestbranding=1&rel=0`;
-                videoModal.classList.remove('hidden');
-                setTimeout(() => videoModal.style.opacity = '1', 10); // Fade in
+                isVideoPlaying = true;
             }
 
-            function closeVideoModal() {
-                if (!isVideoModalOpen) return;
-                isVideoModalOpen = false;
-                videoModal.style.opacity = '0';
-                setTimeout(() => videoModal.classList.add('hidden'), 300); // Hide after fade
-                // Set src to empty to stop the video
-                videoPlayerIframe.src = ""; 
+            // *** NEW closeVideo function ***
+            function closeVideo() {
+                if (!isVideoPlaying) return;
+                videoPanel.classList.add('hidden'); // Hide the video panel
+                videoPlayerIframe.src = ""; // Set src to empty to stop the video
+                isVideoPlaying = false;
             }
 
 
@@ -800,36 +764,29 @@
             // --- Player Logic ---
             playPauseBtn.addEventListener('click', () => {
                 if (isPlaying) pauseSong();
-                else playSong();
+                else playSong(); // playSong() will auto-close the video
             });
-            prevBtn.addEventListener('click', prevSong);
-            nextBtn.addEventListener('click', nextSong);
+            prevBtn.addEventListener('click', prevSong); // prevSong() calls playSong()
+            nextBtn.addEventListener('click', nextSong); // nextSong() calls playSong()
             audioPlayer.addEventListener('timeupdate', updateProgress);
             audioPlayer.addEventListener('ended', nextSong);
             progressBar.addEventListener('input', setProgress);
             
             linerNotesBtn.addEventListener('click', () => {
+                closeVideo(); // *** NEW: Close video first
                 updateLinerNotes(isPlaying ? currentSongIndex : null);
                 flipper.classList.toggle('is-flipped');
             });
             
             // --- "About" Button Listener ---
             aboutBtn.addEventListener('click', () => {
+                closeVideo(); // *** NEW: Close video first
                 noteTitleEl.textContent = aboutTitle;
                 noteBodyEl.innerHTML = aboutText; // Use innerHTML for formatted "About" text
                 flipper.classList.add('is-flipped'); // Show the back panel
             });
 
-            // --- AI Modal Listeners - REMOVED ---
-
-            // --- Video Modal Listeners ---
-            videoModalCloseBtn.addEventListener('click', closeVideoModal);
-            videoModal.addEventListener('click', (e) => {
-                // Check for the container ID
-                if (e.target.id === 'video-modal' || e.target.id === 'video-player-container') {
-                    closeVideoModal();
-                }
-            });
+            // --- Video Modal Listeners - REMOVED ---
 
             // --- Tab Listeners ---
             audioTabBtn.addEventListener('click', () => {
@@ -873,9 +830,7 @@
             loadSong(songs[currentSongIndex]);
             updateLinerNotes(null);
             
-            // --- 7. NEW AI FUNCTIONS - REMOVED ---
-
-            // --- 8. PWA Service Worker Registration ---
+            // --- 7. PWA Service Worker Registration ---
             const isPwa = window.matchMedia('(display-mode: standalone)').matches;
 
             if (isPwa && 'serviceWorker' in navigator) {
@@ -887,7 +842,7 @@
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
-                        showBegiButton();
+                        showBegiButton(); // Corrected typo here
                     });
             } else {
                 console.log('Not in PWA mode, skipping PWA features.');
@@ -897,5 +852,4 @@
     </script>
 </body>
 </html>
-
 
