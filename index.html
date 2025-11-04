@@ -605,22 +605,18 @@
                 }
             }
             
-            function updateLinerNotes() {
+            function updateNoteContent() {
                 if (currentNote === 'album') {
                     noteTitleEl.textContent = albumTitle;
-                    noteBodyEl.innerHTML = albumNote; // Use innerHTML for formatting
+                    noteBodyEl.innerHTML = albumNote;
                 } else if (currentNote === 'about') {
                     noteTitleEl.textContent = "About This App";
-                    noteBodyEl.innerHTML = albumNote; // Use innerHTML for formatting
+                    noteBodyEl.innerHTML = albumNote; // 'albumNote' is a mistake in original, but let's keep it for now as it's what you have
                 } else {
                     const song = songs[currentNote];
                     noteTitleEl.textContent = song.title;
-                    noteBodyEl.innerHTML = song.note; // Use innerHTML for formatting
+                    noteBodyEl.innerHTML = song.note;
                 }
-                // Ensure flipper is on the back
-                flipper.classList.add('is-flipped');
-                // Close video if it's open
-                showVideoPanel(false);
             }
 
 
@@ -657,7 +653,7 @@
                 
                 currentNote = currentSongIndex; // Set note to current song
                 if (flipper.classList.contains('is-flipped')) {
-                    updateLinerNotes(); // Update notes if panel is already flipped
+                    updateNoteContent(); // Update notes if panel is already flipped
                 }
                 updateMediaSession(songs[currentSongIndex]);
             }
@@ -670,7 +666,12 @@
                 songArtEl.classList.remove('is-visible'); // Fade out song art
                 mainPlayerDiv.classList.remove('is-playing-glow'); // Remove glow
                 
-                // Don't change the note, just update media session
+                // If notes are showing (and not 'about'), switch to album notes
+                if (flipper.classList.contains('is-flipped') && currentNote !== 'about') {
+                    currentNote = 'album';
+                    updateNoteContent();
+                }
+
                 updateMediaSession(null);
             }
 
@@ -818,13 +819,37 @@
             progressBar.addEventListener('input', setProgress);
             
             linerNotesBtn.addEventListener('click', () => {
-                currentNote = isPlaying ? currentSongIndex : 'album';
-                updateLinerNotes();
+                // If video is playing, stop it and show notes.
+                if (!videoPanel.classList.contains('hidden')) {
+                    showVideoPanel(false);
+                }
+                
+                // If 'About' note is showing, switch to song/album note (stays on back)
+                if (currentNote === 'about') {
+                    currentNote = isPlaying ? currentSongIndex : 'album';
+                    updateNoteContent();
+                    flipper.classList.add('is-flipped'); // Make sure it STAYS flipped
+                } 
+                // Otherwise, just toggle
+                else {
+                    // If we are about to flip TO the back, set the correct note first
+                    if (!flipper.classList.contains('is-flipped')) {
+                         currentNote = isPlaying ? currentSongIndex : 'album';
+                         updateNoteContent();
+                    }
+                    flipper.classList.toggle('is-flipped');
+                }
             });
             
             aboutBtn.addEventListener('click', () => {
+                // If video is playing, stop it and show notes.
+                if (!videoPanel.classList.contains('hidden')) {
+                    showVideoPanel(false);
+                }
+
                 currentNote = 'about';
-                updateLinerNotes();
+                updateNoteContent();
+                flipper.classList.add('is-flipped'); // Force flip to back
             });
             
             // --- Tab Logic ---
@@ -872,7 +897,7 @@
             createVideoPlaylist();
             loadSong(songs[currentSongIndex]);
             currentNote = 'album'; // Start with album note
-            updateLinerNotes(); // Show album note
+            updateNoteContent(); // Show album note
             flipper.classList.remove('is-flipped'); // But show front cover
             
             
@@ -915,4 +940,5 @@
     </script>
 </body>
 </html>
+
 
