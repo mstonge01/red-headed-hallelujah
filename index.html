@@ -190,23 +190,7 @@
         }
         
         /* --- Audio/Video Tab Styles --- */
-        .tab-btn {
-            @apply w-1/2 p-3 text-center font-album-title tracking-wider text-lg text-gray-400 bg-gray-700 transition-colors duration-200;
-        }
-        .tab-btn.active {
-            @apply bg-red-500 text-white;
-        }
-        .tab-btn:not(.active):hover {
-            @apply bg-gray-600 text-gray-200;
-        }
-        /* First tab rounded left */
-        .tab-btn:first-child {
-            @apply rounded-tl-lg;
-        }
-        /* Last tab rounded right */
-        .tab-btn:last-child {
-            @apply rounded-tr-lg;
-        }
+        /* REMOVED .tab-btn styles from here. They are now directly on the HTML elements. */
 
     </style>
 </head>
@@ -330,8 +314,8 @@
                 <div class="flex-grow min-h-0 flex flex-col">
                     <!-- Audio/Video Tabs -->
                     <div class="flex-shrink-0 flex">
-                        <button id="audio-tab" class="tab-btn active">Audio</button>
-                        <button id="video-tab" class="tab-btn">Video</button>
+                        <button id="audio-tab" class="w-1/2 p-3 text-center font-album-title tracking-wider text-lg transition-colors duration-200 rounded-tl-lg bg-red-500 text-white active">Audio</button>
+                        <button id="video-tab" class="w-1/2 p-3 text-center font-album-title tracking-wider text-lg transition-colors duration-200 rounded-tr-lg text-gray-400 bg-gray-700 hover:bg-gray-600 hover:text-gray-200">Video</button>
                     </div>
                     
                     <!-- Playlist Container -->
@@ -839,16 +823,28 @@
             });
             
             // --- Tab Logic ---
+            const tabBaseClasses = "w-1/2 p-3 text-center font-album-title tracking-wider text-lg transition-colors duration-200";
+            const tabActiveClasses = "bg-red-500 text-white active";
+            const tabInactiveClasses = "text-gray-400 bg-gray-700 hover:bg-gray-600 hover:text-gray-200";
+
             audioTab.addEventListener('click', () => {
-                audioTab.classList.add('active');
-                videoTab.classList.remove('active');
+                // Set Audio Tab to Active
+                audioTab.className = `${tabBaseClasses} ${tabActiveClasses} rounded-tl-lg`;
+                // Set Video Tab to Inactive
+                videoTab.className = `${tabBaseClasses} ${tabInactiveClasses} rounded-tr-lg`;
+                
+                // Show/Hide Playlists
                 playlistEl.classList.remove('hidden');
                 videoPlaylistEl.classList.add('hidden');
             });
             
             videoTab.addEventListener('click', () => {
-                videoTab.classList.add('active');
-                audioTab.classList.remove('active');
+                // Set Video Tab to Active
+                videoTab.className = `${tabBaseClasses} ${tabActiveClasses} rounded-tr-lg`;
+                // Set Audio Tab to Inactive
+                audioTab.className = `${tabBaseClasses} ${tabInactiveClasses} rounded-tl-lg`;
+
+                // Show/Hide Playlists
                 videoPlaylistEl.classList.remove('hidden');
                 playlistEl.classList.add('hidden');
             });
@@ -914,4 +910,5 @@
     </script>
 </body>
 </html>
+
 
