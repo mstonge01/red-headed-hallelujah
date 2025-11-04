@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap" rel="stylesheet">
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json?v=3"> <!-- Incremented manifest version -->
+    <link rel="manifest" href="manifest.json?v=3"> <!-- Matches the v3 in sw.js -->
     <meta name="theme-color" content="#EF4444">
     
     <style>
@@ -55,6 +55,18 @@
             background-color: #EF4444; /* red-500 */
             color: #FFFFFF; /* white */
         }
+        
+        /* Style for video item */
+        .video-item.active {
+             background-color: #EF4444; /* red-500 */
+        }
+        .video-item.active .video-title {
+            color: #FFFFFF; /* white */
+        }
+         .video-item.active .video-artist {
+            color: #E5E7EB; /* gray-200 */
+        }
+
 
         /* Custom style for the progress bar slider thumb */
         #progress-bar-container input[type=range]::-webkit-slider-thumb {
@@ -102,11 +114,15 @@
             }
         }
         
-        /* --- Flipper Styles --- */
-        .flipper-container {
-            perspective: 1000px;
+        .is-playing-glow {
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+
+        /* --- Flipper, Video Panel, & Art Styles --- */
+        .art-container {
             padding-top: 100%; /* Creates a 1:1 aspect ratio */
         }
+        
         #flipper {
             transform-style: preserve-3d;
             transition: transform 0.8s;
@@ -128,13 +144,18 @@
             white-space: pre-wrap;
         }
         
-        /* --- Song Art Crossfade --- */
         #song-art {
             transition: opacity 0.5s ease-in-out;
             opacity: 0;
         }
         #song-art.is-visible {
             opacity: 1;
+        }
+        
+        /* Video Panel Styles */
+        #video-panel {
+            background-color: #000;
+            z-index: 10; /* Sits on top of the flipper */
         }
 
         /* --- Splash Screen Styles --- */
@@ -167,7 +188,26 @@
             background: rgba(0, 0, 0, 0.75);
             border-color: rgba(255, 255, 255, 0.7);
         }
-       
+        
+        /* --- Audio/Video Tab Styles --- */
+        .tab-btn {
+            @apply w-1/2 p-3 text-center font-album-title tracking-wider text-lg text-gray-400 bg-gray-700 transition-colors duration-200;
+        }
+        .tab-btn.active {
+            @apply bg-red-500 text-white;
+        }
+        .tab-btn:not(.active):hover {
+            @apply bg-gray-600 text-gray-200;
+        }
+        /* First tab rounded left */
+        .tab-btn:first-child {
+            @apply rounded-tl-lg;
+        }
+        /* Last tab rounded right */
+        .tab-btn:last-child {
+            @apply rounded-tr-lg;
+        }
+
     </style>
 </head>
 <body class="bg-gray-900 text-gray-300 min-h-screen flex items-center justify-center p-4">
@@ -204,14 +244,19 @@
     <div id="player-container" class="w-full max-w-4xl opacity-0 transition-opacity duration-1000">
         
         <!-- Player Container -->
-        <div class="player-texture shadow-2xl overflow-hidden flex flex-col md:flex-row">
+        <div class="player-texture shadow-2xl overflow-hidden flex flex-col md:flex-row rounded-lg">
             
-            <!-- Left Side: Album Artwork & Liner Notes -->
+            <!-- Left Side: Art, Video, Liner Notes -->
             <div class="w-full md:w-1/2 flex-shrink-0 flex flex-col">
-                <!-- Flipper container (1:1 aspect ratio) -->
-                <div class="relative w-full flipper-container"> 
+                <!-- 1:1 Aspect Ratio Container -->
+                <div class="relative w-full art-container"> 
                     
-                    <!-- Flipper (Art/Notes) -->
+                    <!-- Video Panel (Hidden by default) -->
+                    <div id="video-panel" class="absolute top-0 left-0 w-full h-full hidden">
+                        <iframe id="youtube-player" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+
+                    <!-- 3D Flipper -->
                     <div id="flipper" class="absolute top-0 left-0 w-full h-full">
                         <!-- FRONT (Album Art) -->
                         <div class="flipper-front absolute w-full h-full">
@@ -221,50 +266,36 @@
                             <img id="song-art" src="" alt="Song-specific art" class="absolute top-0 left-0 w-full h-full object-cover">
                         </div>
                         <!-- BACK (Liner Notes) -->
-                        <div id="flipper-back" class="flipper-back absolute w-full h-full p-6 overflow-y-auto flex flex-col">
-                            <div class="flex-grow">
-                                <h3 id="note-title" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
-                                <p id="note-body" class="text-gray-200"></p>
-                            </div>
+                        <div id="flipper-back" class="flipper-back absolute w-full h-full p-6 overflow-y-auto">
+                            <h3 id="note-title" class="font-album-title text-3xl text-yellow-400 tracking-wider mb-4"></h3>
+                            <p id="note-body" class="text-gray-200"></p>
                         </div>
                     </div>
-
-                    <!-- NEW: Video Panel (Hidden on top of the flipper) -->
-                    <div id="video-panel" class="absolute top-0 left-0 w-full h-full hidden bg-black">
-                        <iframe id="video-player-iframe" 
-                            src="" 
-                            class="w-full h-full"
-                            title="YouTube video player" 
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-
-                </div> <!-- End of flipper-container -->
-
-                <!-- Liner Notes Button -->
-                <button id="liner-notes-btn" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200">
-                    Liner Notes
-                </button>
-                <!-- About Button -->
-                <button id="about-btn" class="w-full bg-gray-600 text-white font-album-title tracking-wider text-lg p-3 hover:bg-gray-500 transition-colors duration-200">
-                    About This App
-                </button>
+                </div>
+                
+                <!-- Buttons Below Art -->
+                <div class="grid grid-cols-2">
+                    <button id="liner-notes-btn" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200 rounded-bl-lg">
+                        Liner Notes
+                    </button>
+                     <button id="about-btn" class="w-full bg-gray-600 text-white font-album-title tracking-wider text-lg p-3 hover:bg-gray-700 transition-colors duration-200">
+                        About This App
+                    </button>
+                </div>
             </div>
 
             <!-- Right Side: Info, Controls, Playlist -->
             <div class="w-full md:w-1/2 p-6 flex flex-col justify-between">
                 
                 <!-- Top-Right: Current Song Info -->
-                <div class="mb-4">
+                <div class="mb-4 flex-shrink-0">
                     <p class="text-lg uppercase tracking-widest text-red-500 font-album-title">Now Playing</p>
                     <h2 id="song-title" class="text-3xl text-yellow-400 truncate font-album-title tracking-wider">Song Title</h2>
                     <h3 id="song-artist" class="text-lg text-gray-300">A mstonge01 Project</h3>
                 </div>
 
                 <!-- Middle-Right: Controls & Progress Bar -->
-                <div class="mb-4">
+                <div class="mb-4 flex-shrink-0">
                     <!-- Progress Bar -->
                     <div id="progress-bar-container" class="mb-3">
                          <input type="range" id="progress-bar" class="w-full h-1 bg-gray-700 rounded-lg cursor-pointer" value="0" min="0" max="100">
@@ -297,37 +328,23 @@
                 
                 <!-- Bottom-Right: Tabs & Playlists -->
                 <div class="flex-grow min-h-0 flex flex-col">
-                    <!-- Tab Buttons -->
-                    <div class="flex border-b border-gray-700 mb-2">
-                        <button id="audio-tab-btn" class="flex-1 py-2 px-4 font-album-title tracking-wider text-lg bg-gray-700 text-white rounded-t-md">
-                            Audio
-                        </button>
-                        <button id="video-tab-btn" class="flex-1 py-2 px-4 font-album-title tracking-wider text-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-colors rounded-t-md">
-                            Video
-                        </button>
+                    <!-- Audio/Video Tabs -->
+                    <div class="flex-shrink-0 flex">
+                        <button id="audio-tab" class="tab-btn active">Audio</button>
+                        <button id="video-tab" class="tab-btn">Video</button>
                     </div>
-
-                    <!-- 
-                        *** SCROLL FIX IS HERE ***
-                        This container now has h-80 (20rem) for mobile height
-                        and md:h-auto to allow it to fill space on desktop/tablet.
-                    -->
+                    
+                    <!-- Playlist Container -->
                     <div class="flex-grow min-h-0 relative h-80 md:h-auto">
                         <!-- Audio Playlist -->
-                        <div id="playlist" class="absolute inset-0 overflow-y-auto pr-2">
-                            <!-- Playlist items will be injected here by JavaScript -->
+                        <div id="playlist" class="absolute inset-0 overflow-y-auto pr-2 bg-gray-800 rounded-b-lg">
+                            <!-- Audio items will be injected here -->
                         </div>
                         <!-- Video Playlist -->
-                        <div id="video-playlist" class="absolute inset-0 overflow-y-auto pr-2 hidden">
-                            <!-- Video items will be injected here by JavaScript -->
+                        <div id="video-playlist" class="absolute inset-0 overflow-y-auto pr-2 bg-gray-800 rounded-b-lg hidden">
+                            <!-- Video items will be injected here -->
                         </div>
                     </div>
-                </div>
-
-
-                <!-- Update Button (PWA Only) - REMOVED -->
-                <div id="update-container" class="hidden text-center mt-4 p-2 border-t border-gray-700" style="display: none;">
-                    <!-- Removed update button -->
                 </div>
             </div>
         </div>
@@ -372,7 +389,7 @@
                     note: ``
                 },
                 { 
-                    title: "Zero Degree Beach", 
+                    title: "Zero-Degree Beach", 
                     src: "06-zero-degree-beach.mp3",
                     image_src: "06-zero-degree-beach-art.png",
                     note: ``
@@ -422,7 +439,7 @@
                 { 
                     title: "[Bonus Track] Natural Magic (Acoustic)", 
                     src: "14-natural-magic-acoustic.mp3",
-                    image_src: "11-natural-magic-art.png",
+                    image_src: "11-natural-magic-art.png", // Uses Natural Magic art
                     note: ``
                 }
             ];
@@ -431,22 +448,20 @@
                 {
                     title: "Red-Headed Hallelujah",
                     src: "https://www.youtube.com/embed/UDf9TQ6QDsc",
-                    thumbnail: "04-red-headed-hallelujah-art.png" // Updated thumbnail to match new track #
+                    image_src: "04-red-headed-hallelujah-art.png" // This matches song index 3
                 },
                 {
                     title: "Natural Magic",
-                    src: "https://www.youtube.com/embed/-zrljNrYX4A",
-                    thumbnail: "11-natural-magic-art.png" // Updated thumbnail to match new track #
+                    src: "https://www.youtube.com/embed/usGSmvYKI5c", // <-- UPDATED LINK
+                    image_src: "11-natural-magic-art.png" // This matches song index 10
                 }
-                // Add more videos here as you make them
             ];
 
             const artistName = "A mstonge01 Project";
             const albumTitle = "Red-Headed Hallelujah";
-            const albumNote = ``; // Blanked out as requested
-            const albumName = "Red-Headed Hallelujah"; // Kept for MediaSession
+            const albumNote = `Welcome to Red-Headed Hallelujah, a digital music experience that is part concept album, part street-art gallery, and part AI-assisted love letter. This project was conceived and directed by mstonge01 as a dedicated gift to his wife, Rebecca, blending personal storytelling with cutting-edge technology. This isn't just a website. It's a custom-built Progressive Web App (PWA), designed from the ground up to work perfectly on any device, from a desktop browser to a mobile phone. When installed, it functions as a complete, offline-first application. The app shell loads instantly, while the entire album and its corresponding artwork are cached in the background, allowing for a seamless, high-fidelity listening experience anywhere, with or without an internet connection. The player is deeply integrated with native Media Session controls, meaning the album's art, titles, and playback can be managed directly from your phone's lock screen or your car's dashboard—a testament to its technical polish. The Concept: A Graffiti Tribute. The album's visual identity is rooted in the raw, authentic aesthetic of urban stencil art. The cover and all accompanying track images were created in this high-contrast style, depicting the "Red-Headed Hallelujah" herself in various moments and personas. Like a series of tributes painted on a weathered concrete wall, each image tells a story. You'll find a defiant driver in a doorless Jeep for "Real Women," a saint-like figure bathed in holy light for the title track, and a tender portrait of motherhood for "Natural Magic." A central feature of this site is the Liner Notes button. Click it, and the artwork performs a 3D flip, revealing the story and lyrics behind each song, much like discovering a hidden message on the back of a physical record sleeve. The Music: The "Red-Headed Rock" Aesthetic. Musically, Red-Headed Hallelujah is a high-energy "Red-Headed Rock" album at its core, but it masterfully explores the full spectrum of a life lived together. While generated with the assistance of AI, each track was painstakingly directed, with custom lyrics and styling to create a cohesive and deeply personal narrative. The album opens with the driving, dangerous hard rock of "The Crimson Tide," a symbolic tale of a siren-like mermaid, before moving into the gritty, fuzzed-out blues-rock defiance of "Real Women." The experience flows from chaotic, comedic pop-punk ("Interrupted") and playful funk-rock ("Caps") to moments of profound tenderness, like the intimate acoustic folk of "Natural Magic." The album hits its emotional peak with the soaring, choir-backed anthem "Red-Headed Hallelujah" and the rugged, soulful southern rock ballad "Cinnamon Serenade"—a raw ode to love's less-than-glamorous, unconditional moments. This is a technical and artistic creation, a digital monument to a real-world muse. Enjoy the experience.`;
+            const albumName = "Red-Headed Hallelujah";
 
-            
             // --- 2. DOM ELEMENT REFERENCES ---
             const splashScreen = document.getElementById('splash-screen');
             const splashVideo = document.getElementById('splash-video');
@@ -459,6 +474,11 @@
             const songTitleEl = document.getElementById('song-title');
             const songArtistEl = document.getElementById('song-artist');
             
+            const playlistEl = document.getElementById('playlist');
+            const videoPlaylistEl = document.getElementById('video-playlist');
+            const audioTab = document.getElementById('audio-tab');
+            const videoTab = document.getElementById('video-tab');
+            
             const playPauseBtn = document.getElementById('play-pause-btn');
             const playIcon = document.getElementById('play-icon');
             const pauseIcon = document.getElementById('pause-icon');
@@ -467,38 +487,27 @@
             const progressBar = document.getElementById('progress-bar');
             const currentTimeEl = document.getElementById('current-time');
             const durationTimeEl = document.getElementById('duration-time');
+            
             const linerNotesBtn = document.getElementById('liner-notes-btn');
+            const aboutBtn = document.getElementById('about-btn');
             const flipper = document.getElementById('flipper');
             const noteTitleEl = document.getElementById('note-title');
             const noteBodyEl = document.getElementById('note-body');
             const songArtEl = document.getElementById('song-art');
             const mainPlayerDiv = document.querySelector('.player-texture');
             
-            // "About" Button
-            const aboutBtn = document.getElementById('about-btn');
-
-            // Video & Tab Elements
-            const audioTabBtn = document.getElementById('audio-tab-btn');
-            const videoTabBtn = document.getElementById('video-tab-btn');
-            const playlistEl = document.getElementById('playlist');
-            const videoPlaylistEl = document.getElementById('video-playlist');
-            
-            // *** NEW IN-PLAYER VIDEO REFS ***
             const videoPanel = document.getElementById('video-panel');
-            const videoPlayerIframe = document.getElementById('video-player-iframe');
+            const youtubePlayer = document.getElementById('youtube-player');
 
 
             // --- 3. PLAYER STATE ---
             let currentSongIndex = 0;
+            let currentVideoIndex = null; // To track active video
             let isPlaying = false;
             let hasUserInteracted = false;
-            let isVideoPlaying = false; // NEW state to track video
+            let currentNote = 'album'; // 'album', 'about', or song index
 
             // --- 4. FUNCTIONS ---
-
-            // About Text
-            const aboutTitle = "About Red-Headed Hallelujah";
-            const aboutText = `Welcome to Red-Headed Hallelujah, a digital music experience that is part concept album, part street-art gallery, and part AI-assisted love letter. This project was conceived and directed by mstonge01 as a dedicated gift to his wife, Rebecca, blending personal storytelling with cutting-edge technology.<br><br>This isn't just a website. It's a custom-built Progressive Web App (PWA), designed from the ground up to work perfectly on any device, from a desktop browser to a mobile phone. When installed, it functions as a complete, offline-first application. The app shell loads instantly, while the entire 12-track album and its corresponding artwork are cached in the background, allowing for a seamless, high-fidelity listening experience anywhere, with or without an internet connection.<br><br>The player is deeply integrated with native Media Session controls, meaning the album's art, titles, and playback can be managed directly from your phone's lock screen or your car's dashboard—a testament to its technical polish.<br><br><b class="text-yellow-400 text-lg">The Concept: A Graffiti Tribute</b><br><br>The album's visual identity is rooted in the raw, authentic aesthetic of urban stencil art. The cover and all accompanying track images were created in this high-contrast style, depicting the "Red-Headed Hallelujah" herself in various moments and personas.<br><br>Like a series of tributes painted on a weathered concrete wall, each image tells a story. You'll find a defiant driver in a doorless Jeep for "Real Women," a saint-like figure bathed in holy light for the title track, and a tender portrait of motherhood for "Natural Magic."<br><br>A central feature of this site is the Liner Notes button. Click it, and the artwork performs a 3D flip, revealing the story and lyrics behind each song, much like discovering a hidden message on the back of a physical record sleeve.<br><br><b class="text-yellow-400 text-lg">The Music: The "Red-Headed Rock" Aesthetic</b><br><br>Musically, Red-Headed Hallelujah is a high-energy "Red-Headed Rock" album at its core, but it masterfully explores the full spectrum of a life lived together. While generated with the assistance of AI, each track was painstakingly directed, with custom lyrics and styling to create a cohesive and deeply personal narrative.<br><br>The album opens with the driving, dangerous hard rock of "The Crimson Tide," a symbolic tale of a siren-like mermaid, before moving into the gritty, fuzzed-out blues-rock defiance of "Real Women."<br><br>The experience flows from chaotic, comedic pop-punk ("Interrupted") and playful funk-rock ("Caps") to moments of profound tenderness, like the intimate acoustic folk of "Natural Magic." The album hits its emotional peak with the soaring, choir-backed anthem "Red-Headed Hallelujah" and the rugged, soulful southern rock ballad "Cinnamon Serenade"—a raw ode to love's less-than-glamorous, unconditional moments.<br><br>This is a technical and artistic creation, a digital monument to a real-world muse. Enjoy the experience.`;
             
             // This function now just shows the "Click to Begin" button.
             // It's called after the PWA check (if any) is complete.
@@ -557,7 +566,20 @@
                 }, 1000); // 1-second pause
             }
             
-            // --- Player Functions ---
+            function showVideoPanel(show) {
+                if (show) {
+                    videoPanel.classList.remove('hidden');
+                    flipper.classList.add('hidden');
+                } else {
+                    videoPanel.classList.add('hidden');
+                    flipper.classList.remove('hidden');
+                    // Stop the YouTube video
+                    youtubePlayer.src = ''; 
+                    updateActiveVideoItem(null);
+                }
+            }
+
+            // --- All other player functions (updatePositionState, updateMediaSession, etc.) are correct ---
             function updatePositionState() {
                 if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
                     const { duration, currentTime } = audioPlayer;
@@ -594,16 +616,24 @@
                 }
             }
             
-            function updateLinerNotes(index) {
-                if (index === null) {
+            function updateLinerNotes() {
+                if (currentNote === 'album') {
                     noteTitleEl.textContent = albumTitle;
-                    noteBodyEl.innerHTML = albumNote; // Use innerHTML for formatted album note
+                    noteBodyEl.innerHTML = albumNote; // Use innerHTML for formatting
+                } else if (currentNote === 'about') {
+                    noteTitleEl.textContent = "About This App";
+                    noteBodyEl.innerHTML = albumNote; // Use innerHTML for formatting
                 } else {
-                    const song = songs[index];
+                    const song = songs[currentNote];
                     noteTitleEl.textContent = song.title;
-                    noteBodyEl.innerHTML = song.note; // Use innerHTML for formatted song notes
+                    noteBodyEl.innerHTML = song.note; // Use innerHTML for formatting
                 }
+                // Ensure flipper is on the back
+                flipper.classList.add('is-flipped');
+                // Close video if it's open
+                showVideoPanel(false);
             }
+
 
             function loadSong(song) {
                 songTitleEl.textContent = song.title;
@@ -611,22 +641,35 @@
                 audioPlayer.src = song.src;
                 songArtEl.src = song.image_src; // Set new song art
                 songArtEl.classList.remove('is-visible'); // Make it invisible (ready to fade in)
-                flipper.classList.remove('is-flipped'); // Flip notes back to front
+                
+                // Close video panel if open
+                showVideoPanel(false);
+                // Flip notes back to front
+                flipper.classList.remove('is-flipped');
+                currentNote = currentSongIndex; // Set note to current song
+                
                 updateActivePlaylistItem();
             }
 
             function playSong() {
-                closeVideo(); // *** NEW: Close video if it's open
                 if (!audioPlayer.src || audioPlayer.src.endsWith('index.html')) {
                     loadSong(songs[currentSongIndex]);
                 }
+                
+                // Close video panel if open
+                showVideoPanel(false);
+
                 isPlaying = true;
                 audioPlayer.play();
                 playIcon.classList.add('hidden');
                 pauseIcon.classList.remove('hidden');
                 songArtEl.classList.add('is-visible'); // Fade in song art
                 mainPlayerDiv.classList.add('is-playing-glow'); // Add glow
-                updateLinerNotes(currentSongIndex);
+                
+                currentNote = currentSongIndex; // Set note to current song
+                if (flipper.classList.contains('is-flipped')) {
+                    updateLinerNotes(); // Update notes if panel is already flipped
+                }
                 updateMediaSession(songs[currentSongIndex]);
             }
 
@@ -637,7 +680,8 @@
                 pauseIcon.classList.add('hidden');
                 songArtEl.classList.remove('is-visible'); // Fade out song art
                 mainPlayerDiv.classList.remove('is-playing-glow'); // Remove glow
-                updateLinerNotes(null);
+                
+                // Don't change the note, just update media session
                 updateMediaSession(null);
             }
 
@@ -682,7 +726,7 @@
             }
             
             function updateActivePlaylistItem() {
-                const items = document.querySelectorAll('.playlist-item');
+                const items = document.querySelectorAll('#playlist .playlist-item');
                 items.forEach((item, index) => {
                     if (index === currentSongIndex) {
                         item.classList.add('active');
@@ -692,6 +736,19 @@
                     }
                 });
             }
+            
+            function updateActiveVideoItem(activeIndex) {
+                currentVideoIndex = activeIndex;
+                const items = document.querySelectorAll('#video-playlist .video-item');
+                items.forEach((item, index) => {
+                    if (index === activeIndex) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
 
             function createPlaylist() {
                 songs.forEach((song, index) => {
@@ -709,50 +766,43 @@
                     playlistEl.appendChild(item);
                 });
             }
-
-            // --- *** MODIFIED Video Functions *** ---
+            
             function createVideoPlaylist() {
                 videos.forEach((video, index) => {
                     const item = document.createElement('div');
-                    item.classList.add('playlist-item', 'p-3', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors', 'duration-200', 'flex', 'items-center', 'space-x-4');
+                    item.classList.add('video-item', 'p-3', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors', 'duration-200', 'flex', 'items-center', 'space-x-4');
                     item.innerHTML = `
-                        <img src="${video.thumbnail}" alt="${video.title}" class="w-16 h-9 object-cover rounded-md flex-shrink-0">
-                        <div>
-                            <p class="font-album-title tracking-wider truncate text-white">${video.title}</p>
-                            <p class="text-sm text-gray-400">${artistName}</p>
+                        <img src="${video.image_src}" alt="Thumbnail for ${video.title}" class="w-16 h-16 object-cover rounded-md flex-shrink-0">
+                        <div class="overflow-hidden">
+                            <p class="font-album-title tracking-wider truncate video-title text-gray-100">${video.title}</p>
+                            <p class="text-sm text-gray-400 video-artist">${artistName}</p>
                         </div>
                     `;
                     item.addEventListener('click', () => {
-                        playVideo(video);
+                        playVideo(video, index);
                     });
                     videoPlaylistEl.appendChild(item);
                 });
             }
-
-            // *** NEW playVideo function ***
-            function playVideo(video) {
-                pauseSong(); // Stop the music
-                flipper.classList.remove('is-flipped'); // Ensure notes aren't showing
-                videoPanel.classList.remove('hidden'); // Show the video panel
-                // Set the iframe src. Added autoplay and other parameters.
-                videoPlayerIframe.src = `${video.src}?autoplay=1&modestbranding=1&rel=0`;
-                isVideoPlaying = true;
+            
+            function playVideo(video, index) {
+                // Pause audio player
+                pauseSong();
+                // Show video panel
+                showVideoPanel(true);
+                // Load YouTube video
+                youtubePlayer.src = `${video.src}?autoplay=1&rel=0`;
+                // Set active item
+                updateActiveVideoItem(index);
             }
-
-            // *** NEW closeVideo function ***
-            function closeVideo() {
-                if (!isVideoPlaying) return;
-                videoPanel.classList.add('hidden'); // Hide the video panel
-                videoPlayerIframe.src = ""; // Set src to empty to stop the video
-                isVideoPlaying = false;
-            }
-
 
             // --- 5. EVENT LISTENERS ---
             
             // --- Splash Screen Logic ---
             enterBtn.addEventListener('click', startVideoTransition);
             skipIntroBtn.addEventListener('click', skipIntro);
+
+            // When video finishes, play the intro audio
             splashVideo.addEventListener('ended', () => {
                 if(hasUserInteracted) {
                     introAudio.play().catch(e => {
@@ -761,57 +811,49 @@
                     });
                 }
             });
-            introAudio.addEventListener('ended', transitionToPlayer);
+            
+            // When intro audio finishes, fade to player
+            introAudio.addEventListener('ended', () => {
+                transitionToPlayer();
+            });
             
             // --- Player Logic ---
             playPauseBtn.addEventListener('click', () => {
                 if (isPlaying) pauseSong();
-                else playSong(); // playSong() will auto-close the video
+                else playSong();
             });
-            prevBtn.addEventListener('click', prevSong); // prevSong() calls playSong()
-            nextBtn.addEventListener('click', nextSong); // nextSong() calls playSong()
+            prevBtn.addEventListener('click', prevSong);
+            nextBtn.addEventListener('click', nextSong);
             audioPlayer.addEventListener('timeupdate', updateProgress);
             audioPlayer.addEventListener('ended', nextSong);
             progressBar.addEventListener('input', setProgress);
             
             linerNotesBtn.addEventListener('click', () => {
-                closeVideo(); // *** NEW: Close video first
-                updateLinerNotes(isPlaying ? currentSongIndex : null);
-                flipper.classList.toggle('is-flipped');
+                currentNote = isPlaying ? currentSongIndex : 'album';
+                updateLinerNotes();
             });
             
-            // --- "About" Button Listener ---
             aboutBtn.addEventListener('click', () => {
-                closeVideo(); // *** NEW: Close video first
-                noteTitleEl.textContent = aboutTitle;
-                noteBodyEl.innerHTML = aboutText; // Use innerHTML for formatted "About" text
-                flipper.classList.add('is-flipped'); // Show the back panel
+                currentNote = 'about';
+                updateLinerNotes();
             });
-
-            // --- Tab Listeners ---
-            audioTabBtn.addEventListener('click', () => {
-                // Show audio, hide video
+            
+            // --- Tab Logic ---
+            audioTab.addEventListener('click', () => {
+                audioTab.classList.add('active');
+                videoTab.classList.remove('active');
                 playlistEl.classList.remove('hidden');
                 videoPlaylistEl.classList.add('hidden');
-                // Style tabs
-                audioTabBtn.classList.add('bg-gray-700', 'text-white');
-                audioTabBtn.classList.remove('text-gray-400', 'hover:bg-gray-700');
-                videoTabBtn.classList.add('text-gray-400', 'hover:bg-gray-700');
-                videoTabBtn.classList.remove('bg-gray-700', 'text-white');
             });
-
-            videoTabBtn.addEventListener('click', () => {
-                // Show video, hide audio
+            
+            videoTab.addEventListener('click', () => {
+                videoTab.classList.add('active');
+                audioTab.classList.remove('active');
                 videoPlaylistEl.classList.remove('hidden');
                 playlistEl.classList.add('hidden');
-                // Style tabs
-                videoTabBtn.classList.add('bg-gray-700', 'text-white');
-                videoTabBtn.classList.remove('text-gray-400', 'hover:bg-gray-700');
-                audioTabBtn.classList.add('text-gray-400', 'hover:bg-gray-700');
-                audioTabBtn.classList.remove('bg-gray-700', 'text-white');
             });
 
-
+            
             // --- Media Session Action Handlers (for truck controls) ---
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.setActionHandler('play', playSong);
@@ -826,31 +868,50 @@
 
             // --- 6. INITIALIZE PLAYER ---
             createPlaylist();
-            createVideoPlaylist(); // Create the new video list
+            createVideoPlaylist();
             loadSong(songs[currentSongIndex]);
-            updateLinerNotes(null);
+            currentNote = 'album'; // Start with album note
+            updateLinerNotes(); // Show album note
+            flipper.classList.remove('is-flipped'); // But show front cover
+            
             
             // --- 7. PWA Service Worker Registration ---
+            // Check if we're in "app" mode
             const isPwa = window.matchMedia('(display-mode: standalone)').matches;
 
             if (isPwa && 'serviceWorker' in navigator) {
+                // --- IT'S THE APP ---
                 showBeginButton();
 
                 navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('ServiceWorker registration successful:', registration);
+                        
+                        // Listen for new worker installs
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New content is available!
+                                    // We could show a "New version available, restart" button here
+                                    console.log('New content is available, please restart the app.');
+                                }
+                            });
+                        });
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
-                        showBeginButton(); 
+                        // Even if SW fails, show the button
+                        showBeginButton();
                     });
             } else {
+                // --- IT'S THE PC (or a normal browser tab) ---
                 console.log('Not in PWA mode, skipping PWA features.');
+                // Just show the "Click to Begin" button
                 showBeginButton();
             }
         });
     </script>
 </body>
 </html>
-
 
