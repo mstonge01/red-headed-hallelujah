@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap" rel="stylesheet">
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json?v=3"> <!-- Matches the v3 in sw.js -->
+    <link rel="manifest" href="manifest.json?v=3"> <!-- Incremented manifest version -->
     <meta name="theme-color" content="#EF4444">
     
     <style>
@@ -55,18 +55,6 @@
             background-color: #EF4444; /* red-500 */
             color: #FFFFFF; /* white */
         }
-        
-        /* Style for video item */
-        .video-item.active {
-             background-color: #EF4444; /* red-500 */
-        }
-        .video-item.active .video-title {
-            color: #FFFFFF; /* white */
-        }
-         .video-item.active .video-artist {
-            color: #E5E7EB; /* gray-200 */
-        }
-
 
         /* Custom style for the progress bar slider thumb */
         #progress-bar-container input[type=range]::-webkit-slider-thumb {
@@ -118,11 +106,11 @@
             animation: pulseGlow 2.5s infinite ease-in-out;
         }
 
-        /* --- Flipper, Video Panel, & Art Styles --- */
-        .art-container {
+        /* --- Flipper Styles --- */
+        .flipper-container {
+            perspective: 1000px;
             padding-top: 100%; /* Creates a 1:1 aspect ratio */
         }
-        
         #flipper {
             transform-style: preserve-3d;
             transition: transform 0.8s;
@@ -140,22 +128,14 @@
             background-color: #4B5563; /* gray-600 */
             background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png');
         }
-        #note-body {
-            white-space: pre-wrap;
-        }
         
+        /* --- Song Art Crossfade --- */
         #song-art {
             transition: opacity 0.5s ease-in-out;
             opacity: 0;
         }
         #song-art.is-visible {
             opacity: 1;
-        }
-        
-        /* Video Panel Styles */
-        #video-panel {
-            background-color: #000;
-            z-index: 10; /* Sits on top of the flipper */
         }
 
         /* --- Splash Screen Styles --- */
@@ -188,9 +168,6 @@
             background: rgba(0, 0, 0, 0.75);
             border-color: rgba(255, 255, 255, 0.7);
         }
-        
-        /* --- Audio/Video Tab Styles --- */
-        /* REMOVED .tab-btn styles from here. They are now directly on the HTML elements. */
 
     </style>
 </head>
@@ -228,20 +205,20 @@
     <div id="player-container" class="w-full max-w-4xl opacity-0 transition-opacity duration-1000">
         
         <!-- Player Container -->
-        <div class="player-texture shadow-2xl overflow-hidden flex flex-col md:flex-row rounded-lg">
+        <div class="player-texture shadow-2xl overflow-hidden flex flex-col md:flex-row">
             
-            <!-- Left Side: Art, Video, Liner Notes -->
+            <!-- Left Side: Album Artwork, Video, & Liner Notes -->
             <div class="w-full md:w-1/2 flex-shrink-0 flex flex-col">
-                <!-- 1:1 Aspect Ratio Container -->
-                <div class="relative w-full art-container"> 
+                <!-- Flipper container (1:1 aspect ratio) -->
+                <div class="relative w-full flipper-container bg-black"> 
                     
-                    <!-- Video Panel (Hidden by default) -->
-                    <div id="video-panel" class="absolute top-0 left-0 w-full h-full hidden">
-                        <iframe id="youtube-player" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <!-- Video Panel (Starts Hidden) -->
+                    <div id="video-panel" class="absolute top-0 left-0 w-full h-full z-20 hidden">
+                        <iframe id="video-iframe" class="w-full h-full" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                     </div>
-
-                    <!-- 3D Flipper -->
-                    <div id="flipper" class="absolute top-0 left-0 w-full h-full">
+                    
+                    <!-- Artwork & Notes Flipper -->
+                    <div id="flipper" class="absolute top-0 left-0 w-full h-full z-10">
                         <!-- FRONT (Album Art) -->
                         <div class="flipper-front absolute w-full h-full">
                             <!-- Main Album Art -->
@@ -256,20 +233,20 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Buttons Below Art -->
-                <div class="grid grid-cols-2">
-                    <button id="liner-notes-btn" class="w-full bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200 rounded-bl-lg">
+
+                <!-- Buttons: Liner Notes & About -->
+                <div class="flex">
+                    <button id="liner-notes-btn" class="flex-1 bg-red-500 text-white font-album-title tracking-wider text-lg p-3 hover:bg-red-600 transition-colors duration-200">
                         Liner Notes
                     </button>
-                     <button id="about-btn" class="w-full bg-gray-600 text-white font-album-title tracking-wider text-lg p-3 hover:bg-gray-700 transition-colors duration-200">
+                    <button id="about-btn" class="flex-1 bg-gray-600 text-white font-album-title tracking-wider text-lg p-3 hover:bg-gray-700 transition-colors duration-200 border-l border-gray-800">
                         About This App
                     </button>
                 </div>
             </div>
 
             <!-- Right Side: Info, Controls, Playlist -->
-            <div class="w-full md:w-1/2 p-6 flex flex-col justify-between">
+            <div class="w-full md:w-1/2 p-6 flex flex-col">
                 
                 <!-- Top-Right: Current Song Info -->
                 <div class="mb-4 flex-shrink-0">
@@ -310,23 +287,23 @@
                     </div>
                 </div>
                 
-                <!-- Bottom-Right: Tabs & Playlists -->
-                <div class="flex-grow min-h-0 flex flex-col">
-                    <!-- Audio/Video Tabs -->
+                <!-- Bottom-Right: Playlist Tabs & Container -->
+                <div class="flex-grow flex flex-col min-h-0">
+                    <!-- Tabs -->
                     <div class="flex-shrink-0 flex">
-                        <button id="audio-tab" class="w-1/2 p-3 text-center font-album-title tracking-wider text-lg transition-colors duration-200 rounded-tl-lg bg-red-500 text-white active">Audio</button>
-                        <button id="video-tab" class="w-1/2 p-3 text-center font-album-title tracking-wider text-lg transition-colors duration-200 rounded-tr-lg text-gray-400 bg-gray-700 hover:bg-gray-600 hover:text-gray-200">Video</button>
+                        <button id="audio-tab" class="flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-gray-700/50 border-red-500 text-white">Audio</button>
+                        <button id="video-tab" class="flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-transparent border-gray-700 text-gray-500 hover:bg-gray-800/50">Video</button>
                     </div>
-                    
+
                     <!-- Playlist Container -->
-                    <div class="flex-grow min-h-0 relative h-80 md:h-auto">
+                    <div class="flex-grow relative min-h-0 h-80 md:h-auto">
                         <!-- Audio Playlist -->
-                        <div id="playlist" class="absolute inset-0 overflow-y-auto pr-2 bg-gray-800 rounded-b-lg">
-                            <!-- Audio items will be injected here -->
+                        <div id="playlist" class="absolute top-0 left-0 w-full h-full overflow-y-auto pr-2">
+                            <!-- Playlist items will be injected here by JavaScript -->
                         </div>
-                        <!-- Video Playlist -->
-                        <div id="video-playlist" class="absolute inset-0 overflow-y-auto pr-2 bg-gray-800 rounded-b-lg hidden">
-                            <!-- Video items will be injected here -->
+                        <!-- Video Playlist (Hidden) -->
+                        <div id="video-playlist" class="absolute top-0 left-0 w-full h-full overflow-y-auto pr-2 hidden">
+                            <!-- Video items will be injected here by JavaScript -->
                         </div>
                     </div>
                 </div>
@@ -344,7 +321,86 @@
             const songs = [
                 { 
                     title: "Intro", 
-// ... existing code ... -->
+                    src: "01-intro.mp3",
+                    image_src: "01-intro-art.png",
+                    note: ``
+                },
+                { 
+                    title: "The Crimson Tide", 
+                    src: "02-the-crimson-tide.mp3",
+                    image_src: "02-the-crimson-tide-art.png",
+                    note: ``
+                },
+                { 
+                    title: "Real Women", 
+                    src: "03-real-women.mp3",
+                    image_src: "03-real-women-art.png",
+                    note: ``
+                },
+                { 
+                    title: "Red-Headed Hallelujah", 
+                    src: "04-red-headed-hallelujah.mp3",
+                    image_src: "04-red-headed-hallelujah-art.png",
+                    note: ``
+                },
+                { 
+                    title: "The Good Stuff", 
+                    src: "05-the_good_stuff.mp3",
+                    image_src: "05-the_good_stuff-art.png",
+                    note: ``
+                },
+                { 
+                    title: "Zero Degree Beach", 
+                    src: "06-zero-degree-beach.mp3",
+                    image_src: "06-zero-degree-beach-art.png",
+                    note: ``
+                },
+                { 
+                    title: "Caps", 
+                    src: "07-caps.mp3",
+                    image_src: "07-caps-art.png",
+    
+                    note: ``
+                },
+                { 
+                    title: "Interrupted", 
+                    src: "08-interrupted.mp3",
+                    image_src: "08-interrupted-art.png",
+                    note: ``
+                },
+                { 
+                    title: "Cinnamon Serenade", 
+                    src: "09-cinnamon-serenade.mp3",
+                    image_src: "09-cinnamon-serenade-art.png",
+                    note: ``
+                },
+                { 
+                    title: "Golden Devotion", 
+                    src: "10-golden-devotion.mp3",
+                    image_src: "10-golden-devotion-art.png",
+                    note: ``
+                },
+                { 
+                    title: "Natural Magic", 
+                    src: "11-natural-magic.mp3",
+                    image_src: "11-natural-magic-art.png",
+                    note: ``
+                },
+                { 
+                    title: "Outro", 
+                    src: "12-outro.mp3",
+                    image_src: "12-outro-art.png",
+                    note: ``
+                },
+                { 
+                    title: "[Bonus Track] Red-Headed Hallelujah (Guitar)", 
+                    src: "13-red-headed-hallelujah-guitar.mp3",
+                    image_src: "13-red-headed-hallelujah-guitar-art.png",
+                    note: ``
+                },
+                { 
+                    title: "[Bonus Track] Natural Magic (Acoustic)", 
+                    src: "14-natural-magic-acoustic.mp3",
                     image_src: "11-natural-magic-art.png", // Uses Natural Magic art
                     note: ``
                 }
@@ -374,13 +430,462 @@
             ];
 
             const artistName = "A mstonge01 Project";
-// ... existing code ... -->
+            const albumTitle = "Liner Notes";
+            const albumNote = `Music is playing, but no specific song is selected. Click a song to see its liner notes, or click "About This App".`;
+            const aboutNote = `<h3>About Red-Headed Hallelujah</h3>
+<p>Welcome to <strong>Red-Headed Hallelujah</strong>, a digital music experience that is part concept album, part street-art gallery, and part AI-assisted love letter. This project was conceived and directed by <strong>mstonge01</strong> as a dedicated gift to his wife, Rebecca, blending personal storytelling with cutting-edge technology.</p>
+<p>This isn't just a website. It's a custom-built <strong>Progressive Web App (PWA)</strong>, designed from the ground up to work perfectly on any device, from a desktop browser to a mobile phone. When installed, it functions as a <strong>complete, offline-first application</strong>. The app shell loads instantly, while the entire album and its corresponding artwork are cached in the background, allowing for a seamless, high-fidelity listening experience anywhere, with or without an internet connection.</p>
+<p>The player is deeply integrated with native <strong>Media Session controls</strong>, meaning the album's art, titles, and playback can be managed directly from your phone's lock screen or your car's dashboard—a testament to its technical polish.</p>
+<h3>The Concept: A Graffiti Tribute</h3>
+<p>The album's visual identity is rooted in the raw, authentic aesthetic of <strong>urban stencil art</strong>. The cover and all accompanying track images were created in this high-contrast style, depicting the "Red-Headed Hallelujah" herself in various moments and personas.</p>
+<p>Like a series of tributes painted on a weathered concrete wall, each image tells a story. You'll find a defiant driver in a doorless Jeep for <strong>"Real Women,"</strong> a saint-like figure bathed in holy light for the title track, and a tender portrait of motherhood for <strong>"Natural Magic."</strong></p>
+<p>A central feature of this site is the <strong>Liner Notes</strong> button. Click it, and the artwork performs a 3D flip, revealing the story and lyrics behind each song, much like discovering a hidden message on the back of a physical record sleeve.</p>
+<h3>The Music: The "Red-Headed Rock" Aesthetic</h3>
+<p>Musically, <strong>Red-Headed Hallelujah</strong> is a high-energy "Red-Headed Rock" album at its core, but it masterfully explores the full spectrum of a life lived together. While generated with the assistance of AI, each track was painstakingly directed, with custom lyrics and styling to create a cohesive and deeply personal narrative.</p>
+<p>The album opens with the driving, dangerous hard rock of <strong>"The Crimson Tide,"</strong> a symbolic tale of a siren-like mermaid, before moving into the gritty, fuzzed-out blues-rock defiance of <strong>"Real Women."</strong></p>
+<p>The experience flows from chaotic, comedic pop-punk (<strong>"Interrupted"</strong>) and playful funk-rock (<strong>"Caps"</strong>) to moments of profound tenderness, like the intimate acoustic folk of <strong>"Natural Magic."</strong> The album hits its emotional peak with the soaring, choir-backed anthem <strong>"Red-Headed Hallelujah"</strong> and the rugged, soulful southern rock ballad <strong>"Cinnamon Serenade"</strong>—a raw ode to love's less-than-glamorous, unconditional moments.</p>
+<p>This is a technical and artistic creation, a digital monument to a real-world muse. Enjoy the experience.</p>`;
+            const albumName = "Red-Headed Hallelujah";
+
+            // --- 2. DOM ELEMENT REFERENCES ---
+            const splashScreen = document.getElementById('splash-screen');
+            const splashVideo = document.getElementById('splash-video');
+            const enterBtn = document.getElementById('enter-btn');
+            const skipIntroBtn = document.getElementById('skip-intro-btn');
+            const updateStatusEl = document.getElementById('update-status'); // "Checking for Updates..." message
+            const playerContainer = document.getElementById('player-container');
+            const audioPlayer = document.getElementById('audio-player');
+            const introAudio = document.getElementById('intro-audio');
+            const songTitleEl = document.getElementById('song-title');
+            const songArtistEl = document.getElementById('song-artist');
+            
+            const playlistEl = document.getElementById('playlist');
+            const videoPlaylistEl = document.getElementById('video-playlist');
+            const audioTab = document.getElementById('audio-tab');
+            const videoTab = document.getElementById('video-tab');
+            
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const currentTimeEl = document.getElementById('current-time');
+            const durationTimeEl = document.getElementById('duration-time');
+            
+            const linerNotesBtn = document.getElementById('liner-notes-btn');
+            const aboutBtn = document.getElementById('about-btn');
+            const flipper = document.getElementById('flipper');
+            const noteTitleEl = document.getElementById('note-title');
+            const noteBodyEl = document.getElementById('note-body');
+            const songArtEl = document.getElementById('song-art');
+            const mainPlayerDiv = document.querySelector('.player-texture');
+
+            const videoPanel = document.getElementById('video-panel');
+            const videoIframe = document.getElementById('video-iframe');
+            
+
+            // --- 3. PLAYER STATE ---
+            let currentSongIndex = 0;
+            let isPlaying = false;
+            let hasUserInteracted = false;
+            let currentNote = 'album'; // 'album', 'about', or song index
+
+            // --- 4. FUNCTIONS ---
+            
+            // This function now just shows the "Click to Begin" button.
+            // It's called after the PWA check (if any) is complete.
+            function showBeginButton() {
+                updateStatusEl.style.display = 'none'; // Hide "Checking for Updates..."
+                enterBtn.textContent = 'Click to Begin';
+                enterBtn.style.display = 'block'; // Show the button
+                enterBtn.disabled = false;
+            }
+
+            // This function handles the intro video and audio sequence
+            function startVideoTransition() {
+                if(hasUserInteracted) return;
+                hasUserInteracted = true;
+                
+                // Tell the service worker to start caching songs in the background (if it's the app)
+                if (window.matchMedia('(display-mode: standalone)').matches && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    console.log('Sending cache-content message to SW');
+                    navigator.serviceWorker.controller.postMessage({ action: 'cache-content' });
+                }
+                
+                introAudio.load(); // Preload the intro audio
+                enterBtn.style.display = 'none'; // Hide the "Click to Begin" button
+                skipIntroBtn.classList.remove('hidden'); // Show the "Skip Intro" button
+
+                // Manually play the video (no autoplay)
+                splashVideo.play().then(() => {
+                    // Video started!
+                }).catch(error => {
+                    console.warn("Video play failed even after click:", error);
+                    transitionToPlayer(); // Failsafe in case video fails
+                });
+            }
+
+            // New function to skip the intro
+            function skipIntro() {
+                splashVideo.pause();
+                introAudio.pause(); // Stop the intro audio just in case
+                skipIntroBtn.classList.add('hidden'); // Hide skip button
+                transitionToPlayer(); // Go right to the player
+            }
+
+            // This function fades to the player
+            function transitionToPlayer() {
+                skipIntroBtn.classList.add('hidden'); // Hide skip button
+                // Wait 1 second after intro audio finishes (or skip is clicked)
+                setTimeout(() => {
+                    splashScreen.style.opacity = '0';
+                    playerContainer.style.opacity = '1';
+                    
+                    // After the fade, remove the splash screen
+                    setTimeout(() => {
+                        splashScreen.style.display = 'none';
+                    }, 1000); // Must match the transition duration
+                    
+                }, 1000); // 1-second pause
+            }
+            
+            function showVideoPanel(show, src = "") {
+                if (show) {
+                    pauseSong();
+                    videoIframe.src = src + "?autoplay=1&modestbranding=1&rel=0";
+                    videoPanel.classList.remove('hidden');
+                    flipper.classList.add('hidden');
+                } else {
+                    videoIframe.src = ""; // This stops the video
+                    videoPanel.classList.add('hidden');
+                    flipper.classList.remove('hidden');
+                }
+            }
+            
+            function updatePositionState() {
+                if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
+                    const { duration, currentTime } = audioPlayer;
+                    if (duration && isFinite(duration)) {
+                        navigator.mediaSession.setPositionState({
+                            duration: duration,
+                            playbackRate: audioPlayer.playbackRate,
+                            position: currentTime
+                        });
+                    }
+                }
+            }
+            
+            function updateMediaSession(song) {
+                if ('mediaSession' in navigator) {
+                    if (song) {
+                        // Song is playing
+                        navigator.mediaSession.metadata = new MediaMetadata({
+                            title: song.title,
+                            artist: artistName,
+                            album: albumName,
+                            artwork: [
+                                { src: song.image_src, sizes: '512x512', type: 'image/png' }
+                            ]
+                        });
+                        navigator.mediaSession.playbackState = "playing";
+                    } else {
+                        // Song is paused
+                        if (navigator.mediaSession.metadata) {
+                             navigator.mediaSession.playbackState = "paused";
+                        }
+                    }
+                    updatePositionState(); // Update progress bar
+                }
+            }
+            
+            // Updates the text content of the liner notes panel
+            function updateNoteContent() {
+                if (currentNote === 'album') {
+                    noteTitleEl.textContent = albumTitle;
+                    noteBodyEl.innerHTML = albumNote;
+                } else if (currentNote === 'about') {
+                    noteTitleEl.textContent = "About This App";
+                    noteBodyEl.innerHTML = aboutNote;
+                } else {
+                    const song = songs[currentNote];
+                    noteTitleEl.textContent = song.title;
+                    noteBodyEl.innerHTML = song.note;
+                }
+            }
+
+            function loadSong(song) {
+                songTitleEl.textContent = song.title;
+                songArtistEl.textContent = artistName;
+                audioPlayer.src = song.src;
+                songArtEl.src = song.image_src; // Set new song art
+                songArtEl.classList.remove('is-visible'); // Make it invisible (ready to fade in)
+                flipper.classList.remove('is-flipped');
+                currentNote = currentSongIndex; // Set note to current song
+                
+                updateActivePlaylistItem();
+            }
+
+            function playSong() {
+                if (!audioPlayer.src || audioPlayer.src.endsWith('index.html')) {
+                    loadSong(songs[currentSongIndex]);
+                }
+                
+                // If video is playing, stop it
+                if (!videoPanel.classList.contains('hidden')) {
+                    showVideoPanel(false);
+                }
+
+                isPlaying = true;
+                audioPlayer.play();
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+                songArtEl.classList.add('is-visible'); // Fade in song art
+                mainPlayerDiv.classList.add('is-playing-glow'); // Add glow
+                
+                currentNote = currentSongIndex; // Set note to current song
+                if (flipper.classList.contains('is-flipped')) {
+                    updateNoteContent(); // Update notes if panel is already flipped
+                }
+                updateMediaSession(songs[currentSongIndex]);
+            }
+
+            function pauseSong() {
+                isPlaying = false;
+                audioPlayer.pause();
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+                songArtEl.classList.remove('is-visible'); // Fade out song art
+                mainPlayerDiv.classList.remove('is-playing-glow'); // Remove glow
+                
+                // If notes are showing (and not 'about'), switch to album notes
+                if (flipper.classList.contains('is-flipped') && currentNote !== 'about') {
+                    currentNote = 'album';
+                    updateNoteContent();
+                }
+
+                updateMediaSession(null);
+            }
+
+            function prevSong() {
+                currentSongIndex--;
+                if (currentSongIndex < 0) currentSongIndex = songs.length - 1;
+                loadSong(songs[currentSongIndex]);
+                if (isPlaying) playSong();
+            }
+
+            function nextSong() {
+                currentSongIndex++;
+                if (currentSongIndex > songs.length - 1) currentSongIndex = 0;
+                loadSong(songs[currentSongIndex]);
+                if (isPlaying) playSong();
+            }
+
+            function updateProgress(e) {
+                const { duration, currentTime } = e.srcElement;
+                if (duration) {
+                    const progressPercent = (currentTime / duration) * 100;
+                    progressBar.value = progressPercent;
+                    durationTimeEl.textContent = formatTime(duration);
+                    currentTimeEl.textContent = formatTime(currentTime);
+                    updatePositionState(); // Update truck progress bar
+                }
+            }
+
+            function formatTime(seconds) {
+                if (isNaN(seconds)) return "0:00";
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+
+            function setProgress() {
+                const duration = audioPlayer.duration;
+                if (duration) {
+                     audioPlayer.currentTime = (progressBar.value / 100) * duration;
+                     updatePositionState(); // Update truck progress bar
+                }
+            }
+            
+            function updateActivePlaylistItem() {
+                const items = document.querySelectorAll('.playlist-item');
+                items.forEach((item, index) => {
+                    if (index === currentSongIndex) {
+                        item.classList.add('active');
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            function createPlaylist() {
+                songs.forEach((song, index) => {
+                    const item = document.createElement('div');
+                    item.classList.add('playlist-item', 'p-3', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors', 'duration-200', 'flex', 'items-center', 'space-x-3');
+                    item.innerHTML = `
+                        <img src="${song.image_src}" alt="Art for ${song.title}" class="w-12 h-12 rounded object-cover flex-shrink-0">
+                        <div class="min-w-0">
+                            <p class="font-album-title tracking-wider truncate text-base">${song.title}</p>
+                            <p class="text-sm text-gray-400 truncate">${artistName}</p>
+                        </div>
+                    `;
+                    item.addEventListener('click', () => {
+                        currentSongIndex = index;
+                        loadSong(song);
+                        playSong();
+                    });
+                    playlistEl.appendChild(item);
+                });
+            }
+
+            function createVideoPlaylist() {
+                videos.forEach((video, index) => {
+                    const item = document.createElement('div');
+                    item.classList.add('playlist-item', 'p-3', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors', 'duration-200', 'flex', 'items-center', 'space-x-3');
+                    item.innerHTML = `
+                        <img src="${video.image_src}" alt="Art for ${video.title}" class="w-12 h-12 rounded object-cover flex-shrink-0">
+                        <div class="min-w-0">
+                            <p class="font-album-title tracking-wider truncate text-base">${video.title}</p>
+                            <p class="text-sm text-gray-400 truncate">Music Video</p>
+                        </div>
+                    `;
+                    item.addEventListener('click', () => {
+                        showVideoPanel(true, video.src);
+                    });
+                    videoPlaylistEl.appendChild(item);
+                });
+            }
+
+            // --- 5. EVENT LISTENERS ---
+            
+            // --- Splash Screen Logic ---
+            enterBtn.addEventListener('click', startVideoTransition);
+            skipIntroBtn.addEventListener('click', skipIntro);
+
+            // When video finishes, play the intro audio
+            splashVideo.addEventListener('ended', () => {
+                if(hasUserInteracted) {
+                    introAudio.play().catch(e => {
+                        console.warn("Intro audio failed to play:", e);
+                        transitionToPlayer(); // Failsafe
+                    });
+                }
+            });
+            
+            // When intro audio finishes, fade to player
+            introAudio.addEventListener('ended', () => {
+                transitionToPlayer();
+            });
+            
+            // --- Player Logic ---
+            playPauseBtn.addEventListener('click', () => {
+                if (isPlaying) pauseSong();
+                else playSong();
+            });
+            prevBtn.addEventListener('click', prevSong);
+            nextBtn.addEventListener('click', nextSong);
+            audioPlayer.addEventListener('timeupdate', updateProgress);
+            audioPlayer.addEventListener('ended', nextSong);
+            progressBar.addEventListener('input', setProgress);
+            
+            linerNotesBtn.addEventListener('click', () => {
+                // If video is playing, stop it and show notes.
+                if (!videoPanel.classList.contains('hidden')) {
+                    showVideoPanel(false);
+                }
+                
+                // If 'About' note is showing, switch to song/album note (stays on back)
+                if (currentNote === 'about') {
+                    currentNote = isPlaying ? currentSongIndex : 'album';
+                    updateNoteContent();
+                    flipper.classList.add('is-flipped'); // Make sure it STAYS flipped
+                } 
+                // Otherwise, just toggle
+                else {
+                    // If we are about to flip TO the back, set the correct note first
+                    if (!flipper.classList.contains('is-flipped')) {
+                         currentNote = isPlaying ? currentSongIndex : 'album';
+                         updateNoteContent();
+                    }
+                    flipper.classList.toggle('is-flipped');
+                }
+            });
+            
+            aboutBtn.addEventListener('click', () => {
+                // If video is playing, stop it and show notes.
+                if (!videoPanel.classList.contains('hidden')) {
+                    showVideoPanel(false);
+                }
+
+                currentNote = 'about';
+                updateNoteContent();
+                flipper.classList.add('is-flipped'); // Force flip to back
+            });
+            
+            // --- Tab Logic ---
+            function showPlaylist(type) {
+                if (type === 'audio') {
+                    playlistEl.classList.remove('hidden');
+                    videoPlaylistEl.classList.add('hidden');
+                    audioTab.className = "flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-gray-700/50 border-red-500 text-white";
+                    videoTab.className = "flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-transparent border-gray-700 text-gray-500 hover:bg-gray-800/50";
+                } else {
+                    playlistEl.classList.add('hidden');
+                    videoPlaylistEl.classList.remove('hidden');
+                    videoTab.className = "flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-gray-700/50 border-red-500 text-white";
+                    audioTab.className = "flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-transparent border-gray-700 text-gray-500 hover:bg-gray-800/50";
+                }
+            }
+
+            audioTab.addEventListener('click', () => showPlaylist('audio'));
+            videoTab.addEventListener('click', () => showPlaylist('video'));
+            
+            // --- Media Session Action Handlers (for truck controls) ---
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.setActionHandler('play', playSong);
+                navigator.mediaSession.setActionHandler('pause', pauseSong);
+                navigator.mediaSession.setActionHandler('previoustrack', prevSong);
+                navigator.mediaSession.setActionHandler('nexttrack', nextSong);
+                navigator.mediaSession.setActionHandler('seekto', (details) => {
+                    audioPlayer.currentTime = details.seekTime;
+                    updatePositionState();
+                });
+            }
+
+            // --- 6. INITIALIZE PLAYER ---
+            createPlaylist();
+            createVideoPlaylist();
+            loadSong(songs[currentSongIndex]);
+            currentNote = 'album'; // Start with album note
+            updateNoteContent(); // Set note content
+            flipper.classList.remove('is-flipped'); // But show front cover
+            
+            
             // --- 7. PWA Service Worker Registration ---
             // Check if we're in "app" mode
             const isPwa = window.matchMedia('(display-mode: standalone)').matches;
-// ... existing code ... -->
-                // Just show the "Click to Begin" button
-                showBeginButton();
+
+            // --- ALWAYS SHOW BEGIN BUTTON ---
+            // This ensures the app is usable even if SW registration hangs or fails.
+            showBeginButton();
+
+            if (isPwa && 'serviceWorker' in navigator) {
+                // --- IT'S THE APP ---
+                // We've already shown the button, so we just register in the background.
+                
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful:', registration);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                        // Button is already visible, so just log the error.
+                    });
+            } else {
+                // --- IT'S THE PC (or a normal browser tab) ---
+                console.log('Not in PWA mode, skipping PWA features.');
+                // Button is already visible.
             }
         });
     </script>
