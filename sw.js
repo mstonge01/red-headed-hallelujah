@@ -1,55 +1,52 @@
-const CACHE_NAME = 'rhh-cache-v14'; // <-- IMPORTANT: Incremented cache version
+const CACHE_NAME = 'rhh-cache-v16'; // -- IMPORTANT: This is v16
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
 const APP_SHELL_FILES = [
     './', // This caches the index.html
     'index.html',
-    'manifest.json?v=3', // <-- Matches the ?v=3 in index.html
-    'https://cdn.tailwindcss.com/',
+    'manifest.json?v=3',
+    'https://cdn.tailwindcss.com', // <-- FIXED: Removed trailing slash
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
     'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
     'https://fonts.gstatic.com/s/staatliches/v12/HI_OiY8KO6hCsQSoAPmtMYebvpU.woff2', // Common font file
     'https://www.transparenttextures.com/patterns/stucco.png',
     'https://www.transparenttextures.com/patterns/concrete-wall.png',
-    'cover.png', // <-- Updated main cover art
+    'cover.png', // Main cover art
     'paint-video.mp4',
     'hallelujah-intro.mp3'
 ];
 
 // 2. Content Files: The songs and art to be cached in the background.
 const CONTENT_FILES = [
-    // New song list
     '01-intro.mp3',
-    '02-the-crimson-tide.mp3',
-    '03-real-women.mp3',
-    '04-red-headed-hallelujah.mp3',
-    '05-the_good_stuff.mp3',
-    '06-zero-degree-beach.mp3',
-    '07-caps.mp3',
-    '08-interrupted.mp3',
-    '09-cinnamon-serenade.mp3',
-    '10-golden-devotion.mp3',
-    '11-natural-magic.mp3',
-    '12-outro.mp3',
-    '13-red-headed-hallelujah-guitar.mp3',
-    '14-natural-magic-acoustic.mp3', // <-- Updated track
-    
-    // New art list
     '01-intro-art.png',
+    '02-the-crimson-tide.mp3',
     '02-the-crimson-tide-art.png',
+    '03-real-women.mp3',
     '03-real-women-art.png',
+    '04-red-headed-hallelujah.mp3',
     '04-red-headed-hallelujah-art.png',
+    '05-the_good_stuff.mp3',
     '05-the_good_stuff-art.png',
+    '06-zero-degree-beach.mp3',
     '06-zero-degree-beach-art.png',
+    '07-caps.mp3',
     '07-caps-art.png',
+    '08-interrupted.mp3',
     '08-interrupted-art.png',
+    '09-cinnamon-serenade.mp3',
     '09-cinnamon-serenade-art.png',
+    '10-golden-devotion.mp3',
     '10-golden-devotion-art.png',
+    '11-natural-magic.mp3',
     '11-natural-magic-art.png',
+    '12-outro.mp3',
     '12-outro-art.png',
-    '13-red-headed-hallelujah-guitar-art.png'
-    // 14-red-headed-hallelujah-piano-art.png removed, as new track uses 11's art
+    '13-red-headed-hallelujah-guitar.mp3',
+    '13-red-headed-hallelujah-guitar-art.png',
+    '14-natural-magic-acoustic.mp3',
+    // Note: 14 uses 11's art, so 11-natural-magic-art.png is already cached
 ];
 
 // Helper function to cache with CORS
@@ -71,10 +68,12 @@ self.addEventListener('install', event => {
             console.log('[SW] Caching App Shell...');
             // This is the download that happens when the service worker is first installed
             return Promise.all(
-                APP_SHELL_FILES.map(url => cache.add(cacheRequest(url)))
-            ).catch(err => {
-                console.error('[SW] App Shell caching failed', err);
-            });
+                APP_SHELL_FILES.map(url => {
+                    return cache.add(cacheRequest(url)).catch(err => {
+                        console.warn(`[SW] Failed to cache (App Shell): ${url}`, err);
+                    });
+                })
+            );
         }).then(() => {
             // Force this new service worker to activate immediately
             console.log('[SW] Install complete, skipping waiting.');
@@ -111,10 +110,12 @@ self.addEventListener('message', event => {
             caches.open(CACHE_NAME).then(cache => {
                 console.log('[SW] Caching songs and art in background...');
                 return Promise.all(
-                    CONTENT_FILES.map(url => cache.add(cacheRequest(url)))
-                ).catch(error => {
-                    console.error('[SW] Failed to cache content:', error);
-                });
+                    CONTENT_FILES.map(url => {
+                        return cache.add(cacheRequest(url)).catch(error => {
+                            console.warn(`[SW] Failed to cache (Content): ${url}`, error);
+                        });
+                    })
+                );
             })
         );
     }
@@ -124,16 +125,6 @@ self.addEventListener('message', event => {
 self.addEventListener('fetch', event => {
     // Only handle GET requests
     if (event.request.method !== 'GET') {
-        return;
-    }
-
-    // Network-first for manifest.json to ensure updates are checked.
-    if (event.request.url.includes('manifest.json')) {
-        event.respondWith(
-            fetch(event.request).catch(() => {
-                return caches.match(event.request);
-            })
-        );
         return;
     }
 
@@ -151,23 +142,16 @@ self.addEventListener('fetch', event => {
 
                 // Check if the response is valid
                 if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error') {
-                    // Don't cache bad responses
                     return networkResponse;
                 }
                 
                 // We only want to re-cache our own files or known third-party assets
-                const requestUrl = new URL(event.request.url);
-                const isCachable = 
-                    // Is it a local file from our content/shell lists?
-                    (requestUrl.origin === self.location.origin && 
-                        (APP_SHELL_FILES.some(url => event.request.url.endsWith(url)) ||
-                         CONTENT_FILES.some(url => event.request.url.endsWith(url)))) ||
-                    // Is it a known third-party asset?
-                    requestUrl.hostname.includes('gstatic.com') ||
-                    requestUrl.hostname.includes('tailwindcss.com') ||
-                    requestUrl.hostname.includes('transparenttextures.com');
-                
-                if (isCachable) {
+                // A bit more robust checking
+                const isAppShell = APP_SHELL_FILES.some(url => event.request.url.includes(url));
+                const isContent = CONTENT_FILES.some(url => event.request.url.includes(url));
+                const isFont = event.request.url.includes('gstatic.com');
+
+                if (isAppShell || isContent || isFont) {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then(cache => {
                         cache.put(event.request, responseToCache);
@@ -181,4 +165,3 @@ self.addEventListener('fetch', event => {
         })
     );
 });
-
