@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhh-cache-v16'; // -- IMPORTANT: This is v16
+const CACHE_NAME = 'rhh-cache-v17'; // -- IMPORTANT: This is v17
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
@@ -33,20 +33,22 @@ const CONTENT_FILES = [
     '06-zero-degree-beach-art.png',
     '07-caps.mp3',
     '07-caps-art.png',
-    '08-interrupted.mp3',
-    '08-interrupted-art.png',
-    '09-cinnamon-serenade.mp3',
-    '09-cinnamon-serenade-art.png',
-    '10-golden-devotion.mp3',
-    '10-golden-devotion-art.png',
-    '11-natural-magic.mp3',
-    '11-natural-magic-art.png',
-    '12-outro.mp3',
-    '12-outro-art.png',
-    '13-red-headed-hallelujah-guitar.mp3',
-    '13-red-headed-hallelujah-guitar-art.png',
-    '14-natural-magic-acoustic.mp3',
-    // Note: 14 uses 11's art, so 11-natural-magic-art.png is already cached
+    '08-the-cajun-passion.mp3',
+    '08-the-cajun-passion-art.png',
+    '09-interrupted.mp3',
+    '09-interrupted-art.png',
+    '10-cinnamon-serenade.mp3',
+    '10-cinnamon-serenade-art.png',
+    '11-golden-devotion.mp3',
+    '11-golden-devotion-art.png',
+    '12-natural-magic.mp3',
+    '12-natural-magic-art.png',
+    '13-outro.mp3',
+    '13-outro-art.png',
+    '14-red-headed-hallelujah-guitar.mp3',
+    // Note: 14 uses 4's art, so 04-red-headed-hallelujah-art.png is already cached
+    '15-natural-magic-acoustic.mp3',
+    // Note: 15 uses 12's art, so 12-natural-magic-art.png is already cached
 ];
 
 // Helper function to cache with CORS
