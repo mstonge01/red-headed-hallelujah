@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhh-cache-v17'; // -- IMPORTANT: This is v17
+const CACHE_NAME = 'rhh-cache-v18'; // -- IMPORTANT: This is v18
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
@@ -6,7 +6,7 @@ const APP_SHELL_FILES = [
     './', // This caches the index.html
     'index.html',
     'manifest.json?v=3',
-    'https://cdn.tailwindcss.com', // <-- FIXED: Removed trailing slash
+    'https://cdn.tailwindcss.com',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
     'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2', // Common font file
     'https://fonts.gstatic.com/s/staatliches/v12/HI_OiY8KO6hCsQSoAPmtMYebvpU.woff2', // Common font file
@@ -14,10 +14,11 @@ const APP_SHELL_FILES = [
     'https://www.transparenttextures.com/patterns/concrete-wall.png',
     'cover.png', // Main cover art
     'paint-video.mp4',
-    'hallelujah-intro.mp3'
+    'hallelujah-intro.mp3',
 ];
 
 // 2. Content Files: The songs and art to be cached in the background.
+// This list is now updated to match your new tracklist.
 const CONTENT_FILES = [
     '01-intro.mp3',
     '01-intro-art.png',
@@ -33,22 +34,24 @@ const CONTENT_FILES = [
     '06-zero-degree-beach-art.png',
     '07-caps.mp3',
     '07-caps-art.png',
-    '08-the-cajun-passion.mp3',
-    '08-the-cajun-passion-art.png',
+    '08-red-paddle-queen.mp3',
+    '08-red-paddle-queen.png',
     '09-interrupted.mp3',
     '09-interrupted-art.png',
     '10-cinnamon-serenade.mp3',
     '10-cinnamon-serenade-art.png',
-    '11-golden-devotion.mp3',
-    '11-golden-devotion-art.png',
-    '12-natural-magic.mp3',
-    '12-natural-magic-art.png',
-    '13-outro.mp3',
-    '13-outro-art.png',
-    '14-red-headed-hallelujah-guitar.mp3',
-    // Note: 14 uses 4's art, so 04-red-headed-hallelujah-art.png is already cached
-    '15-natural-magic-acoustic.mp3',
-    // Note: 15 uses 12's art, so 12-natural-magic-art.png is already cached
+    '11-basement-stereo-glow.mp3',
+    '11-basement-stereo-glow.png',
+    '12-golden-devotion.mp3',
+    '12-golden-devotion-art.png',
+    '13-natural-magic.mp3',
+    '13-natural-magic-art.png',
+    '14-outro.mp3',
+    '14-outro-art.png',
+    '15-red-headed-hallelujah-guitar.mp3',
+    // Note: 15 uses 4's art, so 04-red-headed-hallelujah-art.png is already listed
+    '16-natural-magic-acoustic.mp3',
+    // Note: 16 uses 13's art, so 13-natural-magic-art.png is already listed
 ];
 
 // Helper function to cache with CORS
