@@ -179,19 +179,13 @@
         }
 
         .lyric-line {
-            transition: all 0.3s ease-in-out;
-            opacity: 0.4;
+            /* All transition/opacity/transform styles removed */
             padding: 4px 8px;
             border-radius: 4px;
-            transform: scale(0.95);
+            opacity: 0.9; /* Kept them slightly soft but fully readable */
         }
 
-        .lyric-line.active-lyric {
-            opacity: 1;
-            color: #FBBF24; /* yellow-400 */
-            background: rgba(17, 24, 39, 0.4); /* gray-900 with 40% opacity */
-            transform: scale(1);
-        }
+        /* Removed .lyric-line.active-lyric {} styles */
 
     </style>
 </head>
@@ -962,7 +956,7 @@
             let isPlaying = false;
             let hasUserInteracted = false;
             let currentView = 'lyrics'; // 'lyrics' or 'about'
-            let currentLyricIndex = -1; // For tracking karaoke highlighting
+            /* Removed: let currentLyricIndex = -1; */
 
             // --- 4. FUNCTIONS ---
             
@@ -1073,7 +1067,7 @@
                             const lineEl = document.createElement('div');
                             lineEl.classList.add('lyric-line');
                             lineEl.textContent = line.text;
-                            lineEl.dataset.time = line.time; // Store time for highlighting
+                            /* Removed: lineEl.dataset.time = line.time; */
                             lyricsContainerEl.appendChild(lineEl);
                         });
                     } else {
@@ -1083,43 +1077,7 @@
                 }
             }
 
-            // NEW: Handles the karaoke-style highlighting
-            function updateLyricHighlighting() {
-                const currentTime = audioPlayer.currentTime;
-                const song = songs[currentSongIndex];
-                
-                if (!song.lyrics || song.lyrics.length === 0) {
-                    return; // No lyrics to highlight
-                }
-
-                let newLyricIndex = -1;
-
-                // Find the last lyric line whose time is before or at the current time
-                for (let i = song.lyrics.length - 1; i >= 0; i--) {
-                    if (currentTime >= song.lyrics[i].time) {
-                        newLyricIndex = i;
-                        break;
-                    }
-                }
-
-                if (newLyricIndex !== currentLyricIndex) {
-                    currentLyricIndex = newLyricIndex;
-                    const allLyricLines = document.querySelectorAll('#lyrics-container .lyric-line');
-                    
-                    allLyricLines.forEach((line, index) => {
-                        if (index === currentLyricIndex) {
-                            line.classList.add('active-lyric');
-                            // Scroll the active line into view
-                            line.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center' // 'center' or 'nearest'
-                            });
-                        } else {
-                            line.classList.remove('active-lyric');
-                        }
-                    });
-                }
-            }
+            /* Removed: function updateLyricHighlighting() { ... } */
 
 
             function loadSong(song) {
@@ -1136,7 +1094,7 @@
                 flipper.classList.remove('is-flipped');
                 currentView = 'lyrics'; // Default to lyrics view
                 updateLyricsContent(); // Pre-load the lyrics
-                currentLyricIndex = -1; // Reset lyric highlighting
+                /* Removed: currentLyricIndex = -1; */ 
                 
                 updateActivePlaylistItem();
             }
@@ -1195,7 +1153,7 @@
                     durationTimeEl.textContent = formatTime(duration);
                     currentTimeEl.textContent = formatTime(currentTime);
                     updatePositionState();
-                    updateLyricHighlighting(); // Karaoke sync
+                    /* Removed: updateLyricHighlighting(); */
                 }
             }
 
@@ -1211,7 +1169,7 @@
                 if (duration) {
                      audioPlayer.currentTime = (progressBar.value / 100) * duration;
                      updatePositionState();
-                     updateLyricHighlighting(); // Update karaoke on seek
+                     /* Removed: updateLyricHighlighting(); */
                 }
             }
             
@@ -1293,7 +1251,7 @@
             // Combined timeupdate listener
             audioPlayer.addEventListener('timeupdate', () => {
                 updateProgress({ srcElement: audioPlayer }); // Pass the event object manually
-                updateLyricHighlighting();
+                /* Removed: updateLyricHighlighting(); */
             });
 
             audioPlayer.addEventListener('ended', nextSong);
@@ -1357,7 +1315,7 @@
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
                     audioPlayer.currentTime = details.seekTime;
                     updatePositionState();
-                    updateLyricHighlighting(); // Update karaoke on seek
+                    /* Removed: updateLyricHighlighting(); */
                 });
             }
 
