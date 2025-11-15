@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhh-cache-v18'; // -- IMPORTANT: This is v18
+const CACHE_NAME = 'rhh-cache-v19'; // -- IMPORTANT: This is v19
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
@@ -17,8 +17,8 @@ const APP_SHELL_FILES = [
     'hallelujah-intro.mp3',
 ];
 
-// 2. Content Files: The songs and art to be cached in the background.
-// This list is now updated to match your new tracklist.
+// 2. Content Files: The songs, art, and LYRICS to be cached in the background.
+// This list is now updated to match your new tracklist AND include SRT files.
 const CONTENT_FILES = [
     '01-intro.mp3',
     '01-intro-art.png',
@@ -49,9 +49,24 @@ const CONTENT_FILES = [
     '14-outro.mp3',
     '14-outro-art.png',
     '15-red-headed-hallelujah-guitar.mp3',
-    // Note: 15 uses 4's art, so 04-red-headed-hallelujah-art.png is already listed
     '16-natural-magic-acoustic.mp3',
-    // Note: 16 uses 13's art, so 13-natural-magic-art.png is already listed
+
+    // --- NEWLY ADDED SRT FILES ---
+    'Basement Stereo Glow.srt',
+    'Caps.srt',
+    'Cinnamon Serenade.srt',
+    'Golden Devotion.srt',
+    'Interrupted.srt',
+    'Natural Magic (Acoustic).srt',
+    'Natural Magic.srt',
+    'Outro.srt',
+    'Real Women.srt',
+    'Red Paddle Queen.srt',
+    'Red-Headed Hallelujah (Guitar).srt',
+    'Red-Headed Hallelujah.srt',
+    'The Crimson Tide.srt',
+    'The Good Stuff.srt',
+    'Zero-Degree Beach.srt'
 ];
 
 // Helper function to cache with CORS
@@ -71,7 +86,6 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
             console.log('[SW] Caching App Shell...');
-            // This is the download that happens when the service worker is first installed
             return Promise.all(
                 APP_SHELL_FILES.map(url => {
                     return cache.add(cacheRequest(url)).catch(err => {
@@ -80,7 +94,6 @@ self.addEventListener('install', event => {
                 })
             );
         }).then(() => {
-            // Force this new service worker to activate immediately
             console.log('[SW] Install complete, skipping waiting.');
             return self.skipWaiting();
         })
@@ -102,18 +115,16 @@ self.addEventListener('activate', event => {
             );
         })
     );
-    // Tell the active service worker to take control of the page immediately
     return self.clients.claim();
 });
 
 // 3. Message Step: Listen for message from app to cache content
-// This is triggered when you click "Click to Begin"
 self.addEventListener('message', event => {
     if (event.data.action === 'cache-content') {
-        console.log('[SW] Received message to cache content (songs/art).');
+        console.log('[SW] Received message to cache content (songs/art/srt).');
         event.waitUntil(
             caches.open(CACHE_NAME).then(cache => {
-                console.log('[SW] Caching songs and art in background...');
+                console.log('[SW] Caching content in background...');
                 return Promise.all(
                     CONTENT_FILES.map(url => {
                         return cache.add(cacheRequest(url)).catch(error => {
@@ -128,7 +139,6 @@ self.addEventListener('message', event => {
 
 // 4. Fetch Step: Serve from cache, fallback to network
 self.addEventListener('fetch', event => {
-    // Only handle GET requests
     if (event.request.method !== 'GET') {
         return;
     }
@@ -137,24 +147,21 @@ self.addEventListener('fetch', event => {
         caches.match(event.request).then(response => {
             // 1. Respond from Cache (Cache-First)
             if (response) {
-                // console.log(`[SW] Serving from cache: ${event.request.url}`);
                 return response;
             }
 
             // 2. Not in Cache: Fetch from Network, Cache, and Respond
-            // console.log(`[SW] Fetching from network: ${event.request.url}`);
             return fetch(event.request.clone()).then(networkResponse => {
-
-                // Check if the response is valid
                 if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error') {
                     return networkResponse;
                 }
                 
-                // We only want to re-cache our own files or known third-party assets
-                // A bit more robust checking
-                const isAppShell = APP_SHELL_FILES.some(url => event.request.url.includes(url));
-                const isContent = CONTENT_FILES.some(url => event.request.url.includes(url));
-                const isFont = event.request.url.includes('gstatic.com');
+                const url = event.request.url;
+                
+                // Check if the file is one we want to cache
+                const isAppShell = APP_SHELL_FILES.some(path => url.includes(path));
+                const isContent = CONTENT_FILES.some(path => url.includes(path));
+                const isFont = url.includes('gstatic.com');
 
                 if (isAppShell || isContent || isFont) {
                     const responseToCache = networkResponse.clone();
@@ -165,7 +172,6 @@ self.addEventListener('fetch', event => {
                 return networkResponse;
             }).catch(error => {
                 console.error(`[SW] Fetch failed, and not in cache: ${event.request.url}`, error);
-                // We don't have a fallback page, so we just let the browser's default error show
             });
         })
     );
