@@ -169,7 +169,7 @@
             border-color: rgba(255, 255, 255, 0.7);
         }
 
-        /* --- Karaoke/Lyrics Styles --- */
+        /* --- Karaoke/Lyrics Styles (RE-IMPLEMENTED) --- */
         #lyrics-container {
             font-family: 'Staatliches', cursive; /* Use album font for lyrics */
             font-size: 1.5rem; /* 24px */
@@ -179,13 +179,19 @@
         }
 
         .lyric-line {
-            /* All transition/opacity/transform styles removed */
+            transition: all 0.3s ease-in-out;
+            opacity: 0.4;
             padding: 4px 8px;
             border-radius: 4px;
-            opacity: 0.9; /* Kept them slightly soft but fully readable */
+            transform: scale(0.95);
         }
 
-        /* Removed .lyric-line.active-lyric {} styles */
+        .lyric-line.active-lyric {
+            opacity: 1;
+            color: #FBBF24; /* yellow-400 */
+            background: rgba(17, 24, 39, 0.4); /* gray-900 with 40% opacity */
+            transform: scale(1);
+        }
 
     </style>
 </head>
@@ -336,11 +342,16 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- 1. DATABASES ---
+            
+            // --- UPDATED SONGS ARRAY ---
+            // 'lyrics' property is for STATIC lyrics (like Intro)
+            // 'srt' property points to the .srt file for DYNAMIC lyrics
             const songs = [
                 { 
                     title: "Intro", 
                     src: "01-intro.mp3",
                     image_src: "01-intro-art.png",
+                    // Static lyrics for "Intro" as requested
                     lyrics: [
                         { time: 26, text: "They say a light can't be contained..." },
                         { time: 33, text: "And a fire can't be tamed." },
@@ -352,536 +363,91 @@
                     title: "The Crimson Tide", 
                     src: "02-the-crimson-tide.mp3",
                     image_src: "02-the-crimson-tide-art.png",
-                    lyrics: [
-                        { time: 10, text: "The waves they roared the night was black" },
-                        { time: 12, text: "A lantern swung on the captain’s rack" },
-                        { time: 15, text: "But there she swam with hair of flame" },
-                        { time: 17, text: "And called me out by my own name" },
-                        { time: 20, text: "Oh the crimson tide it pulled me near" },
-                        { time: 22, text: "Her voice like gold her smile so clear" },
-                        { time: 25, text: "A red-haired mermaid stole my heart" },
-                        { time: 27, text: "And dragged me down to where dreams start" },
-                        { time: 35, text: "Her eyes were green like kelp at dawn" },
-                        { time: 37, text: "Her laughter rang like a siren’s song" },
-                        { time: 40, text: "I reached my hand she held it tight" },
-                        { time: 42, text: "And pulled me deep into the night" },
-                        { time: 45, text: "What’s a man to do at sea" },
-                        { time: 47, text: "When a mermaid sets his spirit free" },
-                        { time: 50, text: "Oh the crimson tide it pulled me near" },
-                        { time: 52, text: "Her voice like gold her smile so clear" },
-                        { time: 55, text: "A red-haired mermaid stole my heart" },
-                        { time: 57, text: "And dragged me down to where dreams start" },
-                        { time: 75, text: "The ocean’s depths they hold no fear" },
-                        { time: 77, text: "Not when her whispers fill my ear" },
-                        { time: 80, text: "No compass now no stars no map" },
-                        { time: 82, text: "Just her soft kiss and the waves that clap" }
-                    ]
+                    srt: "The Crimson Tide.srt"
                 },
                 { 
                     title: "Real Women", 
                     src: "03-real-women.mp3",
                     image_src: "03-real-women-art.png",
-                    lyrics: [
-                        { time: 10, text: "Another Tuesday morning, same old routine" },
-                        { time: 14, text: "The vanity mirror, a shallow scene" },
-                        { time: 18, text: "They're trading secrets, whispers in the hall" },
-                        { time: 22, text: "\"Did you see what she was wearing? It's just awful, y'all\"" },
-                        { time: 26, text: "Pink manicures and little white lies" },
-                        { time: 30, text: "They spend their whole damn paycheck on what money buys" },
-                        { time: 34, text: "Little bows and kitten heels, scared to break a sweat" },
-                        { time: 38, text: "Oh, they call it living, but they haven't learned to live yet" },
-                        { time: 42, text: "'Cause real women drive Jeeps, baby, roof top down" },
-                        { time: 46, text: "Tearing up the blacktop, all over this town" },
-                        { time: 50, text: "Got the sun in our faces, dust in our hair" },
-                        { time: 54, text: "Don't need a paved road 'cause we don't really care" },
-                        { time: 58, text: "Spinning the tires on a path of our own" },
-                        { time: 62, text: "Got the radio blasting, driving hard to the bone" },
-                        { time: 66, text: "Yeah, real women drive Jeeps, can you hear that sound?" },
-                        { time: 70, text: "The only gossip we're spreading is the bass that shakes the ground!" },
-                        { time: 82, text: "They’re filtering pictures 'til their skin is pristine" },
-                        { time: 86, text: "Afraid of a smudge, afraid of what's real and mean" },
-                        { time: 90, text: "Obsessed with the weight on that digital scale" },
-                        { time: 94, text: "Their biggest problem is a broken fingernail" },
-                        { time: 98, text: "They spend all their hours just trying to fit the mold" },
-                        { time: 102, text: "Another copy of a story that's already told" },
-                        { time: 106, text: "Hiding from the weather, shielding their complexion" },
-                        { time: 110, text: "Just a fragile little doll craving cheap affection" },
-                        { time: 114, text: "'Cause real women drive Jeeps, baby, roof top down" },
-                        { time: 118, text: "Tearing up the blacktop, all over this town" },
-                        { time: 122, text: "Got the sun in our faces, dust in our hair" },
-                        { time: 126, text: "Don't need a paved road 'cause we don't really care" },
-                        { time: 130, text: "Spinning the tires on a path of our own" },
-                        { time: 134, text: "Got the radio blasting, driving hard to the bone" }
-                    ]
+                    srt: "Real Women.srt"
                 },
                 { 
                     title: "Red-Headed Hallelujah", 
                     src: "04-red-headed-hallelujah.mp3",
                     image_src: "04-red-headed-hallelujah-art.png",
-                    lyrics: [
-                        { time: 15, text: "The boss man’s yelling" },
-                        { time: 16, text: "My desk’s a mess" },
-                        { time: 17, text: "Deadlines circling" },
-                        { time: 19, text: "I confess" },
-                        { time: 20, text: "The coffee’s cold" },
-                        { time: 21, text: "My patience thin" },
-                        { time: 23, text: "This nine-to-five feels like a sin" },
-                        { time: 26, text: "But then I see her" },
-                        { time: 27, text: "That red-headed light" },
-                        { time: 29, text: "Her smile burns through my darkest night" },
-                        { time: 31, text: "Oh hallelujah" },
-                        { time: 34, text: "I’m gonna be alright" },
-                        { time: 36, text: "Oh hallelujah" },
-                        { time: 39, text: "I’m gonna be alright" },
-                        { time: 54, text: "Two boys screaming" },
-                        { time: 56, text: "The house is wild" },
-                        { time: 58, text: "Spilled milk rivers" },
-                        { time: 59, text: "And tantrum trials" },
-                        { time: 60, text: "I’m just one man" },
-                        { time: 62, text: "I feel so small" },
-                        { time: 63, text: "How do I answer their every call" },
-                        { time: 65, text: "But then I see her" },
-                        { time: 67, text: "That red-headed light" },
-                        { time: 68, text: "Her smile burns through my darkest night" },
-                        { time: 71, text: "Oh hallelujah" },
-                        { time: 73, text: "I’m gonna be alright" },
-                        { time: 75, text: "Oh hallelujah" },
-                        { time: 78, text: "I’m gonna be alright" },
-                        { time: 95, text: "Breath is short" },
-                        { time: 96, text: "My chest is tight" },
-                        { time: 98, text: "The walls are closing" }
-                    ]
+                    srt: "Red-Headed Hallelujah.srt"
                 },
                 { 
                     title: "The Good Stuff", 
                     src: "05-the_good_stuff.mp3",
                     image_src: "05-the_good_stuff-art.png",
-                    lyrics: [
-                        { time: 13, text: "My best friend had an art class," },
-                        { time: 14, text: "I think it was 101" },
-                        { time: 16, text: "They talked about Picasso, and what to do for fun" },
-                        { time: 19, text: "He sat beside a girl he knew," },
-                        { time: 21, text: "they chatted 'bout the week" },
-                        { time: 22, text: "And somehow they got on the topic of the \"forbidden mystique.\"" },
-                        { time: 26, text: "She said she'd always wondered," },
-                        { time: 27, text: "but never took the chance" },
-                        { time: 29, text: "My buddy said," },
-                        { time: 30, text: "\"I know a guy, let's circumstance!”" },
-                        { time: 32, text: "He calls me up on my flip phone," },
-                        { time: 34, text: "says \"Man, I need a favor\"" },
-                        { time: 36, text: "\"My friend wants the experience," },
-                        { time: 37, text: "can you supply the flavor?\"" },
-                        { time: 39, text: "He said \"You know the good stuff, you've got the master plan\"" },
-                        { time: 42, text: "I said \"Yeah, I'm your guy, I'll do what I can.\"" },
-                        { time: 45, text: "Just another Tuesday, a simple, youthful quest" },
-                        { time: 48, text: "I had no idea it was a cosmic test." },
-                        { time: 51, text: "We met up on a Saturday," },
-                        { time: 53, text: "as I remember well" },
-                        { time: 54, text: "And that's the day I saw your face," },
-                        { time: 56, text: "and stumbled where I fell" },
-                        { time: 58, text: "You had that long red hair, and freckles, and a choker on your neck" },
-                        { time: 61, text: "My brain just went offline," },
-                        { time: 63, text: "I was a total wreck." },
-                        { time: 64, text: "The mission was a failure," },
-                        { time: 66, text: "a total, epic bust" },
-                        { time: 68, text: "But I didn't even notice," },
-                        { time: 70, text: "I'd found my sacred trust" },
-                        { time: 71, text: "Who needs the \"good stuff\" when I'm looking at you?" },
-                        { time: 74, text: "My whole world changed that afternoon." },
-                        { time: 119, text: "It's funny how a stupid plan," },
-                        { time: 121, text: "a half-baked high school plot" },
-                        { time: 123, text: "Could be the single greatest stroke of luck" },
-                        { time: 125, text: "I ever got." },
-                        { time: 126, text: "We were just kids trying to find a little buzz" },
-                        { time: 129, text: "But I found my \"forever\" right there," },
-                        { time: 130, text: "just because." },
-                        { time: 132, text: "I saw the future, I saw the white hairs and the wrinkled hands" },
-                        { time: 135, text: "I saw the family we would build on these suburban lands." },
-                        { time: 139, text: "We met up on a Saturday," },
-                        { time: 140, text: "as I remember well" },
-                        { time: 142, text: "And that's the day I saw your face," },
-                        { time: 144, text: "and stumbled where I fell" },
-                        { time: 146, text: "You had that long red hair, and freckles, and a choker on your neck" },
-                        { time: 149, text: "My brain just went offline," },
-                        { time: 151, text: "I was a total wreck." },
-                        { time: 152, text: "The mission was a failure," },
-                        { time: 154, text: "a total, epic bust" },
-                        { time: 156, text: "But I didn't even notice," },
-                        { time: 157, text: "I'd found my sacred trust" }
-                    ]
+                    srt: "The Good Stuff.srt"
                 },
                 { 
                     title: "Zero Degree Beach", 
                     src: "06-zero-degree-beach.mp3",
                     image_src: "06-zero-degree-beach-art.png",
-                    lyrics: [
-                        { time: 0, text: "I check the thermostat, read the outside air" },
-                        { time: 3, text: "It says \"Don't go out there without a proper pair\"" },
-                        { time: 6, text: "I'm zippin' up my jacket, puttin' gloves on my hand" },
-                        { time: 9, text: "Preparing for the freeze that grips this northern land" },
-                        { time: 13, text: "But I hear the click-clack coming down the hall" },
-                        { time: 16, text: "Like she's stepping off the sand right past the garden wall" },
-                        { time: 20, text: "I don't even ask her, I already know" },
-                        { time: 23, text: "She's got a secret summer in the middle of the snow" },
-                        { time: 26, text: "She says, \"I need my freedom, need to feel the floor\"" },
-                        { time: 30, text: "Then she grabs her heavy coat and heads right for the door..." },
-                        { time: 33, text: "She's walking on the Zero-Degree Beach!" },
-                        { time: 37, text: "The comfort of that plastic, nothing else can reach" },
-                        { time: 40, text: "She's walking on the Zero-Degree Beach!" },
-                        { time: 44, text: "A beautiful stubborn habit that the cold can't teach" },
-                        { time: 47, text: "No matter if it's autumn or a January sleet" },
-                        { time: 50, text: "She's got the only summer that exists beneath her feet" },
-                        { time: 54, text: "My quirky queen in her flip-flops, all year long!" },
-                        { time: 60, text: "We went to a wedding, the venue was so grand" },
-                        { time: 64, text: "White gloves and polished shoes across the marble land" },
-                        { time: 67, text: "She looked like a million bucks, every hair was in place" },
-                        { time: 70, text: "Except for that tell-tale sign of her personal space" },
-                        { time: 74, text: "When she kicked off the heels just an hour after the dance" },
-                        { time: 77, text: "And swapped in the cheap sandals with an affectionate glance" },
-                        { time: 81, text: "Said, \"These are the true me, this is how I thrive\"" },
-                        { time: 84, text: "The only person keeping California alive!" },
-                        { time: 88, text: "Other people stare, they give a little look" },
-                        { time: 91, text: "But they don't know the comfort that she's found inside that hook" },
-                        { time: 95, text: "They don't know the story, the dedication, the peace" },
-                        { time: 98, text: "She's got her priorities, and they're never gonna cease..." },
-                        { time: 101, text: "She's walking on the Zero-Degree Beach!" },
-                        { time: 105, text: "The comfort of that plastic, nothing else can reach" },
-                        { time: 108, text: "She's walking on the Zero-Degree Beach!" },
-                        { time: 112, text: "A beautiful stubborn habit that the cold can't teach" },
-                        { time: 115, text: "No matter if it's autumn or a January sleet" },
-                        { time: 118, text: "She's got the only summer that exists beneath her feet" },
-                        { time: 122, text: "My quirky queen in her flip-flops, all year long!" },
-                        { time: 129, text: "It's just a little thing..." }
-                    ]
+                    srt: "Zero-Degree Beach.srt"
                 },
                 { 
                     title: "Caps", 
                     src: "07-caps.mp3",
                     image_src: "07-caps-art.png",
-                    lyrics: [
-                        { time: 15, text: "Well, the world has wonders, seven they say" },
-                        { time: 17, text: "But they haven't seen your legs today" },
-                        { time: 19, text: "They go on for miles, like a highway line" },
-                        { time: 22, text: "So smooth and silky, Lord, they're fine" },
-                        { time: 24, text: "From your pretty little ankles to your upper thighs" },
-                        { time: 27, text: "They're the sweetest sight for these old eyes" },
-                        { time: 30, text: "Yeah, they're long and lovely, sleek and strong" },
-                        { time: 32, text: "I could stare at them all day long" },
-                        { time: 34, text: "But oh, your tiny knee caps" },
-                        { time: 37, text: "They're like little bottle caps" },
-                        { time: 39, text: "Just sittin' there so neat and small" },
-                        { time: 42, text: "They're the cutest part of all" },
-                        { time: 44, text: "Yeah, your tiny knee caps" },
-                        { time: 47, text: "Maybe they're my favorite maps" },
-                        { time: 49, text: "Leading me to paradise" },
-                        { time: 52, text: "Oh, those knees are mighty nice" },
-                        { time: 60, text: "When you wear those cut-offs, frayed at the end" },
-                        { time: 63, text: "That's when my poor heart just can't pretend" },
-                        { time: 65, text: "It's a masterpiece of biology" },
-                        { time: 68, text: "What those lovely legs just do to me" },
-                        { time: 70, text: "Some men like mountains, some like the sea" },
-                        { time: 73, text: "But your perfect stems are the view for me" },
-                        { time: 75, text: "So graceful when you walk, so fine when you stand" },
-                        { time: 78, text: "The best pair of legs in all the land" },
-                        { time: 80, text: "But oh, your tiny knee caps" },
-                        { time: 82, text: "They're like little bottle caps" },
-                        { time: 85, text: "Just sittin' there so neat and small" },
-                        { time: 87, text: "They're the cutest part of all" },
-                        { time: 90, text: "Yeah, your tiny knee caps" },
-                        { time: 92, text: "Maybe they're my favorite maps" },
-                        { time: 95, text: "Leading me to paradise" },
-                        { time: 97, text: "Oh, those knees are mighty nice" },
-                        { time: 105, text: "Now, people write poems about your eyes" },
-                        { time: 108, text: "And your lovely hair, to my surprise" },
-                        { time: 110, text: "They can have your smile, they can have your hands" },
-                        { time: 113, text: "But only I truly understand..." },
-                        { time: 116, text: "The real attraction..." },
-                        { time: 118, text: "The main event..." }
-                    ]
+                    srt: "Caps.srt"
                 },
                 { 
                     title: "Red Paddle Queen", 
                     src: "08-red-paddle-queen.mp3",
                     image_src: "08-red-paddle-queen.png",
-                    lyrics: [
-                        { time: 14, text: "Yeah, sun's high, water clear, reflections on the glass" },
-                        { time: 16, text: "I'm chilling on the shore, letting summer days pass" },
-                        { time: 19, text: "Then the scene shifts, the vibe lifts, as you come into view" },
-                        { time: 22, text: "A vision on the water, everything brand new" },
-                        { time: 24, text: "This ain't no mud bog ride, no four-wheel-drive sound" },
-                        { time: 27, text: "Just a simple board beneath you, gliding without a sound" },
-                        { time: 29, text: "But the grace in your motion, the way you ride the breeze" },
-                        { time: 32, text: "Got me pausing my whole world, sinkin' to my knees (metaphorically)" },
-                        { time: 35, text: "The paved roads disappear, the streetlights outta sight" },
-                        { time: 38, text: "Just the shimmer of the lake, bathed in golden light" },
-                        { time: 40, text: "I've seen the glitz and glamour, heard the big-city beat" },
-                        { time: 43, text: "But the silent elegance you hold, man, that just can't be beat." },
-                        { time: 46, text: "Oh, the Red Paddle Queen, setting fire to the tide" },
-                        { time: 49, text: "That scarlet wave of hair, where the sunlight loves to hide" },
-                        { time: 52, text: "You glide where the currents flow, you own the liquid street" },
-                        { time: 54, text: "With every stroke, every move, you can't be beat (Nope)" },
-                        { time: 57, text: "On the board, in the breeze, you're the only sight I need" },
-                        { time: 60, text: "The Red Paddle Queen, a natural beauty, indeed." },
-                        { time: 63, text: "From this distance, I can tell, you're commanding your space" },
-                        { time: 66, text: "Got that country focus, that clear look on your face" },
-                        { time: 78, text: "I admire the balance, the control, the silent power" },
-                        { time: 80, text: "Like you're walking on the surface, in your own specific hour" },
-                        { time: 83, text: "The paved roads disappear, the streetlights outta sight" },
-                        { time: 86, text: "Just the shimmer of the lake, bathed in golden light" },
-                        { time: 89, text: "I've seen the glitz and glamour, heard the big-city beat" },
-                        { time: 92, text: "But the silent elegance you hold, man, that just can't be beat." },
-                        { time: 95, text: "Oh, the Red Paddle Queen, setting fire to the tide" },
-                        { time: 98, text: "That scarlet wave of hair, where the sunlight loves to hide" },
-                        { time: 100, text: "You glide where the currents flow, you own the liquid street" },
-                        { time: 103, text: "With every stroke, every move, you can't be beat (Nope)" },
-                        { time: 106, text: "On the board, in the breeze, you're the only sight I need" },
-                        { time: 109, text: "The Red Paddle Queen, a natural beauty, indeed." },
-                        { time: 115, text: "Yeah, the perfect hue, on a canvas of blue" },
-                        { time: 118, text: "You make the simple act look like something brand new" },
-                        { time: 121, text: "It’s more than just a paddle, more than just the ride" },
-                        { time: 123, text: "It's the confidence you carry, with nothing left to hide" },
-                        { time: 131, text: "Oh, the Red Paddle Queen, setting fire to the tide" },
-                        { time: 134, text: "That scarlet wave of hair, where the sunlight loves to hide" },
-                        { time: 137, text: "You glide where the currents flow, you own the liquid street" },
-                        { time: 139, text: "With every stroke, every move, you can't be beat (Nope)" }
-                    ]
+                    srt: "Red Paddle Queen.srt"
                 },
                 { 
                     title: "Interrupted", 
                     src: "09-interrupted.mp3",
                     image_src: "09-interrupted-art.png",
-                    lyrics: [
-                        { time: 12, text: "Well, the kids are down, the house is finally still" },
-                        { time: 15, text: "I look at my sweet woman, man, she gives me that thrill" },
-                        { time: 18, text: "She's got that look in her eye, I know what it's about" },
-                        { time: 21, text: "I go and flip the deadbolt, try to shut the whole world out" },
-                        { time: 24, text: "I take one step, she's pullin' me in close..." },
-                        { time: 27, text: "The dog starts barkin' like he's seen a ghost!" },
-                        { time: 33, text: "He's gotta go outside, man, what's a guy to do?" },
-                        { time: 37, text: "By the time I'm back, she's checkin' work on her phone. Busted." },
-                        { time: 39, text: "Interrupted! (Yeah!)" },
-                        { time: 42, text: "Every single time!" },
-                        { time: 45, text: "Gettin' interrupted! (Oh!)" },
-                        { time: 48, text: "It oughta be a crime!" },
-                        { time: 51, text: "Just tryin' to get some quiet time, just tryin' to connect" },
-                        { time: 54, text: "But this whole damn house is showin' zero respect!" },
-                        { time: 57, text: "Alright, take two, we're back behind the door" },
-                        { time: 60, text: "She's got that fiery spark, leaves me wantin' more" },
-                        { time: 63, text: "I put a record on, somethin' slow and deep" },
-                        { time: 66, text: "Lean in for the kiss, she's the only one I want to keep..." },
-                        { time: 69, text: "(\"Daaaaad?! I'm thirsty!\") A little voice! (Are you kiddin' me?!)" },
-                        { time: 73, text: "He had a nightmare! (Of course he did!)" },
-                        { time: 75, text: "He needs a band-aid! (For what?!)" },
-                        { time: 77, text: "Interrupted! (Come on!)" },
-                        { time: 83, text: "Every single time! Gettin' interrupted! (Woo!)" },
-                        { time: 89, text: "It oughta be a crime!" },
-                        { time: 92, text: "Just tryin' to get some quiet time, just tryin' to connect" },
-                        { time: 95, text: "But this whole damn house is showin' zero respect!" },
-                        { time: 98, text: "I tried the afternoon... (Mailman rang the bell!)" },
-                        { time: 101, text: "I tried the early morn'... (Alarm clock went to hell!)" },
-                        { time: 104, text: "Seems like the universe... (Is ringin' a warning bell!)" },
-                        { time: 107, text: "That we're just too old for this... aw, what the hell." },
-                        { time: 113, text: "I've had enough! I'm takin' back the night!" },
-                        { time: 116, text: "I'm callin' up the sitter, gonna do this right!" },
-                        { time: 125, text: "Got my good shirt on, she's lookin' like a queen" },
-                        { time: 128, text: "That red-haired woman from my high school dreams" },
-                        { time: 131, text: "We're out on the town, yeah, we're on a proper date" },
-                        { time: 134, text: "We ain't comin' home until it's way too late" },
-                        { time: 137, text: "The kids are at the sitter's, packed up for the night" },
-                        { time: 140, text: "For the first time in a year, man, we're doin' this right" },
-                        { time: 143, text: "We get back home, the house is dark and ours" },
-                        { time: 146, text: "No little footsteps, no monsters, no alarms!" },
-                        { time: 150, text: "NOT Interrupted! (No!)" },
-                        { time: 154, text: "The house is finally clear!" },
-                        { time: 157, text: "NOT Interrupted! (Yeah!)" }
-                    ]
+                    srt: "Interrupted.srt"
                 },
                 { 
                     title: "Cinnamon Serenade", 
                     src: "10-cinnamon-serenade.mp3",
                     image_src: "10-cinnamon-serenade-art.png",
-                    lyrics: [
-                        { time: 15, text: "The cabin logs were settled in, the family fast asleep" },
-                        { time: 20, text: "The fireplace was embers, a promise I couldn't keep" },
-                        { time: 24, text: "I said \"Goodnight, my darling,\" and hit the flannel sheets" },
-                        { time: 29, text: "You stayed out by the fire glow, sippin' somethin' sweet" },
-                        { time: 33, text: "A bottle full of cinnamon, they call it Fireball" },
-                        { time: 38, text: "You said \"It's just so easy,\" leanin' on the wall" },
-                        { time: 43, text: "You didn't see the danger, the sugary disguise" },
-                        { time: 47, text: "Just the dancing flames reflected in your eyes" },
-                        { time: 52, text: "Oh, but 3 AM came callin', with a crash and then a moan" },
-                        { time: 56, text: "You woke me from my slumber, clutching the plastic throne" },
-                        { time: 61, text: "And I was your humble servant, in the pale moonlight" },
-                        { time: 65, text: "Holding back your lovely hair with all my might" },
-                        { time: 70, text: "It wasn't wine and roses, it wasn't graceful, no" },
-                        { time: 75, text: "But you're my cinnamon queen, even watching the bourbon flow" },
-                        { time: 91, text: "That devil in a bottle, it whispers candy lies" },
-                        { time: 96, text: "A liquid Trojan horse, a burnin', sweet surprise" },
-                        { time: 100, text: "Shot after shot went down, smooth as a velvet glove" },
-                        { time: 105, text: "You lost all track of reason, lost all track of love (for sobriety)" },
-                        { time: 109, text: "The silence of the forest, shattered by the sound" },
-                        { time: 117, text: "Of all that cinnamon whisky, fightin' the wrong way 'round" },
-                        { time: 124, text: "Oh, but 3 AM came callin', with a crash and then a moan" },
-                        { time: 128, text: "You woke me from my slumber, clutching the plastic throne" },
-                        { time: 132, text: "And I was your humble servant, in the pale moonlight" },
-                        { time: 137, text: "Holding back your lovely hair with all my might" },
-                        { time: 142, text: "It wasn't wine and roses, it wasn't graceful, no" },
-                        { time: 146, text: "But you're my cinnamon queen, even watching the bourbon flow" },
-                        { time: 152, text: "Now, some guys get a siren, a goddess on a pedestal" },
-                        { time: 156, text: "Mine was kneeling over, looking rather dreadful" },
-                        { time: 160, text: "But as I held your forehead, and whispered \"it's alright\"" },
-                        { time: 165, text: "My love was shining clearer than the stars on that cold night" },
-                        { time: 170, text: "It’s not the perfect moments, it’s the ones we survive" },
-                        { time: 174, text: "That prove you’re still the only one who makes me feel alive" },
-                        { time: 193, text: "Oh, yeah, 3 AM came callin', with a crash and then a moan" },
-                        { time: 197, text: "You woke me from my slumber, clutching the plastic throne" },
-                        { time: 202, text: "And I was your humble servant, in the pale moonlight" }
-                    ]
+                    srt: "Cinnamon Serenade.srt"
                 },
                 { 
                     title: "Basement Stereo Glow", 
                     src: "11-basement-stereo-glow.mp3",
                     image_src: "11-basement-stereo-glow.png",
-                    lyrics: [
-                        { time: 2, text: "The carpet's thin, the paneling is brown" },
-                        { time: 5, text: "She’s got her stereo cranked up loud" },
-                        { time: 7, text: "Her parents are out, they're at 'The Crown'" },
-                        { time: 10, text: "So we can own this entire town" },
-                        { time: 12, text: "She's got her bare feet sliding on the floor" },
-                        { time: 15, text: "Right past the posters taped to her door" },
-                        { time: 17, text: "The little green light on the CD player" },
-                        { time: 20, text: "Is the only thing I'm focused on besides her." },
-                        { time: 23, text: "She bounces on her heels, a little bit shy" },
-                        { time: 26, text: "Then the fuzz guitar kicks in, and she closes her eyes" },
-                        { time: 29, text: "One, two, three, four!" },
-                        { time: 32, text: "She’s dancing to Sloan in the basement" },
-                        { time: 35, text: "She knows all the words, every new arrangement" },
-                        { time: 37, text: "She’s got her arms up, singing to the ceiling" },
-                        { time: 40, text: "I’m just sitting on the couch, loving this feeling" },
-                        { time: 43, text: "And she’s alright!" },
-                        { time: 45, text: "(Ooo-ooo, she’s alright!)" },
-                        { time: 48, text: "She’s alright!" },
-                        { time: 50, text: "(Ooo-ooo!)" },
-                        { time: 53, text: "She spins around and her red hair flies" },
-                        { time: 56, text: "A perfect, blurry mess before my eyes" },
-                        { time: 58, text: "She's got momentum and no decision" },
-                        { time: 64, text: "She's closing her eyes, she's mouthing the parts" },
-                        { time: 66, text: "Of all the songs she knows by heart" },
-                        { time: 69, text: "She's jumping on the beat, then stops on a dime" },
-                        { time: 72, text: "She's in her own world, and she's outside of time." },
-                        { time: 75, text: "And I know, I know she's not afraid to" },
-                        { time: 78, text: "Be who she wants, and break all the rules" },
-                        { time: 81, text: "Here it comes now..." },
-                        { time: 83, text: "She’s dancing to Weezer in the basement" },
-                        { time: 86, text: "She’s playing air guitar for the replacement" },
-                        { time: 89, text: "Of all the static on the radio" },
-                        { time: 92, text: "I never, ever wanna go" },
-                        { time: 94, text: "And she’s alright!" },
-                        { time: 96, text: "(Ooo-ooo, she’s alright!)" },
-                        { time: 99, text: "She’s alright!" },
-                        { time: 102, text: "(Ooo-ooo!)" },
-                        { time: 107, text: "The song breaks down, the music gets low" },
-                        { time: 110, text: "She stops and looks at me, and I just know" },
-                        { time: 112, text: "This is the only place I wanna be" },
-                        { time: 115, text: "(The feedback's building, one, two, three...)" },
-                        { time: 118, text: "She smiles a little, and the drums kick in" }
-                    ]
+                    srt: "Basement Stereo Glow.srt"
                 },
                 { 
                     title: "Golden Devotion", 
                     src: "12-golden-devotion.mp3",
                     image_src: "12-golden-devotion-art.png",
-                    lyrics: [
-                        { time: 15, text: "Every ray" },
-                        { time: 16, text: "A soft embrace" },
-                        { time: 18, text: "Burning bright" },
-                        { time: 20, text: "No hiding place" },
-                        { time: 22, text: "Oh she worships the sun" },
-                        { time: 28, text: "The summer kisses her fragile frame" },
-                        { time: 31, text: "Each freckle whispers the sun's name" },
-                        { time: 35, text: "The heat a lover's breath on her cheek" },
-                        { time: 38, text: "In its light she’s bold not weak" },
-                        { time: 42, text: "The cold can't hold her down" },
-                        { time: 46, text: "She’s glowing like a crown" },
-                        { time: 50, text: "Oh she worships the sun" },
-                        { time: 54, text: "Feel the heat she’s undone" },
-                        { time: 57, text: "Every ray" },
-                        { time: 59, text: "A soft embrace" },
-                        { time: 61, text: "Burning bright" },
-                        { time: 63, text: "No hiding place" },
-                        { time: 65, text: "Oh she worships the sun" }
-                    ]
+                    srt: "Golden Devotion.srt"
                 },
                 { 
                     title: "Natural Magic", 
                     src: "13-natural-magic.mp3",
                     image_src: "13-natural-magic-art.png",
-                    lyrics: [
-                        { time: 0, text: "Coffee's cold on the counter" },
-                        { time: 2, text: "Fifty sets of boots by the door" },
-                        { time: 5, text: "The TV's loud, camping stuff being scattered" },
-                        { time: 8, text: "Like a Technicolor storm" },
-                        { time: 11, text: "I'm just trying to find my keys" },
-                        { time: 14, text: "You're in the center of the breeze" },
-                        { time: 17, text: "Handling it all with such an ease" },
-                        { time: 20, text: "And I'm just caught here in the view" },
-                        { time: 23, text: "Watching all the things you do" },
-                        { time: 25, text: "You're the calm inside the hurricane" },
-                        { time: 28, text: "A whispered word that stops the rain" },
-                        { time: 31, text: "It's an instinct I can't understand" },
-                        { time: 34, text: "How you heal the world just with your hand" },
-                        { time: 37, text: "It's a quiet strength, a guiding light" },
-                        { time: 40, text: "Oh, the way you mother, making everything right." },
-                        { time: 46, text: "A nose bleed and a sudden cry" },
-                        { time: 48, text: "You're there before the tear can dry" },
-                        { time: 51, text: "A quiet word, a healing kiss" },
-                        { time: 54, text: "There's no problem you can't dismiss" },
-                        { time: 57, text: "You're a judge, a nurse, a storyteller" },
-                        { time: 60, text: "A fortress and a soft, warm pillow" },
-                        { time: 63, text: "You see the world right through their eyes" },
-                        { time: 66, text: "Without a hint of compromise" },
-                        { time: 69, text: "And I'm just caught here in the view" },
-                        { time: 71, text: "Watching all the things you do" },
-                        { time: 74, text: "You're the calm inside the hurricane" },
-                        { time: 77, text: "A whispered word that stops the rain" },
-                        { time: 80, text: "It's an instinct I can't understand" },
-                        { time: 83, text: "How you heal the world just with your hand" },
-                        { time: 86, text: "It's a quiet strength, a guiding light" },
-                        { time: 89, text: "Oh, the way you mother, making everything right." },
-                        { time: 94, text: "I try my best, I play my part" },
-                        { time: 97, text: "But you're the rhythm, you're the heart" },
-                        { time: 100, text: "You don't just build a house, you build a home" },
-                        { time: 103, text: "You plant the seeds and watch them grow" },
-                        { time: 106, text: "With a patience I will never know" },
-                        { time: 112, text: "You're the calmest place I've ever known" },
-                        { time: 117, text: "And I'm just caught here in the view" },
-                        { time: 120, text: "Watching all the things you do" }
-                    ]
+                    srt: "Natural Magic.srt"
                 },
                 { 
                     title: "Outro", 
                     src: "14-outro.mp3",
                     image_src: "14-outro-art.png",
-                    lyrics: [
-                        { time: 27, text: "From the crimson tide to the cinnamon nights..." },
-                        { time: 33, text: "The quirky and the true." },
-                        { time: 39, text: "From the interrupted moments..." },
-                        { time: 43, text: "To the magic you just do." },
-                        { time: 51, text: "It’s the story of my life..." },
-                        { time: 60, text: "My red-headed Hallelujah." }
-                    ]
+                    srt: "Outro.srt"
                 },
                 { 
                     title: "[Bonus Track] Red-Headed Hallelujah (Guitar Cover)", 
                     src: "15-red-headed-hallelujah-guitar.mp3",
                     image_src: "04-red-headed-hallelujah-art.png", // Uses Track 4 art
-                    lyrics: []
+                    srt: "Red-Headed Hallelujah (Guitar).srt"
                 },
                 { 
                     title: "[Bonus Track] Natural Magic (Acoustic)", 
                     src: "16-natural-magic-acoustic.mp3",
-                    image_src: "13-natural-magic-art.png", // Uses Track 13 art (Natural Magic)
-                    lyrics: []
+                    image_src: "13-natural-magic-art.png", // Uses Track 13 art
+                    srt: "Natural Magic (Acoustic).srt"
                 }
             ];
 
@@ -899,19 +465,19 @@
                 {
                     title: "Natural Magic",
                     src: "https://www.youtube.com/embed/usGSmvYKI5c",
-                    image_src: "13-natural-magic-art.png" // Updated to match new track 13 art
+                    image_src: "13-natural-magic-art.png"
                 },
                 {
                     title: "Natural Magic (Acoustic)",
                     src: "https://www.youtube.com/embed/YGCpLq5Bd6E",
-                    image_src: "13-natural-magic-art.png" // Updated to match new track 13 art
+                    image_src: "13-natural-magic-art.png"
                 }
             ];
 
             const artistName = "A mstonge01 Project";
-            const albumTitle = "Lyrics"; // Changed from "Liner Notes"
-            const albumNote = ``; // Cleared as requested
-            const aboutNote = ``; // Cleared as requested
+            const albumTitle = "Lyrics";
+            const albumNote = ``; // Cleared
+            const aboutNote = ``; // Cleared
             const albumName = "Red-Headed Hallelujah";
 
             // --- 2. DOM ELEMENT REFERENCES ---
@@ -940,10 +506,10 @@
             const currentTimeEl = document.getElementById('current-time');
             const durationTimeEl = document.getElementById('duration-time');
             
-            const lyricsBtn = document.getElementById('lyrics-btn'); // Renamed from linerNotesBtn
+            const lyricsBtn = document.getElementById('lyrics-btn');
             const aboutBtn = document.getElementById('about-btn');
             const flipper = document.getElementById('flipper');
-            const lyricsContainerEl = document.getElementById('lyrics-container'); // Replaces noteBodyEl
+            const lyricsContainerEl = document.getElementById('lyrics-container');
             const songArtEl = document.getElementById('song-art');
             const mainPlayerDiv = document.querySelector('.player-texture');
 
@@ -956,7 +522,8 @@
             let isPlaying = false;
             let hasUserInteracted = false;
             let currentView = 'lyrics'; // 'lyrics' or 'about'
-            /* Removed: let currentLyricIndex = -1; */
+            let currentLyrics = []; // Holds the parsed SRT data [{start, end, text}] or static data [{time, text}]
+            let currentLyricIndex = -1; // For tracking karaoke highlighting
 
             // --- 4. FUNCTIONS ---
             
@@ -1053,31 +620,142 @@
                 }
             }
             
-            // NEW/UPDATED: Populates the lyrics panel
+            // --- NEW SRT PARSING FUNCTIONS ---
+            
+            /**
+             * Converts an SRT timecode (00:01:15,345) to seconds (75.345)
+             */
+            function srtTimeToSeconds(timecode) {
+                const parts = timecode.split(':');
+                const secondsParts = parts[2].split(',');
+                const hours = parseInt(parts[0], 10);
+                const minutes = parseInt(parts[1], 10);
+                const seconds = parseInt(secondsParts[0], 10);
+                const milliseconds = parseInt(secondsParts[1], 10);
+                return (hours * 3600) + (minutes * 60) + seconds + (milliseconds / 1000);
+            }
+
+            /**
+             * Parses raw SRT text into a JavaScript array of lyric objects
+             */
+            function parseSRT(srtText) {
+                const lines = [];
+                const blocks = srtText.trim().split('\n\n');
+                
+                for (const block of blocks) {
+                    const blockLines = block.split('\n');
+                    if (blockLines.length >= 3) {
+                        try {
+                            const timecode = blockLines[1].split(' --> ');
+                            const start = srtTimeToSeconds(timecode[0].trim());
+                            const end = srtTimeToSeconds(timecode[1].trim());
+                            const text = blockLines.slice(2).join(' ').trim();
+                            lines.push({ start, end, text });
+                        } catch (e) {
+                            console.warn("Skipping malformed SRT block:", block);
+                        }
+                    }
+                }
+                return lines;
+            }
+            
+            /**
+             * Fetches and parses an SRT file, then updates the lyrics panel
+             */
+            async function fetchAndParseSRT(srtFile) {
+                try {
+                    const response = await fetch(srtFile);
+                    if (!response.ok) {
+                        throw new Error(`SRT file not found: ${srtFile}`);
+                    }
+                    const srtText = await response.text();
+                    currentLyrics = parseSRT(srtText);
+                } catch (error) {
+                    console.error("Error loading lyrics:", error);
+                    currentLyrics = []; // Set to empty on error
+                }
+                updateLyricsContent(); // Update panel after fetch (or fail)
+            }
+
+
+            // --- UPDATED LYRIC FUNCTIONS ---
+
+            /**
+             * Populates the lyrics panel based on the current state
+             */
             function updateLyricsContent() {
                 lyricsContainerEl.innerHTML = ''; // Clear previous lyrics
                 
+                let lyricsToDisplay = [];
+                
                 if (currentView === 'about') {
-                    // We've cleared the aboutNote, but we can put placeholder text or the HTML
-                    lyricsContainerEl.innerHTML = aboutNote; // This is now an empty string
-                } else if (currentView === 'lyrics') {
-                    const song = songs[currentSongIndex];
-                    if (song.lyrics && song.lyrics.length > 0) {
-                        song.lyrics.forEach(line => {
-                            const lineEl = document.createElement('div');
-                            lineEl.classList.add('lyric-line');
-                            lineEl.textContent = line.text;
-                            /* Removed: lineEl.dataset.time = line.time; */
-                            lyricsContainerEl.appendChild(lineEl);
-                        });
-                    } else {
-                        // Show a message if no lyrics are available
-                        lyricsContainerEl.innerHTML = `<div class="lyric-line" style="opacity: 0.7;">No lyrics available for this track.</div>`;
-                    }
+                    lyricsContainerEl.innerHTML = aboutNote; // This is empty, but respects the view
+                    return;
+                } 
+                
+                // 'currentLyrics' is populated by loadSong
+                if (currentLyrics && currentLyrics.length > 0) {
+                    lyricsToDisplay = currentLyrics;
+                }
+
+                if (lyricsToDisplay.length > 0) {
+                    lyricsToDisplay.forEach(line => {
+                        const lineEl = document.createElement('div');
+                        lineEl.classList.add('lyric-line');
+                        lineEl.textContent = line.text;
+                        lyricsContainerEl.appendChild(lineEl);
+                    });
+                } else {
+                    // Show a message if no lyrics are available
+                    lyricsContainerEl.innerHTML = `<div class="lyric-line" style="opacity: 0.7;">No lyrics available for this track.</div>`;
                 }
             }
 
-            /* Removed: function updateLyricHighlighting() { ... } */
+            /**
+             * Handles the karaoke-style highlighting (RE-IMPLEMENTED)
+             */
+            function updateLyricHighlighting() {
+                // Check if currentLyrics is dynamic (has 'start') or static (has 'time')
+                if (!currentLyrics || currentLyrics.length === 0 || !currentLyrics[0].hasOwnProperty('start')) {
+                    // This is static ("Intro") or empty, so no highlighting.
+                    // Clear any existing highlights just in case.
+                    if (currentLyricIndex !== -1) {
+                         const allLyricLines = document.querySelectorAll('#lyrics-container .lyric-line');
+                         allLyricLines.forEach(line => line.classList.remove('active-lyric'));
+                         currentLyricIndex = -1;
+                    }
+                    return; 
+                }
+                
+                const currentTime = audioPlayer.currentTime;
+                let newLyricIndex = -1;
+
+                // Find the currently active lyric line
+                for (let i = 0; i < currentLyrics.length; i++) {
+                    if (currentTime >= currentLyrics[i].start && currentTime < currentLyrics[i].end) {
+                        newLyricIndex = i;
+                        break;
+                    }
+                }
+
+                if (newLyricIndex !== currentLyricIndex) {
+                    currentLyricIndex = newLyricIndex;
+                    const allLyricLines = document.querySelectorAll('#lyrics-container .lyric-line');
+                    
+                    allLyricLines.forEach((line, index) => {
+                        if (index === currentLyricIndex) {
+                            line.classList.add('active-lyric');
+                            // Scroll the active line into view
+                            line.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                        } else {
+                            line.classList.remove('active-lyric');
+                        }
+                    });
+                }
+            }
 
 
             function loadSong(song) {
@@ -1093,8 +771,22 @@
                 
                 flipper.classList.remove('is-flipped');
                 currentView = 'lyrics'; // Default to lyrics view
-                updateLyricsContent(); // Pre-load the lyrics
-                /* Removed: currentLyricIndex = -1; */ 
+                currentLyricIndex = -1; // Reset lyric highlighting
+                
+                // --- NEW: Load lyrics based on type ---
+                currentLyrics = []; // Clear old lyrics immediately
+                
+                if (song.srt) {
+                    // It's dynamic, fetch the SRT file
+                    fetchAndParseSRT(song.srt);
+                } else if (song.lyrics) {
+                    // It's static (like Intro)
+                    currentLyrics = song.lyrics;
+                    updateLyricsContent(); // Populate panel immediately
+                } else {
+                    // No lyrics
+                    updateLyricsContent(); // Will show "No lyrics" message
+                }
                 
                 updateActivePlaylistItem();
             }
@@ -1115,8 +807,7 @@
                 songArtEl.classList.add('is-visible'); 
                 mainPlayerDiv.classList.add('is-playing-glow'); 
                 
-                currentView = 'lyrics'; // Set view to lyrics
-                updateLyricsContent(); // Update lyrics panel
+                // Don't need to update content here, loadSong does it
                 updateMediaSession(songs[currentSongIndex]);
             }
 
@@ -1153,7 +844,6 @@
                     durationTimeEl.textContent = formatTime(duration);
                     currentTimeEl.textContent = formatTime(currentTime);
                     updatePositionState();
-                    /* Removed: updateLyricHighlighting(); */
                 }
             }
 
@@ -1169,7 +859,7 @@
                 if (duration) {
                      audioPlayer.currentTime = (progressBar.value / 100) * duration;
                      updatePositionState();
-                     /* Removed: updateLyricHighlighting(); */
+                     updateLyricHighlighting(); // Update karaoke on seek
                 }
             }
             
@@ -1248,16 +938,16 @@
             prevBtn.addEventListener('click', prevSong);
             nextBtn.addEventListener('click', nextSong);
             
-            // Combined timeupdate listener
+            // Combined timeupdate listener (RE-IMPLEMENTED)
             audioPlayer.addEventListener('timeupdate', () => {
-                updateProgress({ srcElement: audioPlayer }); // Pass the event object manually
-                /* Removed: updateLyricHighlighting(); */
+                updateProgress({ srcElement: audioPlayer });
+                updateLyricHighlighting(); // Karaoke sync
             });
 
             audioPlayer.addEventListener('ended', nextSong);
             progressBar.addEventListener('input', setProgress);
             
-            // UPDATED: Lyrics Button Handler
+            // Lyrics Button Handler
             lyricsBtn.addEventListener('click', () => {
                 if (!videoPanel.classList.contains('hidden')) {
                     showVideoPanel(false);
@@ -1277,7 +967,7 @@
                 }
             });
             
-            // UPDATED: About Button Handler
+            // About Button Handler
             aboutBtn.addEventListener('click', () => {
                 if (!videoPanel.classList.contains('hidden')) {
                     showVideoPanel(false);
@@ -1306,7 +996,7 @@
             audioTab.addEventListener('click', () => showPlaylist('audio'));
             videoTab.addEventListener('click', () => showPlaylist('video'));
             
-            // --- Media Session Action Handlers (for truck controls) ---
+            // --- Media Session Action Handlers ---
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.setActionHandler('play', playSong);
                 navigator.mediaSession.setActionHandler('pause', pauseSong);
@@ -1315,7 +1005,7 @@
                 navigator.mediaSession.setActionHandler('seekto', (details) => {
                     audioPlayer.currentTime = details.seekTime;
                     updatePositionState();
-                    /* Removed: updateLyricHighlighting(); */
+                    updateLyricHighlighting(); // Update karaoke on seek
                 });
             }
 
@@ -1324,34 +1014,24 @@
             createVideoPlaylist();
             loadSong(songs[currentSongIndex]); // Load first song
             currentView = 'lyrics'; // Set initial view state
-            updateLyricsContent(); // Update the text
+            // updateLyricsContent(); // loadSong now handles this
             flipper.classList.remove('is-flipped'); // Ensure it starts on the front
             
             
             // --- 7. PWA Service Worker Registration ---
-            // Check if we're in "app" mode
             const isPwa = window.matchMedia('(display-mode: standalone)').matches;
-
-            // --- ALWAYS SHOW BEGIN BUTTON ---
-            // This ensures the app is usable even if SW registration hangs or fails.
-            showBeginButton();
+            showBeginButton(); // Show button immediately
 
             if (isPwa && 'serviceWorker' in navigator) {
-                // --- IT'S THE APP ---
-                // We've already shown the button, so we just register in the background.
-                
                 navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('ServiceWorker registration successful:', registration);
                     })
                     .catch(err => {
                         console.log('ServiceWorker registration failed: ', err);
-                        // Button is already visible, so just log the error.
                     });
             } else {
-                // --- IT'S THE PC (or a normal browser tab) ---
                 console.log('Not in PWA mode, skipping PWA features.');
-                // Button is already visible.
             }
         });
     </script>
