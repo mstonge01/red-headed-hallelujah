@@ -1025,13 +1025,19 @@
                     navigator.serviceWorker.controller.postMessage({ action: 'cache-content' });
                 }
                 
-                introAudio.load(); 
+                // introAudio.load(); // <-- This line is no longer needed
                 enterBtn.style.display = 'none';
                 skipIntroBtn.classList.remove('hidden'); 
 
                 splashVideo.play().catch(error => {
                     console.warn("Video play failed even after click:", error);
-                    transitionToPlayer(); 
+                    // Don't transition here, let the audio handle it
+                });
+                
+                // Play audio at the same time
+                introAudio.play().catch(e => {
+                    console.warn("Intro audio failed to play:", e);
+                    transitionToPlayer(); // If audio fails, just transition
                 });
             }
 
@@ -1400,6 +1406,7 @@
             enterBtn.addEventListener('click', startVideoTransition);
             skipIntroBtn.addEventListener('click', skipIntro);
 
+            /* This listener is no longer needed, as the audio now plays immediately.
             splashVideo.addEventListener('ended', () => {
                 if(hasUserInteracted) {
                     introAudio.play().catch(e => {
@@ -1408,6 +1415,7 @@
                     });
                 }
             });
+            */
             
             introAudio.addEventListener('ended', () => {
                 transitionToPlayer();
