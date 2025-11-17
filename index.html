@@ -55,6 +55,19 @@
             background-color: #EF4444; /* red-500 */
             color: #FFFFFF; /* white */
         }
+        
+        /* Style for DJ track playlist item */
+        .playlist-item.dj-track {
+            background-color: #374151; /* gray-700 */
+        }
+        .playlist-item.dj-track.active {
+            background-color: #EF4444; /* red-500 */
+        }
+        .dj-track .track-artist {
+            color: #FBBF24; /* yellow-400 */
+            font-size: 0.8rem;
+        }
+
 
         /* Custom style for the progress bar slider thumb */
         #progress-bar-container input[type=range]::-webkit-slider-thumb {
@@ -169,7 +182,7 @@
             border-color: rgba(255, 255, 255, 0.7);
         }
 
-        /* --- Karaoke/Lyrics Styles (RE-IMPLEMENTED) --- */
+        /* --- Karaoke/Lyrics Styles --- */
         #lyrics-container {
             font-family: 'Staatliches', cursive; /* Use album font for lyrics */
             font-size: 1.5rem; /* 24px */
@@ -191,6 +204,14 @@
             color: #FBBF24; /* yellow-400 */
             background: rgba(17, 24, 39, 0.4); /* gray-900 with 40% opacity */
             transform: scale(1);
+        }
+        
+        /* --- NEW: DJ Mode Toggle Styles --- */
+        #dj-mode-toggle:checked + label {
+            background-color: #EF4444; /* red-500 */
+        }
+        #dj-mode-toggle:checked + label span {
+            transform: translateX(24px); /* 1.5rem */
         }
 
     </style>
@@ -313,10 +334,22 @@
                 
                 <!-- Bottom-Right: Playlist Tabs & Container -->
                 <div class="flex-grow flex flex-col min-h-0">
-                    <!-- Tabs -->
-                    <div class="flex-shrink-0 flex">
-                        <button id="audio-tab" class="flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-gray-700/50 border-red-500 text-white">Audio</button>
-                        <button id="video-tab" class="flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-transparent border-gray-700 text-gray-500 hover:bg-gray-800/50">Video</button>
+                    <!-- Tabs & DJ Mode Toggle -->
+                    <div class="flex-shrink-0 flex justify-between items-center border-b-2 border-gray-700">
+                        <!-- Audio/Video Tabs -->
+                        <div class="flex">
+                            <button id="audio-tab" class="flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-gray-700/50 border-red-500 text-white">Audio</button>
+                            <button id="video-tab" class="flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-transparent border-gray-700 text-gray-500 hover:bg-gray-800/50">Video</button>
+                        </div>
+                        
+                        <!-- NEW: DJ Mode Toggle -->
+                        <div id="dj-mode-container" class="flex items-center space-x-2 px-4">
+                            <label for="dj-mode-toggle" class="font-album-title text-gray-400 text-lg tracking-wider select-none">DJ</label>
+                            <input type="checkbox" id="dj-mode-toggle" class="hidden">
+                            <label for="dj-mode-toggle" class="w-12 h-6 bg-gray-600 rounded-full flex items-center p-1 cursor-pointer transition-colors duration-300">
+                                <span class="w-4 h-4 bg-white rounded-full transition-transform duration-300 transform translate-x-0"></span>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Playlist Container -->
@@ -343,111 +376,223 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- 1. DATABASES ---
             
-            // --- UPDATED SONGS ARRAY ---
-            // 'lyrics' property is for STATIC lyrics (like Intro)
-            // 'srt' property points to the .srt file for DYNAMIC lyrics
-            const songs = [
+            // --- NEW: Master list of ALL tracks (songs + DJ) ---
+            const allTracks = [
+                // 1
+                { 
+                    title: "DJ Intro: Welcome", 
+                    src: "dj-01-intro.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
+                },
                 { 
                     title: "Intro", 
                     src: "01-intro.mp3",
                     image_src: "01-intro-art.png",
-                    // Static lyrics for "Intro" as requested
                     lyrics: [
                         { time: 26, text: "They say a light can't be contained..." },
                         { time: 33, text: "And a fire can't be tamed." },
                         { time: 40, text: "Well, this one's got red hair." },
                         { time: 44, text: "Let's start the story there..." }
-                    ]
+                    ],
+                    type: 'song'
+                },
+                // 2
+                { 
+                    title: "DJ Intro: The Crimson Tide", 
+                    src: "dj-02-the-crimson-tide.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "The Crimson Tide", 
                     src: "02-the-crimson-tide.mp3",
                     image_src: "02-the-crimson-tide-art.png",
-                    srt: "The Crimson Tide.srt"
+                    srt: "The Crimson Tide.srt",
+                    type: 'song'
+                },
+                // 3
+                { 
+                    title: "DJ Intro: Real Women", 
+                    src: "dj-03-real-women.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Real Women", 
                     src: "03-real-women.mp3",
                     image_src: "03-real-women-art.png",
-                    srt: "Real Women.srt"
+                    srt: "Real Women.srt",
+                    type: 'song'
+                },
+                // 4
+                { 
+                    title: "DJ Intro: Red-Headed Hallelujah", 
+                    src: "dj-04-red-headed-hallelujah.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Red-Headed Hallelujah", 
                     src: "04-red-headed-hallelujah.mp3",
                     image_src: "04-red-headed-hallelujah-art.png",
-                    srt: "Red-Headed Hallelujah.srt"
+                    srt: "Red-Headed Hallelujah.srt",
+                    type: 'song'
+                },
+                // 5
+                { 
+                    title: "DJ Intro: The Good Stuff", 
+                    src: "dj-05-the-good-stuff.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "The Good Stuff", 
                     src: "05-the_good_stuff.mp3",
                     image_src: "05-the_good_stuff-art.png",
-                    srt: "The Good Stuff.srt"
+                    srt: "The Good Stuff.srt",
+                    type: 'song'
+                },
+                // 6
+                { 
+                    title: "DJ Intro: Zero Degree Beach", 
+                    src: "dj-06-zero-degree-beach.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Zero Degree Beach", 
                     src: "06-zero-degree-beach.mp3",
                     image_src: "06-zero-degree-beach-art.png",
-                    srt: "Zero-Degree Beach.srt"
+                    srt: "Zero-Degree Beach.srt",
+                    type: 'song'
+                },
+                // 7
+                { 
+                    title: "DJ Intro: Caps", 
+                    src: "dj-07-caps.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Caps", 
                     src: "07-caps.mp3",
                     image_src: "07-caps-art.png",
-                    srt: "Caps.srt"
+                    srt: "Caps.srt",
+                    type: 'song'
+                },
+                // 8
+                { 
+                    title: "DJ Intro: Red Paddle Queen", 
+                    src: "dj-08-red-paddle-queen.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Red Paddle Queen", 
                     src: "08-red-paddle-queen.mp3",
                     image_src: "08-red-paddle-queen.png",
-                    srt: "Red Paddle Queen.srt"
+                    srt: "Red Paddle Queen.srt",
+                    type: 'song'
+                },
+                // 9
+                { 
+                    title: "DJ Intro: Interrupted", 
+                    src: "dj-09-interrupted.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Interrupted", 
                     src: "09-interrupted.mp3",
                     image_src: "09-interrupted-art.png",
-                    srt: "Interrupted.srt"
+                    srt: "Interrupted.srt",
+                    type: 'song'
+                },
+                // 10
+                { 
+                    title: "DJ Intro: Cinnamon Serenade", 
+                    src: "dj-10-cinnamon-serenade.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Cinnamon Serenade", 
                     src: "10-cinnamon-serenade.mp3",
                     image_src: "10-cinnamon-serenade-art.png",
-                    srt: "Cinnamon Serenade.srt"
+                    srt: "Cinnamon Serenade.srt",
+                    type: 'song'
+                },
+                // 11
+                { 
+                    title: "DJ Intro: Basement Stereo Glow", 
+                    src: "dj-11-basement-stereo-glow.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Basement Stereo Glow", 
                     src: "11-basement-stereo-glow.mp3",
                     image_src: "11-basement-stereo-glow.png",
-                    srt: "Basement Stereo Glow.srt"
+                    srt: "Basement Stereo Glow.srt",
+                    type: 'song'
+                },
+                // 12
+                { 
+                    title: "DJ Intro: Golden Devotion", 
+                    src: "dj-12-golden-devotion.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Golden Devotion", 
                     src: "12-golden-devotion.mp3",
                     image_src: "12-golden-devotion-art.png",
-                    srt: "Golden Devotion.srt"
+                    srt: "Golden Devotion.srt",
+                    type: 'song'
+                },
+                // 13
+                { 
+                    title: "DJ Intro: Natural Magic", 
+                    src: "dj-13-natural-magic.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Natural Magic", 
                     src: "13-natural-magic.mp3",
                     image_src: "13-natural-magic-art.png",
-                    srt: "Natural Magic.srt"
+                    srt: "Natural Magic.srt",
+                    type: 'song'
+                },
+                // 14
+                { 
+                    title: "DJ Intro: Outro", 
+                    src: "dj-14-outro.mp3",
+                    image_src: "cover.png",
+                    type: 'dj'
                 },
                 { 
                     title: "Outro", 
                     src: "14-outro.mp3",
                     image_src: "14-outro-art.png",
-                    srt: "Outro.srt"
+                    srt: "Outro.srt",
+                    type: 'song'
                 },
+                // Bonus Tracks (no DJ tracks)
                 { 
                     title: "[Bonus Track] Red-Headed Hallelujah (Guitar Cover)", 
                     src: "15-red-headed-hallelujah-guitar.mp3",
-                    image_src: "04-red-headed-hallelujah-art.png", // Uses Track 4 art
-                    srt: "Red-Headed Hallelujah (Guitar).srt"
+                    image_src: "04-red-headed-hallelujah-art.png",
+                    srt: "Red-Headed Hallelujah (Guitar).srt",
+                    type: 'song'
                 },
                 { 
                     title: "[Bonus Track] Natural Magic (Acoustic)", 
                     src: "16-natural-magic-acoustic.mp3",
-                    image_src: "13-natural-magic-art.png", // Uses Track 13 art
-                    srt: "Natural Magic (Acoustic).srt"
+                    image_src: "13-natural-magic-art.png",
+                    srt: "Natural Magic (Acoustic).srt",
+                    type: 'song'
                 }
             ];
 
@@ -480,9 +625,10 @@
             ];
 
             const artistName = "A mstonge01 Project";
+            const djArtistName = "DJ Mode"; // NEW
             const albumTitle = "Lyrics";
-            const albumNote = ``; // Cleared
-            const aboutNote = ``; // Cleared
+            const albumNote = ``;
+            const aboutNote = ``;
             const albumName = "Red-Headed Hallelujah";
 
             // --- 2. DOM ELEMENT REFERENCES ---
@@ -501,6 +647,7 @@
             const videoPlaylistEl = document.getElementById('video-playlist');
             const audioTab = document.getElementById('audio-tab');
             const videoTab = document.getElementById('video-tab');
+            const djModeToggle = document.getElementById('dj-mode-toggle'); // NEW
             
             const playPauseBtn = document.getElementById('play-pause-btn');
             const playIcon = document.getElementById('play-icon');
@@ -523,7 +670,8 @@
             
 
             // --- 3. PLAYER STATE ---
-            let currentSongIndex = 0;
+            let currentPlaylist = []; // NEW: This will be our active playlist
+            let currentSongIndex = 0; // This is the index *of currentPlaylist*
             let isPlaying = false;
             let hasUserInteracted = false;
             let currentView = 'lyrics'; // 'lyrics' or 'about'
@@ -533,13 +681,9 @@
             // --- 4. FUNCTIONS ---
             
             function showBeginButton() {
-                // updateStatusEl.style.display = 'none';
                 updateStatusEl.classList.add('hidden'); // Hide status
-                
                 enterBtn.textContent = 'Click to Begin';
-                // enterBtn.style.display = 'block';
                 enterBtn.classList.remove('hidden'); // Show button
-                
                 enterBtn.disabled = false;
             }
 
@@ -552,28 +696,17 @@
                     navigator.serviceWorker.controller.postMessage({ action: 'cache-content' });
                 }
                 
-                // introAudio.load(); // <-- This line is no longer needed
-                // enterBtn.style.display = 'none';
                 enterBtn.classList.add('hidden'); // Hide button
                 skipIntroBtn.classList.remove('hidden'); 
 
                 splashVideo.play().catch(error => {
                     console.warn("Video play failed even after click:", error);
                     // FALLBACK: If video fails to play, it will never 'end'.
-                    // So, play the audio immediately as a fallback.
                     introAudio.play().catch(e => {
                         console.warn("Intro audio failed to play:", e);
                         transitionToPlayer(); // If audio fails too, just transition
                     });
                 });
-                
-                /*
-                // Play audio at the same time -- REMOVED per your request
-                introAudio.play().catch(e => {
-                    console.warn("Intro audio failed to play:", e);
-                    transitionToPlayer(); // If audio fails, just transition
-                });
-                */
             }
 
             function skipIntro() {
@@ -622,15 +755,15 @@
                 }
             }
             
-            function updateMediaSession(song) {
+            function updateMediaSession(track) {
                 if ('mediaSession' in navigator) {
-                    if (song) {
+                    if (track) {
                         navigator.mediaSession.metadata = new MediaMetadata({
-                            title: song.title,
-                            artist: artistName,
+                            title: track.title,
+                            artist: track.type === 'dj' ? djArtistName : artistName,
                             album: albumName,
                             artwork: [
-                                { src: song.image_src, sizes: '512x512', type: 'image/png' }
+                                { src: track.image_src, sizes: '512x512', type: 'image/png' }
                             ]
                         });
                         navigator.mediaSession.playbackState = "playing";
@@ -643,11 +776,7 @@
                 }
             }
             
-            // --- NEW SRT PARSING FUNCTIONS ---
-            
-            /**
-             * Converts an SRT timecode (00:01:15,345) to seconds (75.345)
-             */
+            // --- SRT PARSING FUNCTIONS ---
             function srtTimeToSeconds(timecode) {
                 const parts = timecode.split(':');
                 const secondsParts = parts[2].split(',');
@@ -658,9 +787,6 @@
                 return (hours * 3600) + (minutes * 60) + seconds + (milliseconds / 1000);
             }
 
-            /**
-             * Parses raw SRT text into a JavaScript array of lyric objects
-             */
             function parseSRT(srtText) {
                 const lines = [];
                 const blocks = srtText.trim().split('\n\n');
@@ -682,9 +808,6 @@
                 return lines;
             }
             
-            /**
-             * Fetches and parses an SRT file, then updates the lyrics panel
-             */
             async function fetchAndParseSRT(srtFile) {
                 try {
                     const response = await fetch(srtFile);
@@ -701,18 +824,14 @@
             }
 
 
-            // --- UPDATED LYRIC FUNCTIONS ---
-
-            /**
-             * Populates the lyrics panel based on the current state
-             */
+            // --- LYRIC FUNCTIONS ---
             function updateLyricsContent() {
                 lyricsContainerEl.innerHTML = ''; // Clear previous lyrics
                 
                 let lyricsToDisplay = [];
                 
                 if (currentView === 'about') {
-                    lyricsContainerEl.innerHTML = aboutNote; // This is empty, but respects the view
+                    lyricsContainerEl.innerHTML = aboutNote;
                     return;
                 } 
                 
@@ -722,26 +841,37 @@
                 }
 
                 if (lyricsToDisplay.length > 0) {
+                    // Check if lyrics are SRT (have 'start') or static (have 'time')
+                    const isSRT = currentLyrics[0].hasOwnProperty('start');
+                    
                     lyricsToDisplay.forEach(line => {
                         const lineEl = document.createElement('div');
                         lineEl.classList.add('lyric-line');
+                        // For DJ tracks or tracks with no SRT/lyrics, we want to show the title.
+                        // But loadSong handles this. This function just displays what's in currentLyrics.
                         lineEl.textContent = line.text;
+                        
+                        // If it's *not* SRT (e.g., static "Intro" lyrics), make it visible
+                        if (!isSRT) {
+                            lineEl.style.opacity = '0.7'; // Show static lyrics
+                        }
                         lyricsContainerEl.appendChild(lineEl);
                     });
                 } else {
-                    // Show a message if no lyrics are available
-                    lyricsContainerEl.innerHTML = `<div class="lyric-line" style="opacity: 0.7;">No lyrics available for this track.</div>`;
+                    // Show a message if no lyrics are available (e.g. for DJ tracks)
+                    const currentTrack = currentPlaylist[currentSongIndex];
+                    let msg = "No lyrics available for this track.";
+                    if (currentTrack && currentTrack.type === 'dj') {
+                        msg = "DJ track playing...";
+                    }
+                    lyricsContainerEl.innerHTML = `<div class="lyric-line" style="opacity: 0.7;">${msg}</div>`;
                 }
             }
 
-            /**
-             * Handles the karaoke-style highlighting (RE-IMPLEMENTED)
-             */
             function updateLyricHighlighting() {
-                // Check if currentLyrics is dynamic (has 'start') or static (has 'time')
+                // Check if currentLyrics is dynamic (has 'start')
                 if (!currentLyrics || currentLyrics.length === 0 || !currentLyrics[0].hasOwnProperty('start')) {
-                    // This is static ("Intro") or empty, so no highlighting.
-                    // Clear any existing highlights just in case.
+                    // This is static ("Intro"), DJ, or empty. No highlighting needed.
                     if (currentLyricIndex !== -1) {
                          const allLyricLines = document.querySelectorAll('#lyrics-container .lyric-line');
                          allLyricLines.forEach(line => line.classList.remove('active-lyric'));
@@ -780,12 +910,15 @@
                 }
             }
 
+            // --- REFACTORED PLAYER FUNCTIONS ---
 
-            function loadSong(song) {
-                songTitleEl.textContent = song.title;
-                songArtistEl.textContent = artistName;
-                audioPlayer.src = song.src;
-                songArtEl.src = song.image_src; 
+            function loadSong(track) {
+                if (!track) return;
+                
+                songTitleEl.textContent = track.title;
+                songArtistEl.textContent = track.type === 'dj' ? djArtistName : artistName;
+                audioPlayer.src = track.src;
+                songArtEl.src = track.image_src; 
                 songArtEl.classList.remove('is-visible'); 
                 
                 if (!videoPanel.classList.contains('hidden')) {
@@ -796,19 +929,19 @@
                 currentView = 'lyrics'; // Default to lyrics view
                 currentLyricIndex = -1; // Reset lyric highlighting
                 
-                // --- NEW: Load lyrics based on type ---
+                // Load lyrics based on type
                 currentLyrics = []; // Clear old lyrics immediately
                 
-                if (song.srt) {
+                if (track.srt) {
                     // It's dynamic, fetch the SRT file
-                    fetchAndParseSRT(song.srt);
-                } else if (song.lyrics) {
+                    fetchAndParseSRT(track.srt);
+                } else if (track.lyrics) {
                     // It's static (like Intro)
-                    currentLyrics = song.lyrics;
+                    currentLyrics = track.lyrics;
                     updateLyricsContent(); // Populate panel immediately
                 } else {
-                    // No lyrics
-                    updateLyricsContent(); // Will show "No lyrics" message
+                    // No lyrics (e.g., DJ tracks)
+                    updateLyricsContent(); // Will show "No lyrics" or "DJ track" message
                 }
                 
                 updateActivePlaylistItem();
@@ -816,7 +949,7 @@
 
             function playSong() {
                 if (!audioPlayer.src || audioPlayer.src.endsWith('index.html')) {
-                    loadSong(songs[currentSongIndex]);
+                    loadSong(currentPlaylist[currentSongIndex]);
                 }
                 
                 if (!videoPanel.classList.contains('hidden')) {
@@ -830,8 +963,7 @@
                 songArtEl.classList.add('is-visible'); 
                 mainPlayerDiv.classList.add('is-playing-glow'); 
                 
-                // Don't need to update content here, loadSong does it
-                updateMediaSession(songs[currentSongIndex]);
+                updateMediaSession(currentPlaylist[currentSongIndex]);
             }
 
             function pauseSong() {
@@ -847,15 +979,15 @@
 
             function prevSong() {
                 currentSongIndex--;
-                if (currentSongIndex < 0) currentSongIndex = songs.length - 1;
-                loadSong(songs[currentSongIndex]);
+                if (currentSongIndex < 0) currentSongIndex = currentPlaylist.length - 1;
+                loadSong(currentPlaylist[currentSongIndex]);
                 if (isPlaying) playSong();
             }
 
             function nextSong() {
                 currentSongIndex++;
-                if (currentSongIndex > songs.length - 1) currentSongIndex = 0;
-                loadSong(songs[currentSongIndex]);
+                if (currentSongIndex > currentPlaylist.length - 1) currentSongIndex = 0;
+                loadSong(currentPlaylist[currentSongIndex]);
                 if (isPlaying) playSong();
             }
 
@@ -898,25 +1030,91 @@
                 });
             }
 
+            // --- NEW: DJ Mode Playlist Functions ---
+
+            /**
+             * Builds the `currentPlaylist` array based on the DJ Mode toggle
+             */
+            function buildCurrentPlaylist() {
+                const isDjMode = djModeToggle.checked;
+                currentPlaylist = allTracks.filter(track => {
+                    return isDjMode || track.type === 'song';
+                });
+            }
+
+            /**
+             * Wipes and rebuilds the audio playlist HTML from `currentPlaylist`
+             */
             function createPlaylist() {
-                songs.forEach((song, index) => {
+                playlistEl.innerHTML = ''; // Clear existing playlist
+                
+                currentPlaylist.forEach((track, index) => {
                     const item = document.createElement('div');
                     item.classList.add('playlist-item', 'p-3', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-700', 'transition-colors', 'duration-200', 'flex', 'items-center', 'space-x-3');
+                    
+                    let artist = artistName;
+                    if (track.type === 'dj') {
+                        item.classList.add('dj-track');
+                        artist = djArtistName;
+                    }
+
                     item.innerHTML = `
-                        <img src="${song.image_src}" alt="Art for ${song.title}" class="w-12 h-12 rounded object-cover flex-shrink-0">
+                        <img src="${track.image_src}" alt="Art for ${track.title}" class="w-12 h-12 rounded object-cover flex-shrink-0">
                         <div class="min-w-0">
-                            <p class="font-album-title tracking-wider truncate text-base">${song.title}</p>
-                            <p class="text-sm text-gray-400 truncate">${artistName}</p>
+                            <p class="font-album-title tracking-wider truncate text-base">${track.title}</p>
+                            <p class="track-artist text-sm text-gray-400 truncate">${artist}</p>
                         </div>
                     `;
                     item.addEventListener('click', () => {
                         currentSongIndex = index;
-                        loadSong(song);
+                        loadSong(track);
                         playSong();
                     });
                     playlistEl.appendChild(item);
                 });
             }
+
+            /**
+             * Handles the logic for toggling DJ Mode
+             */
+            function handleDjToggle() {
+                // 1. Get the src of the currently playing track
+                let currentSrc = null;
+                if (isPlaying && currentPlaylist[currentSongIndex]) {
+                    currentSrc = currentPlaylist[currentSongIndex].src;
+                }
+                
+                // 2. Rebuild the master playlist
+                buildCurrentPlaylist();
+                
+                // 3. Redraw the UI
+                createPlaylist();
+                
+                // 4. Find the new index of the playing track
+                if (currentSrc) {
+                    const newIndex = currentPlaylist.findIndex(track => track.src === currentSrc);
+                    if (newIndex !== -1) {
+                        currentSongIndex = newIndex;
+                    } else {
+                        // The track (was DJ) is no longer in the list.
+                        // We could stop, or just reset to index 0.
+                        // Let's just reset to 0, but not auto-play.
+                        pauseSong();
+                        currentSongIndex = 0;
+                        loadSong(currentPlaylist[currentSongIndex]);
+                    }
+                } else {
+                    // Nothing was playing, just reset the index
+                    currentSongIndex = 0;
+                    loadSong(currentPlaylist[currentSongIndex]);
+                }
+                
+                // 5. Re-highlight the active item
+                updateActivePlaylistItem();
+            }
+
+            // --- END NEW FUNCTIONS ---
+
 
             function createVideoPlaylist() {
                 videos.forEach((video, index) => {
@@ -941,7 +1139,6 @@
             enterBtn.addEventListener('click', startVideoTransition);
             skipIntroBtn.addEventListener('click', skipIntro);
 
-            /* This listener is no longer needed... -- RE-ENABLING THIS LISTENER */
             splashVideo.addEventListener('ended', () => {
                 if(hasUserInteracted) {
                     // Video finished, now play audio
@@ -951,7 +1148,6 @@
                     });
                 }
             });
-            
             
             introAudio.addEventListener('ended', () => {
                 transitionToPlayer();
@@ -964,7 +1160,6 @@
             prevBtn.addEventListener('click', prevSong);
             nextBtn.addEventListener('click', nextSong);
             
-            // Combined timeupdate listener (RE-IMPLEMENTED)
             audioPlayer.addEventListener('timeupdate', () => {
                 updateProgress({ srcElement: audioPlayer });
                 updateLyricHighlighting(); // Karaoke sync
@@ -973,7 +1168,6 @@
             audioPlayer.addEventListener('ended', nextSong);
             progressBar.addEventListener('input', setProgress);
             
-            // Lyrics Button Handler
             lyricsBtn.addEventListener('click', () => {
                 if (!videoPanel.classList.contains('hidden')) {
                     showVideoPanel(false);
@@ -993,7 +1187,6 @@
                 }
             });
             
-            // About Button Handler
             aboutBtn.addEventListener('click', () => {
                 if (!videoPanel.classList.contains('hidden')) {
                     showVideoPanel(false);
@@ -1009,11 +1202,13 @@
                 if (type === 'audio') {
                     playlistEl.classList.remove('hidden');
                     videoPlaylistEl.classList.add('hidden');
+                    djModeToggle.parentElement.classList.remove('hidden'); // Show DJ toggle
                     audioTab.className = "flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-gray-700/50 border-red-500 text-white";
                     videoTab.className = "flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-transparent border-gray-700 text-gray-500 hover:bg-gray-800/50";
                 } else {
                     playlistEl.classList.add('hidden');
                     videoPlaylistEl.classList.remove('hidden');
+                    djModeToggle.parentElement.classList.add('hidden'); // Hide DJ toggle
                     videoTab.className = "flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-gray-700/50 border-red-500 text-white";
                     audioTab.className = "flex-1 p-3 font-album-title tracking-wider text-lg transition-colors duration-200 border-b-2 bg-transparent border-gray-700 text-gray-500 hover:bg-gray-800/50";
                 }
@@ -1021,6 +1216,9 @@
 
             audioTab.addEventListener('click', () => showPlaylist('audio'));
             videoTab.addEventListener('click', () => showPlaylist('video'));
+            
+            // --- NEW: DJ Mode Toggle Listener ---
+            djModeToggle.addEventListener('change', handleDjToggle);
             
             // --- Media Session Action Handlers ---
             if ('mediaSession' in navigator) {
@@ -1036,12 +1234,12 @@
             }
 
             // --- 6. INITIALIZE PLAYER ---
+            buildCurrentPlaylist(); // Build initial playlist (DJ mode off)
             createPlaylist();
             createVideoPlaylist();
-            loadSong(songs[currentSongIndex]); // Load first song
-            currentView = 'lyrics'; // Set initial view state
-            // updateLyricsContent(); // loadSong now handles this
-            flipper.classList.remove('is-flipped'); // Ensure it starts on the front
+            loadSong(currentPlaylist[currentSongIndex]); // Load first song from currentPlaylist
+            currentView = 'lyrics';
+            flipper.classList.remove('is-flipped');
             
             
             // --- 7. PWA Service Worker Registration ---
