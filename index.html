@@ -559,14 +559,21 @@
 
                 splashVideo.play().catch(error => {
                     console.warn("Video play failed even after click:", error);
-                    // Don't transition here, let the audio handle it
+                    // FALLBACK: If video fails to play, it will never 'end'.
+                    // So, play the audio immediately as a fallback.
+                    introAudio.play().catch(e => {
+                        console.warn("Intro audio failed to play:", e);
+                        transitionToPlayer(); // If audio fails too, just transition
+                    });
                 });
                 
-                // Play audio at the same time
+                /*
+                // Play audio at the same time -- REMOVED per your request
                 introAudio.play().catch(e => {
                     console.warn("Intro audio failed to play:", e);
                     transitionToPlayer(); // If audio fails, just transition
                 });
+                */
             }
 
             function skipIntro() {
@@ -934,16 +941,17 @@
             enterBtn.addEventListener('click', startVideoTransition);
             skipIntroBtn.addEventListener('click', skipIntro);
 
-            /* This listener is no longer needed, as the audio now plays immediately.
+            /* This listener is no longer needed... -- RE-ENABLING THIS LISTENER */
             splashVideo.addEventListener('ended', () => {
                 if(hasUserInteracted) {
+                    // Video finished, now play audio
                     introAudio.play().catch(e => {
                         console.warn("Intro audio failed to play:", e);
-                        transitionToPlayer(); 
+                        transitionToPlayer(); // If audio fails, just transition
                     });
                 }
             });
-            */
+            
             
             introAudio.addEventListener('ended', () => {
                 transitionToPlayer();
