@@ -1010,9 +1010,13 @@
             // --- 4. FUNCTIONS ---
             
             function showBeginButton() {
-                updateStatusEl.style.display = 'none';
+                // updateStatusEl.style.display = 'none';
+                updateStatusEl.classList.add('hidden'); // Hide status
+                
                 enterBtn.textContent = 'Click to Begin';
-                enterBtn.style.display = 'block';
+                // enterBtn.style.display = 'block';
+                enterBtn.classList.remove('hidden'); // Show button
+                
                 enterBtn.disabled = false;
             }
 
@@ -1026,7 +1030,8 @@
                 }
                 
                 // introAudio.load(); // <-- This line is no longer needed
-                enterBtn.style.display = 'none';
+                // enterBtn.style.display = 'none';
+                enterBtn.classList.add('hidden'); // Hide button
                 skipIntroBtn.classList.remove('hidden'); 
 
                 splashVideo.play().catch(error => {
