@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rhh-cache-v19'; // -- IMPORTANT: This is v19
+const CACHE_NAME = 'rhh-cache-v20'; // -- IMPORTANT: This is v20
 
 // 1. App Shell Files: The basic files needed for the app to run.
 // These are cached immediately on install.
@@ -17,41 +17,43 @@ const APP_SHELL_FILES = [
     'hallelujah-intro.mp3',
 ];
 
-// 2. Content Files: The songs, art, and LYRICS to be cached in the background.
-// This list is now updated to match your new tracklist AND include SRT files.
+// 2. Content Files: The songs, art, lyrics, and DJ tracks.
 const CONTENT_FILES = [
+    // Songs
     '01-intro.mp3',
-    '01-intro-art.png',
     '02-the-crimson-tide.mp3',
-    '02-the-crimson-tide-art.png',
     '03-real-women.mp3',
-    '03-real-women-art.png',
     '04-red-headed-hallelujah.mp3',
-    '04-red-headed-hallelujah-art.png',
     '05-the_good_stuff.mp3',
-    '05-the_good_stuff-art.png',
     '06-zero-degree-beach.mp3',
-    '06-zero-degree-beach-art.png',
     '07-caps.mp3',
-    '07-caps-art.png',
     '08-red-paddle-queen.mp3',
-    '08-red-paddle-queen.png',
     '09-interrupted.mp3',
-    '09-interrupted-art.png',
     '10-cinnamon-serenade.mp3',
-    '10-cinnamon-serenade-art.png',
     '11-basement-stereo-glow.mp3',
-    '11-basement-stereo-glow.png',
     '12-golden-devotion.mp3',
-    '12-golden-devotion-art.png',
     '13-natural-magic.mp3',
-    '13-natural-magic-art.png',
     '14-outro.mp3',
-    '14-outro-art.png',
     '15-red-headed-hallelujah-guitar.mp3',
     '16-natural-magic-acoustic.mp3',
 
-    // --- NEWLY ADDED SRT FILES ---
+    // Art
+    '01-intro-art.png',
+    '02-the-crimson-tide-art.png',
+    '03-real-women-art.png',
+    '04-red-headed-hallelujah-art.png',
+    '05-the_good_stuff-art.png',
+    '06-zero-degree-beach-art.png',
+    '07-caps-art.png',
+    '08-red-paddle-queen.png',
+    '09-interrupted-art.png',
+    '10-cinnamon-serenade-art.png',
+    '11-basement-stereo-glow.png',
+    '12-golden-devotion-art.png',
+    '13-natural-magic-art.png',
+    '14-outro-art.png',
+
+    // SRT Lyrics
     'Basement Stereo Glow.srt',
     'Caps.srt',
     'Cinnamon Serenade.srt',
@@ -66,7 +68,23 @@ const CONTENT_FILES = [
     'Red-Headed Hallelujah.srt',
     'The Crimson Tide.srt',
     'The Good Stuff.srt',
-    'Zero-Degree Beach.srt'
+    'Zero-Degree Beach.srt',
+    
+    // --- NEWLY ADDED DJ TRACKS ---
+    'dj-01-intro.mp3',
+    'dj-02-the-crimson-tide.mp3',
+    'dj-03-real-women.mp3',
+    'dj-04-red-headed-hallelujah.mp3',
+    'dj-05-the-good-stuff.mp3',
+    'dj-06-zero-degree-beach.mp3',
+    'dj-07-caps.mp3',
+    'dj-08-red-paddle-queen.mp3',
+    'dj-09-interrupted.mp3',
+    'dj-10-cinnamon-serenade.mp3',
+    'dj-11-basement-stereo-glow.mp3',
+    'dj-12-golden-devotion.mp3',
+    'dj-13-natural-magic.mp3',
+    'dj-14-outro.mp3'
 ];
 
 // Helper function to cache with CORS
@@ -121,7 +139,7 @@ self.addEventListener('activate', event => {
 // 3. Message Step: Listen for message from app to cache content
 self.addEventListener('message', event => {
     if (event.data.action === 'cache-content') {
-        console.log('[SW] Received message to cache content (songs/art/srt).');
+        console.log('[SW] Received message to cache content (songs/art/srt/dj).');
         event.waitUntil(
             caches.open(CACHE_NAME).then(cache => {
                 console.log('[SW] Caching content in background...');
