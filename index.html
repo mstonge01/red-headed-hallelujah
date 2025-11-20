@@ -745,7 +745,8 @@
             function updatePositionState() {
                 if ('mediaSession' in navigator && navigator.mediaSession.metadata) {
                     const { duration, currentTime } = audioPlayer;
-                    if (duration && isFinite(duration)) {
+                    // Fix 2: Bluetooth Sync - Ensure duration is valid before sending to car
+                    if (duration && isFinite(duration) && !isNaN(duration)) {
                         navigator.mediaSession.setPositionState({
                             duration: duration,
                             playbackRate: audioPlayer.playbackRate,
@@ -766,12 +767,13 @@
                                 { src: track.image_src, sizes: '512x512', type: 'image/png' }
                             ]
                         });
-                        navigator.mediaSession.playbackState = "playing";
+                        // Fix 3: Aggressive Session Control
+                        // Explicitly telling the browser we are "Playing" forces focus
+                        navigator.mediaSession.playbackState = "playing"; 
                     } else {
-                        if (navigator.mediaSession.metadata) {
-                             navigator.mediaSession.playbackState = "paused";
-                        }
+                         navigator.mediaSession.playbackState = "paused";
                     }
+                    // Call position update only on major state changes, not timeupdate
                     updatePositionState(); 
                 }
             }
@@ -917,7 +919,11 @@
                 
                 songTitleEl.textContent = track.title;
                 songArtistEl.textContent = track.type === 'dj' ? djArtistName : artistName;
+                
                 audioPlayer.src = track.src;
+                // Fix 1: Stuck at End - Force rewind on load
+                audioPlayer.currentTime = 0; 
+                
                 songArtEl.src = track.image_src; 
                 songArtEl.classList.remove('is-visible'); 
                 
@@ -998,7 +1004,9 @@
                     progressBar.value = progressPercent;
                     durationTimeEl.textContent = formatTime(duration);
                     currentTimeEl.textContent = formatTime(currentTime);
-                    updatePositionState();
+                    
+                    // Fix 2: REMOVED updatePositionState() from here. 
+                    // It floods the Bluetooth stack and causes desync.
                 }
             }
 
@@ -1013,8 +1021,8 @@
                 const duration = audioPlayer.duration;
                 if (duration) {
                      audioPlayer.currentTime = (progressBar.value / 100) * duration;
-                     updatePositionState();
-                     updateLyricHighlighting(); // Update karaoke on seek
+                     updatePositionState(); // We KEEP it here (User input)
+                     updateLyricHighlighting(); 
                 }
             }
             
@@ -1222,6 +1230,7 @@
             
             // --- Media Session Action Handlers ---
             if ('mediaSession' in navigator) {
+                // Fix 3: Ensure all handlers are properly set up on load
                 navigator.mediaSession.setActionHandler('play', playSong);
                 navigator.mediaSession.setActionHandler('pause', pauseSong);
                 navigator.mediaSession.setActionHandler('previoustrack', prevSong);
