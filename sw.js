@@ -1,12 +1,10 @@
-const CACHE_NAME = 'rhh-cache-v22'; // Matches the HTML checker
+const CACHE_NAME = 'rhh-cache-v23'; // Incremented for new files
 
-// 1. App Shell Files
-// The HTML checker will handle the heavy songs, 
-// but we still want the SW to know about the core structure.
 const APP_SHELL_FILES = [
     './', 
     'index.html',
     'manifest.json?v=3',
+    'tracks.js', // -- NEW: Database file
     'https://cdn.tailwindcss.com',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Staatliches&display=swap',
     'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2',
@@ -23,7 +21,6 @@ function cacheRequest(url) {
 }
 
 self.addEventListener('install', event => {
-    // Skip waiting means it activates immediately
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
@@ -54,22 +51,18 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-    // Ignore range requests (streaming)
     if (event.request.headers.has('range')) return; 
     if (event.request.method !== 'GET') return;
 
     event.respondWith(
         caches.match(event.request).then(response => {
-            // 1. Cache Hit
             if (response) return response;
 
-            // 2. Network Fetch
             return fetch(event.request).then(networkResponse => {
                 if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error') {
                     return networkResponse;
                 }
 
-                // Cache for future (Dynamic caching)
                 const responseToCache = networkResponse.clone();
                 caches.open(CACHE_NAME).then(cache => {
                     cache.put(event.request, responseToCache);
