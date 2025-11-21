@@ -77,34 +77,23 @@
 
     <!-- Splash Screen -->
     <div id="splash-screen" class="fixed top-0 left-0 w-full h-full bg-gray-900 z-50 flex items-center justify-center opacity-100 transition-opacity duration-1000">
-        
         <video id="splash-video" class="max-w-full max-h-full object-contain" preload="auto" playsinline>
             <source src="paint-video.mp4" type="video/mp4">
         </video>
         
         <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
-             <!-- Status Text -->
             <div id="update-status" class="p-4 rounded-lg text-white font-album-title text-2xl tracking-wider animate-pulse">
                 Checking for Updates...
             </div>
             
-            <!-- Download Progress Bar (Hidden by default) -->
             <div id="download-progress-container" class="hidden flex-col items-center">
-                <div class="download-bar-bg">
-                    <div id="download-bar-fill" class="download-bar-fill"></div>
-                </div>
+                <div class="download-bar-bg"><div id="download-bar-fill" class="download-bar-fill"></div></div>
                 <p id="download-percent" class="text-gray-400 text-sm mt-2 font-mono">0%</p>
             </div>
 
-            <!-- Click to Begin Button -->
-            <button id="enter-btn" class="hidden mt-6 z-60 text-white p-5 px-10 font-album-title text-2xl tracking-widest rounded-lg shadow-2xl uppercase">
-                Push to Start
-            </button>
+            <button id="enter-btn" class="hidden mt-6 z-60 text-white p-5 px-10 font-album-title text-2xl tracking-widest rounded-lg shadow-2xl uppercase">Push to Start</button>
         </div>
-
-        <button id="skip-intro-btn" class="hidden absolute bottom-10 left-1/2 -translate-x-1/2 z-60 text-white px-6 py-3 bg-gray-800/80 rounded-full text-sm font-bold tracking-wide border border-white/20 backdrop-blur-sm">
-            Skip Intro
-        </button>
+        <button id="skip-intro-btn" class="hidden absolute bottom-10 left-1/2 -translate-x-1/2 z-60 text-white px-6 py-3 bg-gray-800/80 rounded-full text-sm font-bold tracking-wide border border-white/20 backdrop-blur-sm">Skip Intro</button>
     </div>
 
     <!-- Main Player Container -->
@@ -187,53 +176,57 @@
     <audio id="audio-player" preload="metadata"></audio>
     <audio id="intro-audio" src="hallelujah-intro.mp3" preload="auto"></audio>
 
+    <!-- LOAD TRACKS DATABASE -->
+    <script src="tracks.js"></script>
+
     <script>
-        // --- CONFIGURATION & DATABASE ---
-        // We define these at the top so the Downloader can see them immediately.
-        
-        // *IMPORTANT*: Bump this number when you add new songs/features to force an update check.
-        const CURRENT_VERSION = '2.2'; 
+        const CURRENT_VERSION = '2.3'; 
 
-        const allTracks = [
-            { title: "DJ Intro: Welcome", src: "dj-01-intro.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Intro", src: "01-intro.mp3", image_src: "01-intro-art.png", lyrics: [{ time: 26, text: "They say a light can't be contained..." }, { time: 33, text: "And a fire can't be tamed." }, { time: 40, text: "Well, this one's got red hair." }, { time: 44, text: "Let's start the story there..." }], type: 'song' },
-            { title: "DJ Intro: The Crimson Tide", src: "dj-02-the-crimson-tide.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "The Crimson Tide", src: "02-the-crimson-tide.mp3", image_src: "02-the-crimson-tide-art.png", srt: "The Crimson Tide.srt", type: 'song' },
-            { title: "DJ Intro: Real Women", src: "dj-03-real-women.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Real Women", src: "03-real-women.mp3", image_src: "03-real-women-art.png", srt: "Real Women.srt", type: 'song' },
-            { title: "DJ Intro: Red-Headed Hallelujah", src: "dj-04-red-headed-hallelujah.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Red-Headed Hallelujah", src: "04-red-headed-hallelujah.mp3", image_src: "04-red-headed-hallelujah-art.png", srt: "Red-Headed Hallelujah.srt", type: 'song' },
-            { title: "DJ Intro: The Good Stuff", src: "dj-05-the-good-stuff.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "The Good Stuff", src: "05-the_good_stuff.mp3", image_src: "05-the_good_stuff-art.png", srt: "The Good Stuff.srt", type: 'song' },
-            { title: "DJ Intro: Zero Degree Beach", src: "dj-06-zero-degree-beach.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Zero Degree Beach", src: "06-zero-degree-beach.mp3", image_src: "06-zero-degree-beach-art.png", srt: "Zero-Degree Beach.srt", type: 'song' },
-            { title: "DJ Intro: Caps", src: "dj-07-caps.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Caps", src: "07-caps.mp3", image_src: "07-caps-art.png", srt: "Caps.srt", type: 'song' },
-            { title: "DJ Intro: Red Paddle Queen", src: "dj-08-red-paddle-queen.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Red Paddle Queen", src: "08-red-paddle-queen.mp3", image_src: "08-red-paddle-queen.png", srt: "Red Paddle Queen.srt", type: 'song' },
-            { title: "DJ Intro: Interrupted", src: "dj-09-interrupted.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Interrupted", src: "09-interrupted.mp3", image_src: "09-interrupted-art.png", srt: "Interrupted.srt", type: 'song' },
-            { title: "DJ Intro: Cinnamon Serenade", src: "dj-10-cinnamon-serenade.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Cinnamon Serenade", src: "10-cinnamon-serenade.mp3", image_src: "10-cinnamon-serenade-art.png", srt: "Cinnamon Serenade.srt", type: 'song' },
-            { title: "DJ Intro: Basement Stereo Glow", src: "dj-11-basement-stereo-glow.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Basement Stereo Glow", src: "11-basement-stereo-glow.mp3", image_src: "11-basement-stereo-glow.png", srt: "Basement Stereo Glow.srt", type: 'song' },
-            { title: "DJ Intro: Golden Devotion", src: "dj-12-golden-devotion.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Golden Devotion", src: "12-golden-devotion.mp3", image_src: "12-golden-devotion-art.png", srt: "Golden Devotion.srt", type: 'song' },
-            { title: "DJ Intro: Natural Magic", src: "dj-13-natural-magic.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Natural Magic", src: "13-natural-magic.mp3", image_src: "13-natural-magic-art.png", srt: "Natural Magic.srt", type: 'song' },
-            { title: "DJ Intro: Outro", src: "dj-14-outro.mp3", image_src: "cover.png", type: 'dj' },
-            { title: "Outro", src: "14-outro.mp3", image_src: "14-outro-art.png", srt: "Outro.srt", type: 'song' },
-            { title: "[Bonus Track] Red-Headed Hallelujah (Guitar Cover)", src: "15-red-headed-hallelujah-guitar.mp3", image_src: "04-red-headed-hallelujah-art.png", srt: "Red-Headed Hallelujah (Guitar).srt", type: 'song' },
-            { title: "[Bonus Track] Natural Magic (Acoustic)", src: "16-natural-magic-acoustic.mp3", image_src: "13-natural-magic-art.png", srt: "Natural Magic (Acoustic).srt", type: 'song' }
-        ];
+        // --- STATE MANAGEMENT (Feature #2) ---
+        const playerState = {
+            playlist: [],
+            currentIndex: 0,
+            isPlaying: false,
+            view: 'lyrics',
+            lyrics: [],
+            lyricIndex: -1,
+            hasInteracted: false
+        };
 
-        const videos = [
-            { title: "The Crimson Tide", src: "https://www.youtube.com/embed/zN1H_gJR0Uo", image_src: "02-the-crimson-tide-art.png" },
-            { title: "Real Women", src: "https://www.youtube.com/embed/VXiXI-mZvL4", image_src: "03-real-women-art.png" },
-            { title: "Red-Headed Hallelujah", src: "https://www.youtube.com/embed/0WVY004pOng", image_src: "04-red-headed-hallelujah-art.png" },
-            { title: "Natural Magic", src: "https://www.youtube.com/embed/usGSmvYKI5c", image_src: "13-natural-magic-art.png" },
-            { title: "Natural Magic (Acoustic)", src: "https://www.youtube.com/embed/YGCpLq5Bd6E", image_src: "13-natural-magic-art.png" }
-        ];
+        // --- HAPTIC FEEDBACK HELPER (Feature #7) ---
+        function vibrate() {
+            // Small 10ms tick for UI feedback
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+
+        // --- WAKE LOCK MANAGER (Feature #4) ---
+        let wakeLock = null;
+        async function toggleWakeLock(shouldLock) {
+            if (shouldLock) {
+                try {
+                    if (!wakeLock && 'wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        console.log('Wake Lock active');
+                    }
+                } catch (err) {
+                    console.warn('Wake Lock error:', err);
+                }
+            } else {
+                if (wakeLock) {
+                    await wakeLock.release();
+                    wakeLock = null;
+                    console.log('Wake Lock released');
+                }
+            }
+        }
+
+        // Re-acquire lock if user minimizes and comes back
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                toggleWakeLock(true);
+            }
+        });
+
 
         // --- AUTOMATIC ASSET CHECKER ---
         async function performStartupCheck() {
@@ -246,86 +239,54 @@
             const savedVersion = localStorage.getItem('app_version');
             const isUpdate = savedVersion !== CURRENT_VERSION;
             
-            // List of all files we want to ensure exist locally
-            // We extract all unique .mp3, .png, .srt files from the tracks list
-            const filesToCheck = [
-                'paint-video.mp4',
-                'hallelujah-intro.mp3',
-                'cover.png'
-            ];
-            
+            // Build file list from tracks.js data
+            const filesToCheck = ['paint-video.mp4', 'hallelujah-intro.mp3', 'cover.png', 'tracks.js'];
             allTracks.forEach(t => {
                 if(t.src) filesToCheck.push(t.src);
                 if(t.image_src) filesToCheck.push(t.image_src);
                 if(t.srt) filesToCheck.push(t.srt);
             });
 
-            // Remove duplicates
             const uniqueFiles = [...new Set(filesToCheck)];
             const totalFiles = uniqueFiles.length;
             let loadedCount = 0;
 
             if (isUpdate) {
                 statusEl.textContent = "New Content Found - Downloading Updates...";
-                statusEl.classList.remove('animate-pulse'); // Stop pulsing, show progress
+                statusEl.classList.remove('animate-pulse');
                 progressContainer.classList.remove('hidden');
             } else {
                 statusEl.textContent = "Verifying Files...";
             }
 
-            // We use the Cache Storage API directly to 'warm up' the cache
-            const cache = await caches.open('rhh-cache-v22'); // Must match sw.js cache name
+            const cache = await caches.open('rhh-cache-v23'); // Match SW version
 
             for (const file of uniqueFiles) {
                 try {
-                    // If it's an update, we use 'reload' to force network. 
-                    // If not, we use 'default' which checks cache first.
                     const fetchOptions = isUpdate ? { cache: 'reload' } : {};
-                    
-                    // We fetch the file
                     const response = await fetch(file, fetchOptions);
-                    
-                    if (response.ok) {
-                        // Put it in cache so Service Worker finds it later
-                        await cache.put(file, response.clone());
-                    }
-                } catch (e) {
-                    console.warn(`Failed to verify/download ${file}`, e);
-                }
+                    if (response.ok) await cache.put(file, response.clone());
+                } catch (e) { console.warn(`Failed to verify/download ${file}`, e); }
 
                 loadedCount++;
                 const percent = Math.round((loadedCount / totalFiles) * 100);
-                
-                // Update UI
                 if (isUpdate) {
                     progressBar.style.width = `${percent}%`;
                     progressText.textContent = `${percent}%`;
                 }
             }
 
-            // Check Complete
             localStorage.setItem('app_version', CURRENT_VERSION);
-            
             statusEl.classList.add('hidden');
             progressContainer.classList.add('hidden');
-            
             enterBtn.textContent = "PUSH TO START";
             enterBtn.classList.remove('hidden');
             enterBtn.disabled = false;
-            
-            // Try to pre-warm the splash video 
-            const vid = document.getElementById('splash-video');
-            vid.load();
+            document.getElementById('splash-video').load();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Start the check immediately
             performStartupCheck();
-            
-            // ... (Rest of the Player Logic) ...
-            const artistName = "A mstonge01 Project";
-            const djArtistName = "DJ Mode";
-            const albumName = "Red-Headed Hallelujah";
             
             // DOM Elements
             const splashScreen = document.getElementById('splash-screen');
@@ -360,40 +321,37 @@
             const videoPanel = document.getElementById('video-panel');
             const videoIframe = document.getElementById('video-iframe');
             
-            let currentPlaylist = [];
-            let currentSongIndex = 0;
-            let isPlaying = false;
-            let hasUserInteracted = false;
-            let currentView = 'lyrics';
-            let currentLyrics = [];
-            let currentLyricIndex = -1;
-
-            // --- Functions ---
-            
+            // --- Audio Handlers ---
             audioPlayer.addEventListener('waiting', () => loadingSpinner.classList.remove('hidden'));
             audioPlayer.addEventListener('playing', () => {
                 loadingSpinner.classList.add('hidden');
-                isPlaying = true;
+                playerState.isPlaying = true;
                 playIcon.classList.add('hidden');
                 pauseIcon.classList.remove('hidden');
                 mainPlayerDiv.classList.add('is-playing-glow');
                 songArtEl.classList.add('is-visible');
+                // Enable Wake Lock when playing
+                toggleWakeLock(true);
+            });
+            audioPlayer.addEventListener('pause', () => {
+                 // Release Wake Lock on pause
+                 toggleWakeLock(false);
             });
 
             function startVideoTransition() {
-                if(hasUserInteracted) return;
-                hasUserInteracted = true;
+                if(playerState.hasInteracted) return;
+                playerState.hasInteracted = true;
+                vibrate();
                 enterBtn.classList.add('hidden');
                 skipIntroBtn.classList.remove('hidden'); 
                 const vidPromise = splashVideo.play();
                 if (vidPromise !== undefined) {
-                    vidPromise.catch(error => {
-                        introAudio.play().catch(e => transitionToPlayer());
-                    });
+                    vidPromise.catch(() => introAudio.play().catch(e => transitionToPlayer()));
                 }
             }
 
             function skipIntro() {
+                vibrate();
                 splashVideo.pause();
                 introAudio.pause(); 
                 transitionToPlayer(); 
@@ -413,31 +371,33 @@
                 songArtistEl.textContent = track.type === 'dj' ? djArtistName : artistName;
                 audioPlayer.src = track.src;
                 audioPlayer.currentTime = 0; 
-                // audioPlayer.load(); // removed aggressive load to let preload handle it
                 songArtEl.src = track.image_src; 
                 songArtEl.classList.remove('is-visible'); 
                 if (!videoPanel.classList.contains('hidden')) showVideoPanel(false);
                 flipper.classList.remove('is-flipped');
-                currentView = 'lyrics';
-                currentLyricIndex = -1;
-                currentLyrics = [];
+                
+                playerState.view = 'lyrics';
+                playerState.lyricIndex = -1;
+                playerState.lyrics = [];
+                
                 if (track.srt) fetchAndParseSRT(track.srt);
                 else if (track.lyrics) {
-                    currentLyrics = track.lyrics;
+                    playerState.lyrics = track.lyrics;
                     updateLyricsContent();
                 } else updateLyricsContent();
+                
                 updateActivePlaylistItem();
                 updateMediaSession(track);
             }
 
             function playSong() {
-                if (!audioPlayer.src || audioPlayer.src.endsWith('index.html')) loadSong(currentPlaylist[currentSongIndex]);
+                if (!audioPlayer.src || audioPlayer.src.endsWith('index.html')) loadSong(playerState.playlist[playerState.currentIndex]);
                 if (!videoPanel.classList.contains('hidden')) showVideoPanel(false);
                 audioPlayer.play().catch(e => loadingSpinner.classList.add('hidden'));
             }
 
             function pauseSong() {
-                isPlaying = false;
+                playerState.isPlaying = false;
                 audioPlayer.pause();
                 playIcon.classList.remove('hidden');
                 pauseIcon.classList.add('hidden');
@@ -448,17 +408,19 @@
             }
 
             function nextSong() {
-                currentSongIndex++;
-                if (currentSongIndex > currentPlaylist.length - 1) currentSongIndex = 0;
-                loadSong(currentPlaylist[currentSongIndex]);
-                if (isPlaying) playSong();
+                vibrate();
+                playerState.currentIndex++;
+                if (playerState.currentIndex > playerState.playlist.length - 1) playerState.currentIndex = 0;
+                loadSong(playerState.playlist[playerState.currentIndex]);
+                if (playerState.isPlaying) playSong();
             }
 
             function prevSong() {
-                currentSongIndex--;
-                if (currentSongIndex < 0) currentSongIndex = currentPlaylist.length - 1;
-                loadSong(currentPlaylist[currentSongIndex]);
-                if (isPlaying) playSong();
+                vibrate();
+                playerState.currentIndex--;
+                if (playerState.currentIndex < 0) playerState.currentIndex = playerState.playlist.length - 1;
+                loadSong(playerState.playlist[playerState.currentIndex]);
+                if (playerState.isPlaying) playSong();
             }
 
             function updateProgress() {
@@ -486,12 +448,12 @@
 
             function buildCurrentPlaylist() {
                 const isDjMode = djModeToggle.checked;
-                currentPlaylist = allTracks.filter(track => isDjMode || track.type === 'song');
+                playerState.playlist = allTracks.filter(track => isDjMode || track.type === 'song');
             }
 
             function createPlaylist() {
                 playlistEl.innerHTML = '';
-                currentPlaylist.forEach((track, index) => {
+                playerState.playlist.forEach((track, index) => {
                     const item = document.createElement('div');
                     item.classList.add('playlist-item', 'p-2', 'rounded', 'cursor-pointer', 'hover:bg-gray-700', 'transition', 'flex', 'items-center', 'space-x-3');
                     let artist = artistName;
@@ -507,7 +469,8 @@
                         </div>
                     `;
                     item.addEventListener('click', () => {
-                        currentSongIndex = index;
+                        vibrate();
+                        playerState.currentIndex = index;
                         loadSong(track);
                         playSong();
                     });
@@ -518,7 +481,7 @@
             function updateActivePlaylistItem() {
                 const items = document.querySelectorAll('#playlist .playlist-item');
                 items.forEach((item, index) => {
-                    if (index === currentSongIndex) {
+                    if (index === playerState.currentIndex) {
                         item.classList.add('active');
                         item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     } else item.classList.remove('active');
@@ -526,21 +489,22 @@
             }
 
             function handleDjToggle() {
+                vibrate();
                 let currentSrc = null;
-                if (currentPlaylist[currentSongIndex]) currentSrc = currentPlaylist[currentSongIndex].src;
+                if (playerState.playlist[playerState.currentIndex]) currentSrc = playerState.playlist[playerState.currentIndex].src;
                 buildCurrentPlaylist();
                 createPlaylist();
                 if (currentSrc) {
-                    const newIndex = currentPlaylist.findIndex(track => track.src === currentSrc);
-                    if (newIndex !== -1) currentSongIndex = newIndex;
+                    const newIndex = playerState.playlist.findIndex(track => track.src === currentSrc);
+                    if (newIndex !== -1) playerState.currentIndex = newIndex;
                     else {
                         pauseSong();
-                        currentSongIndex = 0;
-                        loadSong(currentPlaylist[0]);
+                        playerState.currentIndex = 0;
+                        loadSong(playerState.playlist[0]);
                     }
                 } else {
-                    currentSongIndex = 0;
-                    loadSong(currentPlaylist[0]);
+                    playerState.currentIndex = 0;
+                    loadSong(playerState.playlist[0]);
                 }
                 updateActivePlaylistItem();
             }
@@ -569,7 +533,10 @@
                             <p class="text-xs text-gray-400">Music Video</p>
                         </div>
                     `;
-                    item.addEventListener('click', () => showVideoPanel(true, video.src));
+                    item.addEventListener('click', () => {
+                        vibrate();
+                        showVideoPanel(true, video.src);
+                    });
                     videoPlaylistEl.appendChild(item);
                 });
             }
@@ -603,21 +570,21 @@
                 try {
                     const response = await fetch(srtFile);
                     if (response.ok) {
-                        currentLyrics = parseSRT(await response.text());
+                        playerState.lyrics = parseSRT(await response.text());
                         updateLyricsContent();
                     }
-                } catch (e) { currentLyrics = []; updateLyricsContent(); }
+                } catch (e) { playerState.lyrics = []; updateLyricsContent(); }
             }
 
             function updateLyricsContent() {
                 lyricsContainerEl.innerHTML = '';
-                if (currentView === 'about') {
+                if (playerState.view === 'about') {
                     lyricsContainerEl.innerHTML = `<div class="p-4 text-center">App created by mstonge01.<br>Version ${CURRENT_VERSION}</div>`;
                     return;
                 }
-                if (currentLyrics.length > 0) {
-                    const isSRT = currentLyrics[0].hasOwnProperty('start');
-                    currentLyrics.forEach(line => {
+                if (playerState.lyrics.length > 0) {
+                    const isSRT = playerState.lyrics[0].hasOwnProperty('start');
+                    playerState.lyrics.forEach(line => {
                         const el = document.createElement('div');
                         el.classList.add('lyric-line');
                         el.textContent = line.text;
@@ -625,19 +592,19 @@
                         lyricsContainerEl.appendChild(el);
                     });
                 } else {
-                    const msg = currentPlaylist[currentSongIndex]?.type === 'dj' ? "DJ Mode Active" : "No lyrics available.";
+                    const msg = playerState.playlist[playerState.currentIndex]?.type === 'dj' ? "DJ Mode Active" : "No lyrics available.";
                     lyricsContainerEl.innerHTML = `<div class="lyric-line" style="opacity: 0.7;">${msg}</div>`;
                 }
             }
 
             function updateLyricHighlighting() {
-                if (!currentLyrics || !currentLyrics.length || !currentLyrics[0].start) return;
+                if (!playerState.lyrics || !playerState.lyrics.length || !playerState.lyrics[0].start) return;
                 const currentTime = audioPlayer.currentTime;
-                const newIndex = currentLyrics.findIndex(l => currentTime >= l.start && currentTime < l.end);
-                if (newIndex !== -1 && newIndex !== currentLyricIndex) {
-                    currentLyricIndex = newIndex;
+                const newIndex = playerState.lyrics.findIndex(l => currentTime >= l.start && currentTime < l.end);
+                if (newIndex !== -1 && newIndex !== playerState.lyricIndex) {
+                    playerState.lyricIndex = newIndex;
                     document.querySelectorAll('.lyric-line').forEach((line, i) => {
-                        if (i === currentLyricIndex) {
+                        if (i === playerState.lyricIndex) {
                             line.classList.add('active-lyric');
                             line.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         } else line.classList.remove('active-lyric');
@@ -658,10 +625,13 @@
 
             enterBtn.addEventListener('click', startVideoTransition);
             skipIntroBtn.addEventListener('click', skipIntro);
-            splashVideo.addEventListener('ended', () => { if(hasUserInteracted) introAudio.play().catch(e => transitionToPlayer()); });
+            splashVideo.addEventListener('ended', () => { if(playerState.hasInteracted) introAudio.play().catch(e => transitionToPlayer()); });
             introAudio.addEventListener('ended', transitionToPlayer);
             
-            playPauseBtn.addEventListener('click', () => isPlaying ? pauseSong() : playSong());
+            playPauseBtn.addEventListener('click', () => {
+                vibrate();
+                playerState.isPlaying ? pauseSong() : playSong();
+            });
             prevBtn.addEventListener('click', prevSong);
             nextBtn.addEventListener('click', nextSong);
             audioPlayer.addEventListener('timeupdate', updateProgress);
@@ -669,19 +639,27 @@
             progressBar.addEventListener('input', setProgress);
             
             lyricsBtn.addEventListener('click', () => {
-                if (currentView === 'about') { currentView = 'lyrics'; updateLyricsContent(); }
-                else if (!flipper.classList.contains('is-flipped')) { currentView = 'lyrics'; updateLyricsContent(); }
+                vibrate();
+                if (playerState.view === 'about') { playerState.view = 'lyrics'; updateLyricsContent(); }
+                else if (!flipper.classList.contains('is-flipped')) { playerState.view = 'lyrics'; updateLyricsContent(); }
                 flipper.classList.toggle('is-flipped');
             });
-            aboutBtn.addEventListener('click', () => { currentView = 'about'; updateLyricsContent(); flipper.classList.add('is-flipped'); });
+            aboutBtn.addEventListener('click', () => { 
+                vibrate();
+                playerState.view = 'about'; 
+                updateLyricsContent(); 
+                flipper.classList.add('is-flipped'); 
+            });
             
             audioTab.addEventListener('click', () => {
+                vibrate();
                 playlistEl.classList.remove('hidden'); videoPlaylistEl.classList.add('hidden');
                 djModeToggle.parentElement.classList.remove('hidden');
                 audioTab.classList.replace('bg-transparent', 'bg-gray-700'); audioTab.classList.replace('text-gray-500', 'text-white');
                 videoTab.classList.replace('bg-gray-700', 'bg-transparent'); videoTab.classList.replace('text-white', 'text-gray-500');
             });
             videoTab.addEventListener('click', () => {
+                vibrate();
                 playlistEl.classList.add('hidden'); videoPlaylistEl.classList.remove('hidden');
                 djModeToggle.parentElement.classList.add('hidden');
                 videoTab.classList.replace('bg-transparent', 'bg-gray-700'); videoTab.classList.replace('text-gray-500', 'text-white');
@@ -699,9 +677,8 @@
             buildCurrentPlaylist();
             createPlaylist();
             createVideoPlaylist();
-            loadSong(currentPlaylist[0]);
+            loadSong(playerState.playlist[0]);
             
-            // Register Service Worker if capable
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js')
                     .then(reg => console.log('SW Registered'))
