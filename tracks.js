@@ -222,11 +222,26 @@ const allTracks = [
 ];
 
 const videos = [
-    { title: "The Crimson Tide", src: "https://www.youtube.com/embed/zN1H_gJR0Uo", image_src: "02-the-crimson-tide-art.png" },
-    { title: "Real Women", src: "https://www.youtube.com/embed/VXiXI-mZvL4", image_src: "03-real-women-art.png" },
-    { title: "Red-Headed Hallelujah", src: "https://www.youtube.com/embed/0WVY004pOng", image_src: "04-red-headed-hallelujah-art.png" },
-    { title: "Natural Magic", src: "https://www.youtube.com/embed/usGSmvYKI5c", image_src: "13-natural-magic-art.png" },
-    { title: "Natural Magic (Acoustic)", src: "https://www.youtube.com/embed/YGCpLq5Bd6E", image_src: "13-natural-magic-art.png" }
+    { 
+        title: "The Crimson Tide", 
+        src: "https://www.youtube.com/embed/eLi96mi1hXI", 
+        image_src: "02-the-crimson-tide-art.png" 
+    },
+    { 
+        title: "Real Women", 
+        src: "https://www.youtube.com/embed/VXiXI-mZvL4", 
+        image_src: "03-real-women-art.png" 
+    },
+    { 
+        title: "Red-Headed Hallelujah", 
+        src: "https://www.youtube.com/embed/0WVY004pOng", 
+        image_src: "04-red-headed-hallelujah-art.png" 
+    },
+    { 
+        title: "Natural Magic", 
+        src: "https://www.youtube.com/embed/usGSmvYKI5c", 
+        image_src: "13-natural-magic-art.png" 
+    }
 ];
 
 const artistName = "A mstonge01 Project";
